@@ -1,0 +1,21 @@
+{
+  "name": "Kairo",
+  "short_name": "Kairo",
+  "description": "One Voice. All AIs. Voice-to-Prompt AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0a1a",
+  "theme_color": "#0d0a1a",
+  "icons": [
+    {
+      "src": "logo/kairo-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo/kairo-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

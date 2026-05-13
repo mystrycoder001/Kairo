@@ -1,0 +1,38 @@
+Kairo turns your voice or text into perfect AI prompts and remembers you across every AI tool — forever.
+
+\The Problem:
+Every day 500 million people use free AI tools like ChatGPT, Gemini and Claude. They have two painful problems:
+
+They know what they want but can't explain it to AI properly so they get bad results
+Every new chat they have to re-explain who they are and what they need from scratch — wasting hours every week
+
+
+The Solution:
+Kairo is a voice-to-prompt AI app with two superpowers:
+Superpower 1 — Prompt Builder
+Speak or type your rough idea in plain language. Kairo instantly converts it into a perfectly structured AI prompt that gets you 10x better results from any AI tool.
+Superpower 2 — AI Passport
+Build your personal AI identity once. Your goals, your context, your style. One tap generates your context block — paste it into ANY free AI tool instantly. No more re-explaining yourself ever again.
+
+Who It's For:
+
+Students using AI for studying and projects
+Content creators using AI for scripts and ideas
+Freelancers using AI for client work
+Anyone frustrated with getting bad AI results
+
+
+Why Kairo Wins:
+
+ChatGPT memory only works inside ChatGPT
+Gemini memory only works inside Gemini
+Kairo works across ALL AI tools — universally
+
+
+The Vision:
+
+"Every person deserves to get the best from AI — not just people who know how to write perfect prompts."
+
+
+Built By:
+A 15 year old student from Tamil Nadu, India who felt this pain every single day and decided to build the fix.

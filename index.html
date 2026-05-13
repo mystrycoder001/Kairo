@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A voice-to-prompt AI app that converts rough voice/text into perfect AI prompts and saves user context across every AI tool forever.">
+  <meta name="theme-color" content="#0d0a1a">
+  <title>Kairo — One Voice. All AIs.</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="logo/kairo-logo.png" type="image/png">
+</head>
+<body>
+
+  <!-- ====== APP SHELL ====== -->
+  <div id="app">
+
+    <!-- Navigation -->
+    <nav id="nav" class="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <button class="nav-logo" id="nav-logo-btn" aria-label="Go to home">
+          <img src="logo/kairo-logo.png" alt="Kairo" class="nav-logo-img">
+          <span class="nav-brand">Kairo</span>
+        </button>
+        <div class="nav-actions">
+          <button class="nav-btn" id="nav-sync-btn">Session Sync</button>
+          <button class="nav-btn" id="nav-passport-btn">My Passport</button>
+          <button class="nav-btn nav-btn-primary" id="nav-build-btn">Build Prompt</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ====== SCREEN 1: LANDING ====== -->
+    <section id="screen-landing" class="screen active" aria-label="Landing">
+      <div class="orb orb-1" aria-hidden="true"></div>
+      <div class="orb orb-2" aria-hidden="true"></div>
+      <div class="orb orb-3" aria-hidden="true"></div>
+
+      <div class="landing-hero">
+        <div class="hero-badge animate-up">
+          <span class="badge-dot"></span> Voice-to-Prompt AI
+        </div>
+
+        <div class="hero-logo-wrap animate-up delay-1">
+          <img src="logo/kairo-logo.png" alt="Kairo Logo" class="hero-logo">
+        </div>
+
+        <h1 class="hero-title animate-up delay-2">
+          One Voice.<br>
+          <span class="gradient-text">All AIs.</span>
+        </h1>
+
+        <p class="hero-subtitle animate-up delay-3">
+          Speak your rough idea. Get a perfectly structured prompt.<br>
+          Works with ChatGPT, Gemini, Claude — every AI tool, forever.
+        </p>
+
+        <div class="hero-cta animate-up delay-4">
+          <button class="btn-primary btn-hero" id="landing-trial-btn">
+            <span>✨</span> Start Free Trial
+          </button>
+          <button class="btn-secondary btn-hero" id="landing-passport-btn">
+            <span>🪪</span> My AI Passport
+          </button>
+        </div>
+        <p class="trial-note animate-up delay-4">14 days free. No credit card required.</p>
+
+        <div class="features-grid animate-up delay-5">
+          <div class="feature-card glass">
+            <div class="feature-icon">🎙️</div>
+            <h3>Prompt Builder</h3>
+            <p>Speak or type your rough idea. Kairo crafts the perfect prompt that gets you 10× better AI results.</p>
+          </div>
+          <div class="feature-card glass">
+            <div class="feature-icon">🪪</div>
+            <h3>AI Passport</h3>
+            <p>Build your AI identity once. One tap generates your context block — paste it into any AI tool instantly.</p>
+          </div>
+          <div class="feature-card glass">
+            <div class="feature-icon">🔄</div>
+            <h3>Session Sync</h3>
+            <p>Paste a previous conversation. Kairo summarizes it and lets you continue exactly where you left off in a new tool.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SCREEN 2: VOICE RECORDING ====== -->
+    <section id="screen-voice" class="screen" aria-label="Voice Recording">
+      <div class="screen-inner">
+        <div class="screen-header">
+          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
+          <h2 class="screen-title">Build Your Prompt</h2>
+          <div class="screen-step">Step 1 of 2</div>
+        </div>
+
+        <div class="waveform-container" id="waveform" aria-hidden="true">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+
+        <div class="mic-container">
+          <div class="mic-rings" id="mic-rings" aria-hidden="true">
+            <div class="mic-ring ring-1"></div>
+            <div class="mic-ring ring-2"></div>
+            <div class="mic-ring ring-3"></div>
+          </div>
+          <button class="mic-btn" id="mic-btn" aria-label="Start recording" title="Start Recording">
+            <span class="mic-icon" id="mic-icon">🎙️</span>
+          </button>
+        </div>
+
+        <div class="recording-status" role="status" aria-live="polite">
+          <span id="status-text">Tap the mic to start recording</span>
+          <span class="recording-dot hidden" id="recording-dot" aria-hidden="true"></span>
+          <span id="recording-timer" class="timer hidden">00:00</span>
+        </div>
+
+        <div class="voice-controls">
+          <button class="ctrl-btn" id="pause-btn" disabled aria-label="Pause recording">⏸️ Pause</button>
+          <button class="ctrl-btn ctrl-stop" id="stop-btn" disabled aria-label="Stop recording">⏹️ Stop</button>
+        </div>
+
+        <div class="transcript-container glass" id="live-transcript-box">
+          <div class="transcript-header">
+            <span class="transcript-label">📝 Live Transcript</span>
+            <button class="clear-btn" id="clear-transcript-btn" type="button">Clear</button>
+          </div>
+          <div id="transcript-display"
+               class="transcript-text"
+               contenteditable="true"
+               role="textbox"
+               aria-multiline="true"
+               aria-label="Speech transcript, editable"
+               data-placeholder="Your speech will appear here in real time…">
+          </div>
+        </div>
+
+        <div class="or-divider">
+          <span class="or-line"></span>
+          <span class="or-text">OR</span>
+          <span class="or-line"></span>
+        </div>
+
+        <div class="type-input-container glass">
+          <div class="type-input-header">
+            <span class="type-input-icon">⌨️</span>
+            <div class="type-input-info">
+              <span class="type-input-label">Type your idea instead</span>
+              <span class="type-input-hint">Describe what you want — we'll craft the perfect prompt</span>
+            </div>
+          </div>
+          <textarea id="text-input-fallback"
+                    class="type-input-textarea"
+                    rows="4"
+                    placeholder="e.g. I want to write a YouTube script about how teenagers can use AI to study smarter and get better grades…"
+                    aria-label="Type your idea here"></textarea>
+        </div>
+
+        <p class="fallback-note" id="voice-fallback-note"></p>
+
+        <button class="btn-primary btn-generate" id="generate-prompt-btn" disabled>
+          <span id="generate-btn-text">✨ Generate Prompt</span>
+          <span id="generate-btn-loader" class="spinner hidden" aria-hidden="true"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ====== SCREEN 3: AI PASSPORT ====== -->
+    <section id="screen-passport" class="screen" aria-label="AI Passport">
+      <div class="screen-inner">
+        <div class="screen-header">
+          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
+          <h2 class="screen-title">My AI Passport</h2>
+          <div class="screen-step">Your AI Identity</div>
+        </div>
+
+        <p class="screen-desc">Build your personal AI identity once. Paste it into any AI tool to skip the re-introduction — forever.</p>
+
+        <form id="passport-form" class="passport-form" novalidate>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="passport-name">Your Name</label>
+              <input type="text" id="passport-name" placeholder="e.g. Arjun" autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="passport-age">Age</label>
+              <input type="number" id="passport-age" placeholder="e.g. 15" min="5" max="120">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="passport-role">Role / Occupation</label>
+            <input type="text" id="passport-role" placeholder="e.g. Student, Content Creator, Freelance Developer…">
+          </div>
+
+          <div class="form-group">
+            <label for="passport-goals">Your Goals</label>
+            <textarea id="passport-goals" rows="3" placeholder="e.g. I want to create YouTube scripts, study faster for exams, and grow my startup idea…"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="passport-style">Communication Style</label>
+            <select id="passport-style">
+              <option value="">Select your preferred style…</option>
+              <option value="casual">Casual &amp; Friendly</option>
+              <option value="professional">Professional &amp; Formal</option>
+              <option value="technical">Technical &amp; Precise</option>
+              <option value="creative">Creative &amp; Expressive</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Favourite AI Tools</label>
+            <div class="checkbox-grid">
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="ChatGPT"> ChatGPT</label>
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Gemini"> Gemini</label>
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Claude"> Claude</label>
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Copilot"> Copilot</label>
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Perplexity"> Perplexity</label>
+              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Other"> Other</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="passport-context">Additional Context</label>
+            <textarea id="passport-context" rows="3" placeholder="e.g. I'm building a startup in India. I prefer short, actionable answers. I learn best with examples…"></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary btn-full" id="generate-passport-btn">
+            <span id="passport-btn-text">🪪 Generate My AI Passport</span>
+            <span id="passport-btn-loader" class="spinner hidden" aria-hidden="true"></span>
+          </button>
+        </form>
+
+        <div id="passport-output" class="passport-output glass hidden">
+          <div class="output-header">
+            <h3>✅ Your AI Passport</h3>
+            <button class="copy-btn" id="copy-passport-btn" type="button">📋 Copy</button>
+          </div>
+          <div id="passport-output-text" class="output-text"></div>
+          <p class="output-tip">💡 Paste this at the start of any AI conversation to skip re-introductions instantly.</p>
+        </div>
+
+        <div class="session-history-section">
+          <h3>Saved Session Contexts</h3>
+          <div id="session-history-list" class="session-history-list">
+            <!-- Sync history goes here -->
+            <p class="empty-history">No saved sessions yet. Use Session Sync to save contexts here.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====== SCREEN 4: SESSION SYNC ====== -->
+    <section id="screen-sync" class="screen" aria-label="Session Sync">
+      <div class="screen-inner">
+        <div class="screen-header">
+          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
+          <h2 class="screen-title">Session Sync</h2>
+          <div class="screen-step">Continue Anywhere</div>
+        </div>
+
+        <p class="screen-desc">Paste the summary or last few messages of your AI conversation below. Kairo will summarize the context so you can continue seamlessly in another tool.</p>
+
+        <div class="type-input-container glass">
+          <div class="type-input-header">
+            <span class="type-input-icon">📋</span>
+            <div class="type-input-info">
+              <span class="type-input-label">Previous Conversation</span>
+            </div>
+          </div>
+          <textarea id="sync-input" class="type-input-textarea" rows="6" placeholder="Paste your ChatGPT/Claude/Gemini conversation summary here..."></textarea>
+        </div>
+
+        <button class="btn-primary btn-generate" id="generate-sync-btn" disabled>
+          <span id="sync-btn-text">🔄 Generate Context Block</span>
+          <span id="sync-btn-loader" class="spinner hidden" aria-hidden="true"></span>
+        </button>
+
+        <div id="sync-output-container" class="output-card glass hidden mt-4">
+          <div class="output-card-header">
+            <span class="output-label">Continue From Here</span>
+            <div class="output-actions">
+              <button class="action-btn" id="copy-sync-btn" type="button">📋 Copy</button>
+            </div>
+          </div>
+          <div id="sync-output-text" class="output-text prompt-output-text"></div>
+          <div class="sync-actions mt-3">
+             <button class="btn-secondary btn-full" id="save-sync-history-btn">💾 Save to Passport History</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SCREEN 5: OUTPUT ====== -->
+    <section id="screen-output" class="screen" aria-label="Generated Prompt">
+      <div class="screen-inner">
+        <div class="screen-header">
+          <button class="back-btn" data-screen="voice" aria-label="Back to voice screen">← Refine</button>
+          <h2 class="screen-title">Your AI Prompt</h2>
+          <div class="screen-step">Ready ✅</div>
+        </div>
+
+        <div class="output-card glass">
+          <div class="output-card-header">
+            <span class="output-label">Generated Prompt</span>
+            <div class="output-actions">
+              <button class="action-btn" id="copy-prompt-btn" title="Copy to clipboard" type="button">📋 Copy</button>
+              <button class="action-btn" id="share-prompt-btn" title="Share prompt" type="button">↗️ Share</button>
+            </div>
+          </div>
+          <div id="prompt-output-text" class="output-text prompt-output-text" role="region" aria-live="polite"></div>
+        </div>
+
+        <div class="passport-toggle-wrap glass">
+          <div class="toggle-info">
+            <span class="toggle-label">🪪 Add AI Passport</span>
+            <span class="toggle-desc">Prepend your personal context block to the prompt</span>
+          </div>
+          <label class="toggle-switch" aria-label="Toggle AI Passport">
+            <input type="checkbox" id="passport-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="quick-links-section">
+          <p class="quick-links-label">Open directly in:</p>
+          <div class="quick-links-grid">
+            <a href="https://chat.openai.com/" class="quick-link-btn" id="open-chatgpt" target="_blank" rel="noopener">
+              <span class="ql-icon">💬</span> ChatGPT
+            </a>
+            <a href="https://gemini.google.com/" class="quick-link-btn" id="open-gemini" target="_blank" rel="noopener">
+              <span class="ql-icon">✨</span> Gemini
+            </a>
+            <a href="https://claude.ai/" class="quick-link-btn" id="open-claude" target="_blank" rel="noopener">
+              <span class="ql-icon">🤖</span> Claude
+            </a>
+          </div>
+        </div>
+
+        <div class="output-bottom-actions">
+          <button class="btn-secondary" id="refine-btn" type="button">🎙️ Refine Prompt</button>
+          <button class="btn-primary" id="new-prompt-btn" type="button">✨ New Prompt</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- #app -->
+
+  <!-- ====== TRIAL MODAL ====== -->
+  <div id="trial-modal" class="modal-overlay hidden">
+    <div class="modal-content glass">
+      <h2>🚀 Upgrade to Kairo Pro</h2>
+      <p>Your 14-day free trial has expired. Upgrade to Pro to continue generating perfect prompts and syncing sessions.</p>
+      <div class="pro-features">
+        <ul>
+          <li>Unlimited Prompts</li>
+          <li>Unlimited Session Syncs</li>
+          <li>Save multiple Passports</li>
+        </ul>
+      </div>
+      <button class="btn-primary btn-full" id="upgrade-pro-btn">Upgrade for $4.99/mo</button>
+      <p class="modal-note">No commitment. Cancel anytime.</p>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
