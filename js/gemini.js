@@ -1,6 +1,6 @@
 // js/gemini.js — Client wrapper for generating prompts via backend waterfall
 export async function generatePrompt(text, activeMode) {
-    const response = await fetch('/api/_ai-waterfall', {
+    const response = await fetch('/api/ai-waterfall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

@@ -102,7 +102,7 @@ function renderPassportText() {
 }
 
 async function generatePassportAPI(data) {
-    const response = await fetch('/api/_ai-waterfall', {
+    const response = await fetch('/api/ai-waterfall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'passport', data })
