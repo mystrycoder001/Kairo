@@ -1,113 +1,114 @@
-// voice.js — Web Speech API wrapper
+// js/voice.js — Audio Capture Logic with Groq Whisper
+import { $, showToast } from './app.js';
 
-export class VoiceRecorder {
-  constructor({ onTranscript, onStatusChange, onTimerTick }) {
-    this.onTranscript    = onTranscript;
-    this.onStatusChange  = onStatusChange;
-    this.onTimerTick     = onTimerTick;
+export function initVoice(onComplete) {
+    const micBtn = $('mic-btn');
+    const micIcon = $('mic-icon');
+    const statusText = $('status-text');
+    const transcriptDisplay = $('transcript-display');
+    const recordingDot = $('recording-dot');
+    const timerDisplay = $('recording-timer');
+    const stopBtn = $('stop-btn');
+    const generateBtn = $('generate-prompt-btn');
 
-    this.recognition     = null;
-    this.state           = 'idle'; // idle | recording | paused | stopped
-    this.fullTranscript  = '';
-    this.timerInterval   = null;
-    this.seconds         = 0;
-    this.supported       = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let timerInterval = null;
+    let seconds = 0;
 
-    this._init();
-  }
+    micBtn?.addEventListener('click', async () => {
+        if (isRecording) return; // Prevent multiple clicks
 
-  _init() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { this.supported = false; return; }
-    this.supported = true;
-    this.recognition = new SR();
-    this.recognition.continuous      = true;
-    this.recognition.interimResults  = true;
-    this.recognition.lang            = 'en-US';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
 
-    this.recognition.onresult = (e) => {
-      let interim = '';
-      let final   = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t + ' ';
-        else interim += t;
-      }
-      if (final) this.fullTranscript += final;
-      this.onTranscript(this.fullTranscript, interim);
-    };
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
 
-    this.recognition.onerror = (e) => {
-      if (e.error === 'no-speech' || e.error === 'aborted') return;
-      console.error('SpeechRecognition error:', e.error);
-      this.stop();
-      this.onStatusChange('error', e.error);
-    };
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                await processAudio(audioBlob);
+                stream.getTracks().forEach(track => track.stop()); // Stop mic
+            };
 
-    this.recognition.onend = () => {
-      // auto-restart if still recording (browser cuts off after ~60s)
-      if (this.state === 'recording') {
-        try { this.recognition.start(); } catch (_) {}
-      }
-    };
-  }
+            mediaRecorder.start();
+            isRecording = true;
+            
+            // Update UI
+            micIcon.textContent = 'graphic_eq';
+            statusText.textContent = 'Listening...';
+            recordingDot?.classList.remove('hidden');
+            if(stopBtn) stopBtn.disabled = false;
+            startTimer();
 
-  start() {
-    if (!this.supported) return;
-    this.state = 'recording';
-    this.fullTranscript = '';
-    this.seconds = 0;
-    this.recognition.start();
-    this._startTimer();
-    this.onStatusChange('recording');
-  }
+        } catch (err) {
+            showToast('❌ Microphone access denied or unavailable.');
+            console.error(err);
+        }
+    });
 
-  pause() {
-    if (this.state !== 'recording') return;
-    this.state = 'paused';
-    try { this.recognition.stop(); } catch (_) {}
-    this._stopTimer();
-    this.onStatusChange('paused');
-  }
+    stopBtn?.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            isRecording = false;
 
-  resume() {
-    if (this.state !== 'paused') return;
-    this.state = 'recording';
-    try { this.recognition.start(); } catch (_) {}
-    this._startTimer();
-    this.onStatusChange('recording');
-  }
+            // Update UI immediately
+            micIcon.textContent = 'mic';
+            statusText.textContent = 'Transcribing...';
+            recordingDot?.classList.add('hidden');
+            stopBtn.disabled = true;
+            stopTimer();
+        }
+    });
 
-  stop() {
-    this.state = 'stopped';
-    try { this.recognition.stop(); } catch (_) {}
-    this._stopTimer();
-    this.onStatusChange('stopped');
-  }
+    generateBtn?.addEventListener('click', () => {
+        const text = transcriptDisplay.value.trim();
+        if(text) onComplete(text);
+    });
 
-  reset() {
-    this.stop();
-    this.state = 'idle';
-    this.fullTranscript = '';
-    this.seconds = 0;
-    this.onStatusChange('idle');
-  }
+    function startTimer() {
+        seconds = 0;
+        timerDisplay.textContent = '00:00';
+        timerInterval = setInterval(() => {
+            seconds++;
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+        }, 1000);
+    }
 
-  _startTimer() {
-    this._stopTimer();
-    this.timerInterval = setInterval(() => {
-      this.seconds++;
-      this.onTimerTick(this._formatTime(this.seconds));
-    }, 1000);
-  }
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
 
-  _stopTimer() {
-    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
-  }
+    async function processAudio(blob) {
+        statusText.textContent = 'Transcribing via Groq Whisper...';
+        micIcon.classList.add('animate-spin');
 
-  _formatTime(s) {
-    const m = Math.floor(s / 60).toString().padStart(2, '0');
-    const sec = (s % 60).toString().padStart(2, '0');
-    return `${m}:${sec}`;
-  }
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.webm');
+
+        try {
+            const response = await fetch('/api/transcribe', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if(!response.ok) throw new Error(data.error || 'Transcription failed');
+
+            transcriptDisplay.value = data.text;
+            statusText.textContent = 'Transcription complete';
+            if(generateBtn) generateBtn.disabled = false;
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+            statusText.textContent = 'Error';
+        } finally {
+            micIcon.classList.remove('animate-spin');
+        }
+    }
 }

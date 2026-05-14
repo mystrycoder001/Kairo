@@ -1,23 +1,33 @@
-# Kairo — One Voice. All AIs.
+# Mindwave — One Mind. All AIs.
 
-A voice-to-prompt AI app that converts rough voice/text into perfect AI prompts and saves user context across every AI tool forever.
+Mindwave is an intelligent architectural AI prompting system that turns your thoughts and session history into perfect, reusable context blocks. It bridges the gap between different AI tools while maintaining a persistent digital identity.
 
-## Features
-- **Prompt Builder:** Turn messy speech or text into highly structured AI prompts.
-- **AI Passport:** Save your identity and context once, use it everywhere.
-- **Session Sync:** Paste a previous conversation to summarize the context and resume in another tool instantly.
-- **AI Waterfall:** Seamless backend switching between Gemini, Groq, and OpenRouter if an API limit is reached.
-- **PWA:** Installable as a native-feeling app on mobile and desktop.
-
-## Deployment
-This app is designed to be deployed on Vercel.
-
-1. Clone the repository.
-2. Link to a Vercel project: `vercel link`
-3. Add environment variables in Vercel settings (`GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`).
-4. Deploy: `vercel --prod`
+## Key Features
+- **Voice-to-Prompt**: High-precision architectural instruction generation from speech.
+- **AI Identity Seed**: Define your role, goals, and style once—attach it to every prompt.
+- **Session Sync**: Bridge context between ChatGPT, Claude, and Gemini seamlessly.
+- **14-Day Pro Trial**: Full access to all features for 14 days, with proactive usage monitoring.
 
 ## Tech Stack
-- Frontend: Vanilla HTML, CSS, JavaScript
-- Backend: Vercel Serverless Functions (Node.js)
-- APIs: Web Speech API, Gemini (primary), Groq (fallback), OpenRouter (fallback).
+- **Frontend**: Vanilla JS, TailwindCSS, Stitch Design System ("Intelligent Void").
+- **Backend**: Vercel Serverless Functions (Node.js).
+- **AI Pipeline**: Gemini 1.5 Flash -> Groq (Llama 3) -> OpenRouter.
+- **Auth**: Supabase (Google OAuth & Magic Links).
+
+## Environment Variables
+Create a `.env` file with the following:
+```env
+GEMINI_API_KEY=your_key
+GROQ_API_KEY=your_key
+OPENROUTER_API_KEY=your_key
+SUPABASE_URL=your_project_url
+SUPABASE_ANON_KEY=your_anon_key
+```
+
+## Getting Started
+1. Install dependencies: `npm install`
+2. Run locally: `npx serve .` (or use VS Code Live Server)
+3. Deploy: `vercel`
+
+## Branding
+Mindwave uses a high-contrast, black-and-white "Intelligent Void" aesthetic for maximum focus and architectural precision.

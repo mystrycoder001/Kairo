@@ -1,379 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A voice-to-prompt AI app that converts rough voice/text into perfect AI prompts and saves user context across every AI tool forever.">
-  <meta name="theme-color" content="#0d0a1a">
-  <title>Kairo — One Voice. All AIs.</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="logo/kairo-logo.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindwave — Your memory across every AI</title>
+    
+    <!-- PWA & SEO -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="description" content="Never repeat yourself to AI again. The identity and memory layer for AI.">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    
 </head>
-<body>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans selection:bg-white selection:text-black">
 
-  <!-- ====== APP SHELL ====== -->
-  <div id="app">
-
-    <!-- Navigation -->
-    <nav id="nav" class="nav" aria-label="Main navigation">
-      <div class="nav-inner">
-        <button class="nav-logo" id="nav-logo-btn" aria-label="Go to home">
-          <img src="logo/kairo-logo.png" alt="Kairo" class="nav-logo-img">
-          <span class="nav-brand">Kairo</span>
-        </button>
-        <div class="nav-actions">
-          <button class="nav-btn" id="nav-sync-btn">Session Sync</button>
-          <button class="nav-btn" id="nav-passport-btn">My Passport</button>
-          <button class="nav-btn nav-btn-primary" id="nav-build-btn">Build Prompt</button>
-        </div>
-      </div>
-    </nav>
-
-    <!-- ====== SCREEN 1: LANDING ====== -->
-    <section id="screen-landing" class="screen active" aria-label="Landing">
-      <div class="orb orb-1" aria-hidden="true"></div>
-      <div class="orb orb-2" aria-hidden="true"></div>
-      <div class="orb orb-3" aria-hidden="true"></div>
-
-      <div class="landing-hero">
-        <div class="hero-badge animate-up">
-          <span class="badge-dot"></span> Voice-to-Prompt AI
-        </div>
-
-        <div class="hero-logo-wrap animate-up delay-1">
-          <img src="logo/kairo-logo.png" alt="Kairo Logo" class="hero-logo">
-        </div>
-
-        <h1 class="hero-title animate-up delay-2">
-          One Voice.<br>
-          <span class="gradient-text">All AIs.</span>
-        </h1>
-
-        <p class="hero-subtitle animate-up delay-3">
-          Speak your rough idea. Get a perfectly structured prompt.<br>
-          Works with ChatGPT, Gemini, Claude — every AI tool, forever.
-        </p>
-
-        <div class="hero-cta animate-up delay-4">
-          <button class="btn-primary btn-hero" id="landing-trial-btn">
-            <span>✨</span> Start Free Trial
-          </button>
-          <button class="btn-secondary btn-hero" id="landing-passport-btn">
-            <span>🪪</span> My AI Passport
-          </button>
-        </div>
-        <p class="trial-note animate-up delay-4">14 days free. No credit card required.</p>
-
-        <div class="features-grid animate-up delay-5">
-          <div class="feature-card glass">
-            <div class="feature-icon">🎙️</div>
-            <h3>Prompt Builder</h3>
-            <p>Speak or type your rough idea. Kairo crafts the perfect prompt that gets you 10× better AI results.</p>
-          </div>
-          <div class="feature-card glass">
-            <div class="feature-icon">🪪</div>
-            <h3>AI Passport</h3>
-            <p>Build your AI identity once. One tap generates your context block — paste it into any AI tool instantly.</p>
-          </div>
-          <div class="feature-card glass">
-            <div class="feature-icon">🔄</div>
-            <h3>Session Sync</h3>
-            <p>Paste a previous conversation. Kairo summarizes it and lets you continue exactly where you left off in a new tool.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====== SCREEN 2: VOICE RECORDING ====== -->
-    <section id="screen-voice" class="screen" aria-label="Voice Recording">
-      <div class="screen-inner">
-        <div class="screen-header">
-          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
-          <h2 class="screen-title">Build Your Prompt</h2>
-          <div class="screen-step">Step 1 of 2</div>
-        </div>
-
-        <div class="waveform-container" id="waveform" aria-hidden="true">
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        </div>
-
-        <div class="mic-container">
-          <div class="mic-rings" id="mic-rings" aria-hidden="true">
-            <div class="mic-ring ring-1"></div>
-            <div class="mic-ring ring-2"></div>
-            <div class="mic-ring ring-3"></div>
-          </div>
-          <button class="mic-btn" id="mic-btn" aria-label="Start recording" title="Start Recording">
-            <span class="mic-icon" id="mic-icon">🎙️</span>
-          </button>
-        </div>
-
-        <div class="recording-status" role="status" aria-live="polite">
-          <span id="status-text">Tap the mic to start recording</span>
-          <span class="recording-dot hidden" id="recording-dot" aria-hidden="true"></span>
-          <span id="recording-timer" class="timer hidden">00:00</span>
-        </div>
-
-        <div class="voice-controls">
-          <button class="ctrl-btn" id="pause-btn" disabled aria-label="Pause recording">⏸️ Pause</button>
-          <button class="ctrl-btn ctrl-stop" id="stop-btn" disabled aria-label="Stop recording">⏹️ Stop</button>
-        </div>
-
-        <div class="transcript-container glass" id="live-transcript-box">
-          <div class="transcript-header">
-            <span class="transcript-label">📝 Live Transcript</span>
-            <button class="clear-btn" id="clear-transcript-btn" type="button">Clear</button>
-          </div>
-          <div id="transcript-display"
-               class="transcript-text"
-               contenteditable="true"
-               role="textbox"
-               aria-multiline="true"
-               aria-label="Speech transcript, editable"
-               data-placeholder="Your speech will appear here in real time…">
-          </div>
-        </div>
-
-        <div class="or-divider">
-          <span class="or-line"></span>
-          <span class="or-text">OR</span>
-          <span class="or-line"></span>
-        </div>
-
-        <div class="type-input-container glass">
-          <div class="type-input-header">
-            <span class="type-input-icon">⌨️</span>
-            <div class="type-input-info">
-              <span class="type-input-label">Type your idea instead</span>
-              <span class="type-input-hint">Describe what you want — we'll craft the perfect prompt</span>
+    <!-- HEADER -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#222222]">
+        <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-black font-bold">waves</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Mindwave</span>
             </div>
-          </div>
-          <textarea id="text-input-fallback"
-                    class="type-input-textarea"
-                    rows="4"
-                    placeholder="e.g. I want to write a YouTube script about how teenagers can use AI to study smarter and get better grades…"
-                    aria-label="Type your idea here"></textarea>
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
+                <a href="pricing.html" class="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
+                <a href="onboarding.html" class="text-sm font-medium bg-white text-black px-5 py-2.5 rounded-full hover:scale-105 transition-transform">Get Started</a>
+            </nav>
         </div>
+    </header>
 
-        <p class="fallback-note" id="voice-fallback-note"></p>
-
-        <button class="btn-primary btn-generate" id="generate-prompt-btn" disabled>
-          <span id="generate-btn-text">✨ Generate Prompt</span>
-          <span id="generate-btn-loader" class="spinner hidden" aria-hidden="true"></span>
-        </button>
-      </div>
-    </section>
-
-    <!-- ====== SCREEN 3: AI PASSPORT ====== -->
-    <section id="screen-passport" class="screen" aria-label="AI Passport">
-      <div class="screen-inner">
-        <div class="screen-header">
-          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
-          <h2 class="screen-title">My AI Passport</h2>
-          <div class="screen-step">Your AI Identity</div>
-        </div>
-
-        <p class="screen-desc">Build your personal AI identity once. Paste it into any AI tool to skip the re-introduction — forever.</p>
-
-        <form id="passport-form" class="passport-form" novalidate>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="passport-name">Your Name</label>
-              <input type="text" id="passport-name" placeholder="e.g. Arjun" autocomplete="given-name">
+    <!-- HERO SECTION -->
+    <main class="flex-1 pt-32 pb-20">
+        <div class="max-w-6xl mx-auto px-6 text-center space-y-8 mt-10">
+            <div class="inline-block border border-[#222222] bg-[#111111] px-4 py-1.5 rounded-full text-sm font-medium text-gray-300 mb-4 animate-fade-in-up">
+                Introducing the Identity Layer for AI
             </div>
-            <div class="form-group">
-              <label for="passport-age">Age</label>
-              <input type="number" id="passport-age" placeholder="e.g. 15" min="5" max="120">
+            
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-tight animate-fade-in-up" style="animation-delay: 0.1s;">
+                Your memory <br> across <span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-600">every AI.</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto animate-fade-in-up" style="animation-delay: 0.2s;">
+                Never repeat yourself to AI again. 
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 animate-fade-in-up" style="animation-delay: 0.3s;">
+                <a href="onboarding.html" class="w-full sm:w-auto bg-white text-black font-bold px-8 py-4 rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                    Start 14-Day Free Trial
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+                <a href="#demo" class="w-full sm:w-auto bg-[#111111] border border-[#222222] text-white font-medium px-8 py-4 rounded-full hover:bg-[#222222] transition-colors flex items-center justify-center gap-2">
+                    See it in action
+                </a>
             </div>
-          </div>
+        </div>
 
-          <div class="form-group">
-            <label for="passport-role">Role / Occupation</label>
-            <input type="text" id="passport-role" placeholder="e.g. Student, Content Creator, Freelance Developer…">
-          </div>
+        <!-- INTERACTIVE DEMO (BEFORE SIGNUP) -->
+        <div id="demo" class="max-w-5xl mx-auto px-6 mt-32 relative">
+            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-white/5 blur-[100px] rounded-full pointer-events-none"></div>
+            
+            <div class="bg-[#111111] border border-[#222222] rounded-3xl overflow-hidden shadow-2xl relative z-10 glassmorphism">
+                <!-- Demo Header -->
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-[#222222] bg-black/50">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div class="mx-auto text-xs font-mono text-gray-500">mindwave-demo.app</div>
+                </div>
 
-          <div class="form-group">
-            <label for="passport-goals">Your Goals</label>
-            <textarea id="passport-goals" rows="3" placeholder="e.g. I want to create YouTube scripts, study faster for exams, and grow my startup idea…"></textarea>
-          </div>
+                <!-- Demo Content Area -->
+                <div class="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center min-h-[500px]">
+                    
+                    <!-- Left: Interactive Controls -->
+                    <div class="space-y-8">
+                        <div class="space-y-2">
+                            <h3 class="text-2xl font-bold">Watch the magic.</h3>
+                            <p class="text-gray-400">Click to simulate a real workflow.</p>
+                        </div>
 
-          <div class="form-group">
-            <label for="passport-style">Communication Style</label>
-            <select id="passport-style">
-              <option value="">Select your preferred style…</option>
-              <option value="casual">Casual &amp; Friendly</option>
-              <option value="professional">Professional &amp; Formal</option>
-              <option value="technical">Technical &amp; Precise</option>
-              <option value="creative">Creative &amp; Expressive</option>
-            </select>
-          </div>
+                        <div class="space-y-4">
+                            <!-- Step 1: Voice -->
+                            <div id="demo-step-1" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group">
+                                <div class="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined">mic</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">1. Voice Record</h4>
+                                    <p class="text-xs text-gray-400">Capture the raw idea.</p>
+                                </div>
+                            </div>
 
-          <div class="form-group">
-            <label>Favourite AI Tools</label>
-            <div class="checkbox-grid">
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="ChatGPT"> ChatGPT</label>
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Gemini"> Gemini</label>
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Claude"> Claude</label>
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Copilot"> Copilot</label>
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Perplexity"> Perplexity</label>
-              <label class="checkbox-item"><input type="checkbox" name="ai-tools" value="Other"> Other</label>
+                            <!-- Step 2: Passport -->
+                            <div id="demo-step-2" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group opacity-50">
+                                <div class="w-12 h-12 rounded-full bg-[#222222] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined">badge</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">2. Attach AI Passport</h4>
+                                    <p class="text-xs text-gray-400">Inject your context.</p>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Session Sync -->
+                            <div id="demo-step-3" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group opacity-50">
+                                <div class="w-12 h-12 rounded-full bg-[#222222] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined">sync_alt</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">3. Session Sync</h4>
+                                    <p class="text-xs text-gray-400">Carry on from Claude.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Visual Output -->
+                    <div class="relative h-full w-full bg-black/80 rounded-2xl border border-[#222222] p-6 overflow-hidden flex flex-col justify-center">
+                        
+                        <!-- Output 1: Voice Visualizer -->
+                        <div id="demo-output-1" class="demo-output absolute inset-0 flex flex-col items-center justify-center p-8 text-center transition-all duration-500">
+                            <div class="relative w-32 h-32 flex items-center justify-center mb-6">
+                                <div class="absolute inset-0 border border-white/20 rounded-full animate-ping"></div>
+                                <div class="absolute inset-2 border border-white/40 rounded-full animate-ping" style="animation-delay: 0.2s;"></div>
+                                <span class="material-symbols-outlined text-6xl text-white">graphic_eq</span>
+                            </div>
+                            <p class="typewriter text-lg font-medium text-gray-300">"I want to build a landing page for Mindwave... make it dark mode."</p>
+                        </div>
+
+                        <!-- Output 2: AI Passport -->
+                        <div id="demo-output-2" class="demo-output absolute inset-0 flex flex-col items-center justify-center p-8 opacity-0 pointer-events-none transition-all duration-500 scale-95">
+                            <div class="w-full bg-[#111111] border border-[#222222] rounded-xl p-6 space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Demo" class="w-16 h-16 rounded-full bg-white/10">
+                                    <div>
+                                        <h4 class="font-bold text-lg">Alex (Founder Mode)</h4>
+                                        <p class="text-xs text-gray-400">Prefers concise, technical code. Tailwind + React.</p>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-mono text-gray-500 bg-black p-3 rounded border border-[#222222]">
+                                    <span class="text-green-400">Attached:</span> Identity block injected into prompt.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Output 3: Final Prompt -->
+                        <div id="demo-output-3" class="demo-output absolute inset-0 flex flex-col items-start justify-center p-8 opacity-0 pointer-events-none transition-all duration-500 scale-95">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Final Generated Prompt</h4>
+                            <div class="w-full h-full text-sm text-gray-300 font-mono leading-relaxed bg-black border border-[#222222] rounded-lg p-4 overflow-y-auto custom-scrollbar">
+                                <span class="text-blue-400"># Context:</span> Alex (Founder Mode) - Technical, Tailwind, React<br><br>
+                                <span class="text-blue-400"># Previous Session:</span> User was debugging dark mode toggle. Continue from there.<br><br>
+                                <span class="text-blue-400"># Task:</span> Build a landing page for Mindwave, ensure it's dark mode focused.<br><br>
+                                <span class="text-green-400 animate-pulse">Ready to paste into ChatGPT/Claude.</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="passport-context">Additional Context</label>
-            <textarea id="passport-context" rows="3" placeholder="e.g. I'm building a startup in India. I prefer short, actionable answers. I learn best with examples…"></textarea>
-          </div>
-
-          <button type="submit" class="btn-primary btn-full" id="generate-passport-btn">
-            <span id="passport-btn-text">🪪 Generate My AI Passport</span>
-            <span id="passport-btn-loader" class="spinner hidden" aria-hidden="true"></span>
-          </button>
-        </form>
-
-        <div id="passport-output" class="passport-output glass hidden">
-          <div class="output-header">
-            <h3>✅ Your AI Passport</h3>
-            <button class="copy-btn" id="copy-passport-btn" type="button">📋 Copy</button>
-          </div>
-          <div id="passport-output-text" class="output-text"></div>
-          <p class="output-tip">💡 Paste this at the start of any AI conversation to skip re-introductions instantly.</p>
         </div>
+    </main>
 
-        <div class="session-history-section">
-          <h3>Saved Session Contexts</h3>
-          <div id="session-history-list" class="session-history-list">
-            <!-- Sync history goes here -->
-            <p class="empty-history">No saved sessions yet. Use Session Sync to save contexts here.</p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ====== SCREEN 4: SESSION SYNC ====== -->
-    <section id="screen-sync" class="screen" aria-label="Session Sync">
-      <div class="screen-inner">
-        <div class="screen-header">
-          <button class="back-btn" data-screen="landing" aria-label="Back to home">← Back</button>
-          <h2 class="screen-title">Session Sync</h2>
-          <div class="screen-step">Continue Anywhere</div>
-        </div>
-
-        <p class="screen-desc">Paste the summary or last few messages of your AI conversation below. Kairo will summarize the context so you can continue seamlessly in another tool.</p>
-
-        <div class="type-input-container glass">
-          <div class="type-input-header">
-            <span class="type-input-icon">📋</span>
-            <div class="type-input-info">
-              <span class="type-input-label">Previous Conversation</span>
+    <!-- FOOTER -->
+    <footer class="border-t border-[#222222] bg-black py-12 mt-20">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-white">waves</span>
+                <span class="font-bold">Mindwave</span>
             </div>
-          </div>
-          <textarea id="sync-input" class="type-input-textarea" rows="6" placeholder="Paste your ChatGPT/Claude/Gemini conversation summary here..."></textarea>
-        </div>
-
-        <button class="btn-primary btn-generate" id="generate-sync-btn" disabled>
-          <span id="sync-btn-text">🔄 Generate Context Block</span>
-          <span id="sync-btn-loader" class="spinner hidden" aria-hidden="true"></span>
-        </button>
-
-        <div id="sync-output-container" class="output-card glass hidden mt-4">
-          <div class="output-card-header">
-            <span class="output-label">Continue From Here</span>
-            <div class="output-actions">
-              <button class="action-btn" id="copy-sync-btn" type="button">📋 Copy</button>
+            
+            <p class="text-sm text-gray-500">Built with ❤️ for AI users everywhere.</p>
+            
+            <div class="flex items-center gap-6 text-sm text-gray-400">
+                <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+                <a href="#" class="hover:text-white transition-colors">Twitter</a>
+                <a href="#" class="hover:text-white transition-colors">ProductHunt</a>
             </div>
-          </div>
-          <div id="sync-output-text" class="output-text prompt-output-text"></div>
-          <div class="sync-actions mt-3">
-             <button class="btn-secondary btn-full" id="save-sync-history-btn">💾 Save to Passport History</button>
-          </div>
         </div>
-      </div>
-    </section>
+    </footer>
 
-    <!-- ====== SCREEN 5: OUTPUT ====== -->
-    <section id="screen-output" class="screen" aria-label="Generated Prompt">
-      <div class="screen-inner">
-        <div class="screen-header">
-          <button class="back-btn" data-screen="voice" aria-label="Back to voice screen">← Refine</button>
-          <h2 class="screen-title">Your AI Prompt</h2>
-          <div class="screen-step">Ready ✅</div>
-        </div>
+    <!-- Demo Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = [$('demo-step-1'), $('demo-step-2'), $('demo-step-3')];
+            const outputs = [$('demo-output-1'), $('demo-output-2'), $('demo-output-3')];
+            let currentStep = 0;
 
-        <div class="output-card glass">
-          <div class="output-card-header">
-            <span class="output-label">Generated Prompt</span>
-            <div class="output-actions">
-              <button class="action-btn" id="copy-prompt-btn" title="Copy to clipboard" type="button">📋 Copy</button>
-              <button class="action-btn" id="share-prompt-btn" title="Share prompt" type="button">↗️ Share</button>
-            </div>
-          </div>
-          <div id="prompt-output-text" class="output-text prompt-output-text" role="region" aria-live="polite"></div>
-        </div>
+            function $(id) { return document.getElementById(id); }
 
-        <div class="passport-toggle-wrap glass">
-          <div class="toggle-info">
-            <span class="toggle-label">🪪 Add AI Passport</span>
-            <span class="toggle-desc">Prepend your personal context block to the prompt</span>
-          </div>
-          <label class="toggle-switch" aria-label="Toggle AI Passport">
-            <input type="checkbox" id="passport-toggle">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="quick-links-section">
-          <p class="quick-links-label">Open directly in:</p>
-          <div class="quick-links-grid">
-            <a href="https://chat.openai.com/" class="quick-link-btn" id="open-chatgpt" target="_blank" rel="noopener">
-              <span class="ql-icon">💬</span> ChatGPT
-            </a>
-            <a href="https://gemini.google.com/" class="quick-link-btn" id="open-gemini" target="_blank" rel="noopener">
-              <span class="ql-icon">✨</span> Gemini
-            </a>
-            <a href="https://claude.ai/" class="quick-link-btn" id="open-claude" target="_blank" rel="noopener">
-              <span class="ql-icon">🤖</span> Claude
-            </a>
-          </div>
-        </div>
-
-        <div class="output-bottom-actions">
-          <button class="btn-secondary" id="refine-btn" type="button">🎙️ Refine Prompt</button>
-          <button class="btn-primary" id="new-prompt-btn" type="button">✨ New Prompt</button>
-        </div>
-      </div>
-    </section>
-
-  </div><!-- #app -->
-
-  <!-- ====== TRIAL MODAL ====== -->
-  <div id="trial-modal" class="modal-overlay hidden">
-    <div class="modal-content glass">
-      <h2>🚀 Upgrade to Kairo Pro</h2>
-      <p>Your 14-day free trial has expired. Upgrade to Pro to continue generating perfect prompts and syncing sessions.</p>
-      <div class="pro-features">
-        <ul>
-          <li>Unlimited Prompts</li>
-          <li>Unlimited Session Syncs</li>
-          <li>Save multiple Passports</li>
-        </ul>
-      </div>
-      <button class="btn-primary btn-full" id="upgrade-pro-btn">Upgrade for $4.99/mo</button>
-      <p class="modal-note">No commitment. Cancel anytime.</p>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="toast hidden" role="alert" aria-live="assertive"></div>
-
-  <script type="module" src="js/app.js"></script>
+            steps.forEach((step, index) => {
+                step.addEventListener('click', () => {
+                    // Update steps UI
+                    steps.forEach((s, i) => {
+                        if (i <= index) s.classList.remove('opacity-50');
+                        else s.classList.add('opacity-50');
+                    });
+                    
+                    // Update output UI
+                    outputs.forEach((o, i) => {
+                        if (i === index) {
+                            o.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                        } else {
+                            o.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+                        }
+                    });
+                });
+            });
+            
+            // Auto play demo
+            setInterval(() => {
+                currentStep = (currentStep + 1) % 3;
+                steps[currentStep].click();
+            }, 4000);
+        });
+    </script>
 </body>
 </html>

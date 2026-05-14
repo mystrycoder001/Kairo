@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#c8c6c5",
+                    "tertiary": "#ffffff",
+                    "secondary-container": "#4a4949",
+                    "tertiary-fixed": "#e5e2e1",
+                    "tertiary-container": "#e5e2e1",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-background": "#e2e2e2",
+                    "outline": "#8e9192",
+                    "secondary-fixed": "#e5e2e1",
+                    "surface-dim": "#131313",
+                    "surface": "#131313",
+                    "on-secondary-fixed-variant": "#474646",
+                    "primary": "#ffffff",
+                    "on-secondary": "#313030",
+                    "on-primary-fixed-variant": "#454747",
+                    "on-tertiary-container": "#656464",
+                    "inverse-on-surface": "#303030",
+                    "inverse-surface": "#e2e2e2",
+                    "on-surface-variant": "#c4c7c8",
+                    "background": "#000000",
+                    "on-primary-container": "#636565",
+                    "surface-container-low": "#1b1b1b",
+                    "surface-container-highest": "#353535",
+                    "on-primary-fixed": "#1a1c1c",
+                    "primary-container": "#e2e2e2",
+                    "primary-fixed-dim": "#c6c6c7",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "inverse-primary": "#5d5f5f",
+                    "on-primary": "#2f3131",
+                    "surface-container-lowest": "#0e0e0e",
+                    "error": "#ffb4ab",
+                    "on-tertiary": "#303030",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "on-secondary-container": "#bab8b7",
+                    "error-container": "#93000a",
+                    "outline-variant": "#444748",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-variant": "#353535",
+                    "on-error": "#690005",
+                    "on-surface": "#e2e2e2",
+                    "surface-tint": "#c6c6c7",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-container": "#1f1f1f",
+                    "surface-bright": "#393939"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "section-gap": "80px",
+                    "gutter": "24px",
+                    "margin-desktop": "40px",
+                    "margin-mobile": "20px",
+                    "container-max": "1200px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid #222222;
+        }
+        .glass-nav {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="selection:bg-primary selection:text-background">
+<nav class="fixed top-0 left-0 w-full flex justify-between items-center px-margin-desktop py-4 z-50 glass-nav border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">Mindwave</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-primary font-bold font-label-md text-label-md hover:bg-surface-container-high/50 transition-colors duration-300 px-3 py-2 rounded-lg" href="#">Home</a>
+<a class="text-on-surface-variant font-medium font-label-md text-label-md hover:text-primary transition-colors duration-300" href="#">Features</a>
+<a class="text-on-surface-variant font-medium font-label-md text-label-md hover:text-primary transition-colors duration-300" href="#">About</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">account_circle</button>
+<button class="bg-primary text-on-primary font-bold px-6 py-2 rounded-full font-label-md text-label-md active:scale-95 transition-all duration-150">
+                Start Free Trial
+            </button>
+</div>
+</nav>
+<main class="pt-32">
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col items-center text-center mb-section-gap">
+<div class="w-32 h-32 mb-12 flex items-center justify-center">
+<img alt="Mindwave Logo" class="w-full h-full object-contain" src="data:image/png;base64,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"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg max-w-4xl mb-6 tracking-tighter leading-tight">
+                Think once. <br/>
+<span class="text-on-surface-variant">Use everywhere.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-12">
+                Elevate your intellectual workflow with the world's first architectural AI workspace. Minimal distraction, maximum cognitive power.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 items-center">
+<button class="bg-primary text-black font-bold px-10 py-5 rounded-full text-lg hover:opacity-90 transition-all active:scale-95">
+                    Start Free Trial
+                </button>
+<button class="bg-transparent text-white border border-[#222222] font-bold px-10 py-5 rounded-full text-lg hover:bg-[#111111] transition-all">
+                    View Demo
+                </button>
+</div>
+</section>
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-section-gap">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="glass-card p-10 rounded-[16px] hover:border-[#444444] transition-all group">
+<div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-white/10 group-hover:border-white/30 transition-all">
+<span class="material-symbols-outlined text-primary">terminal</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Prompt Builder</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Design complex AI instructions with a visual logic engine that ensures consistency across every interaction.
+                    </p>
+</div>
+<div class="glass-card p-10 rounded-[16px] hover:border-[#444444] transition-all group">
+<div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-white/10 group-hover:border-white/30 transition-all">
+<span class="material-symbols-outlined text-primary">badge</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">AI Passport</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Your portable identity for the AI age. Carry your preferences, history, and style across any platform seamlessly.
+                    </p>
+</div>
+<div class="glass-card p-10 rounded-[16px] hover:border-[#444444] transition-all group">
+<div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-white/10 group-hover:border-white/30 transition-all">
+<span class="material-symbols-outlined text-primary">sync</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Session Sync</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Instantaneous synchronization across all devices. Your thoughts remain fluid, whether you're on desktop or mobile.
+                    </p>
+</div>
+</div>
+</section>
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-section-gap">
+<div class="glass-card rounded-[16px] overflow-hidden flex flex-col md:flex-row items-center border-[#222222]">
+<div class="p-12 md:p-20 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant mb-6 block">The Interface</span>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8 leading-tight">Master your workflow in the Intelligent Void.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-md">
+                        A workspace designed to vanish. No buttons where they shouldn't be. No distractions when you're thinking.
+                    </p>
+<ul class="space-y-4">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="font-body-md text-body-md">Adaptive Dark Glass interface</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="font-body-md text-body-md">Low-latency sync engine</span>
+</li>
+</ul>
+</div>
+<div class="flex-1 w-full h-[500px] relative">
+<div class="absolute inset-0 bg-gradient-to-tr from-black to-transparent z-10"></div>
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="A macro close-up view of a high-end dark mode user interface featuring translucent panels and sharp white typography against a deep black background. The lighting is cold and cinematic, emphasizing the glass-like textures and the depth of the layers. The aesthetic is extremely professional and minimalist, evoking a sense of powerful technology and architectural precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzOa9Z9QpGlHR3C3n587I2bHv166UiXh3Wlb-u4aaiMjujUc5X1BWckLqyf2mI2aNxSe4i8sKjiTUjCm0z63UydRhNuBufCWC3Z_W_h_untdQRoQaXO9yFioUXPTnnhCLHMzbpYAPKgmla2KHcmK14fyBHnmZH2GtFRwoByn0inijUbpF3_lPyew_3FZUWyKY6IcNJ5UwZDdPJdI9G7XSMC_tQJYnrF9G90QznTjo41qL9zhapqJT0qERPMkmpIRh-D6Tz0oPeQQvg"/>
+</div>
+</div>
+</section>
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-section-gap text-center">
+<div class="py-20 glass-card rounded-[32px] border-white/5 overflow-hidden relative">
+<div class="absolute -top-40 -left-40 w-96 h-96 bg-primary/5 blur-[120px] rounded-full"></div>
+<div class="absolute -bottom-40 -right-40 w-96 h-96 bg-primary/5 blur-[120px] rounded-full"></div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-6">Ready to scale your mind?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-12 max-w-xl mx-auto">
+                    Join over 50,000 professionals who have simplified their cognitive load with Mindwave.
+                </p>
+<button class="bg-primary text-black font-bold px-12 py-6 rounded-full text-xl hover:scale-105 transition-all active:scale-95 shadow-2xl shadow-white/10">
+                    Get Started Now
+                </button>
+</div>
+</section>
+</main>
+<footer class="border-t border-[#111111] py-12 px-margin-desktop">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col gap-2">
+<span class="font-headline-md text-headline-md font-bold text-primary">Mindwave</span>
+<span class="text-on-surface-variant font-label-md text-label-md">© 2024 Intelligent Void Labs.</span>
+</div>
+<div class="flex gap-12">
+<div class="flex flex-col gap-4">
+<span class="text-white font-bold font-label-md text-label-md">Product</span>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">Pricing</a>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">Features</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="text-white font-bold font-label-md text-label-md">Company</span>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">About</a>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">Careers</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="text-white font-bold font-label-md text-label-md">Legal</span>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-white transition-colors font-label-md text-label-md" href="#">Terms</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

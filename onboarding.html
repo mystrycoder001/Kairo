@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindwave — Onboarding</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Confetti for Step 5 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+    <!-- Progress Bar -->
+    <div class="fixed top-0 left-0 right-0 h-1 bg-[#111111] z-50">
+        <div id="progress-bar" class="h-full bg-white transition-all duration-500 ease-out" style="width: 20%;"></div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="p-6 flex items-center justify-center">
+        <div class="flex items-center gap-2 opacity-50">
+            <span class="material-symbols-outlined text-white">waves</span>
+            <span class="font-bold tracking-tight">Mindwave</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="w-full max-w-2xl bg-[#111111] border border-[#222222] rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden glassmorphism">
+            
+            <!-- STEP 1: Welcome -->
+            <div id="step-1" class="ob-step space-y-8 animate-fade-in-up">
+                <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-white text-black rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <span class="material-symbols-outlined text-4xl">waving_hand</span>
+                    </div>
+                    <h1 class="text-4xl font-bold tracking-tight">Welcome to Mindwave.</h1>
+                    <p class="text-gray-400">Let's set up your personal AI memory layer in 3 minutes.</p>
+                </div>
+                
+                <div class="space-y-3 pt-6 border-t border-[#222222]">
+                    <div class="flex items-center gap-4 bg-black/50 p-4 rounded-xl border border-[#222222]">
+                        <span class="material-symbols-outlined text-white">badge</span>
+                        <span class="text-sm font-medium">1. Build your AI Passport</span>
+                    </div>
+                    <div class="flex items-center gap-4 bg-black/50 p-4 rounded-xl border border-[#222222]">
+                        <span class="material-symbols-outlined text-white">dataset</span>
+                        <span class="text-sm font-medium">2. Select Memory Modes</span>
+                    </div>
+                    <div class="flex items-center gap-4 bg-black/50 p-4 rounded-xl border border-[#222222]">
+                        <span class="material-symbols-outlined text-white">mic</span>
+                        <span class="text-sm font-medium">3. Try your first Voice Test</span>
+                    </div>
+                </div>
+
+                <button onclick="nextStep(2)" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform">Let's Go</button>
+            </div>
+
+            <!-- STEP 2: AI Passport -->
+            <div id="step-2" class="ob-step space-y-8 hidden">
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-bold tracking-tight">Your AI Passport</h2>
+                    <p class="text-gray-400 text-sm">Who are you? We'll attach this to your prompts.</p>
+                </div>
+
+                <form id="passport-form" class="space-y-6" onsubmit="event.preventDefault(); nextStep(3);">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Name</label>
+                            <input type="text" id="ob-name" required class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 focus:border-white outline-none transition-colors" placeholder="Alex">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Role / Title</label>
+                            <input type="text" id="ob-role" required class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 focus:border-white outline-none transition-colors" placeholder="Software Engineer">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Deep Goals</label>
+                        <textarea id="ob-goals" required class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 focus:border-white outline-none transition-colors resize-none h-24" placeholder="What are you currently building or focused on?"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Communication Style</label>
+                        <select id="ob-style" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 focus:border-white outline-none transition-colors appearance-none">
+                            <option value="Casual">Casual & Socratic</option>
+                            <option value="Professional" selected>Direct & Professional</option>
+                            <option value="Technical">Highly Technical</option>
+                            <option value="Creative">Creative & Explanatory</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform">Save Identity</button>
+                </form>
+            </div>
+
+            <!-- STEP 3: Memory Modes -->
+            <div id="step-3" class="ob-step space-y-8 hidden">
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-bold tracking-tight">Memory Modes</h2>
+                    <p class="text-gray-400 text-sm">Select the contexts you want Mindwave to remember.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="relative flex items-start gap-4 p-4 border border-[#222222] bg-black/50 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
+                        <input type="checkbox" value="Founder Mode" class="peer mt-1 bg-black border-[#222222] checked:bg-white accent-white w-4 h-4" checked>
+                        <div>
+                            <span class="block font-bold text-sm">Founder Mode</span>
+                            <span class="block text-xs text-gray-500">Startup projects, pitches</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-start gap-4 p-4 border border-[#222222] bg-black/50 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
+                        <input type="checkbox" value="Study Mode" class="peer mt-1 bg-black border-[#222222] checked:bg-white accent-white w-4 h-4">
+                        <div>
+                            <span class="block font-bold text-sm">Study Mode</span>
+                            <span class="block text-xs text-gray-500">Subjects, exams, research</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-start gap-4 p-4 border border-[#222222] bg-black/50 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
+                        <input type="checkbox" value="Coding Mode" class="peer mt-1 bg-black border-[#222222] checked:bg-white accent-white w-4 h-4" checked>
+                        <div>
+                            <span class="block font-bold text-sm">Coding Mode</span>
+                            <span class="block text-xs text-gray-500">Tech stack, current repos</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-start gap-4 p-4 border border-[#222222] bg-black/50 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
+                        <input type="checkbox" value="Content Creator" class="peer mt-1 bg-black border-[#222222] checked:bg-white accent-white w-4 h-4">
+                        <div>
+                            <span class="block font-bold text-sm">Creator Mode</span>
+                            <span class="block text-xs text-gray-500">Content style, audience</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-start gap-4 p-4 border border-[#222222] bg-black/50 rounded-xl cursor-pointer hover:border-white/30 transition-colors">
+                        <input type="checkbox" value="Freelancer Mode" class="peer mt-1 bg-black border-[#222222] checked:bg-white accent-white w-4 h-4">
+                        <div>
+                            <span class="block font-bold text-sm">Freelancer Mode</span>
+                            <span class="block text-xs text-gray-500">Client work, skills</span>
+                        </div>
+                    </label>
+                </div>
+
+                <button onclick="saveModesAndNext()" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform">Enable Modes</button>
+            </div>
+
+            <!-- STEP 4: First Voice Test -->
+            <div id="step-4" class="ob-step space-y-8 hidden">
+                <div class="text-center space-y-2">
+                    <h2 class="text-3xl font-bold tracking-tight">Voice Test</h2>
+                    <p class="text-gray-400 text-sm">Speak a rough idea. See the WOW moment.</p>
+                </div>
+
+                <div class="flex flex-col items-center justify-center space-y-6 py-6 border border-[#222222] bg-black/50 rounded-2xl relative">
+                    <div id="ob-mic-rings" class="absolute w-32 h-32 rounded-full border border-white/20 animate-ping hidden"></div>
+                    <button id="ob-mic-btn" class="w-24 h-24 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-10">
+                        <span id="ob-mic-icon" class="material-symbols-outlined text-4xl">mic</span>
+                    </button>
+                    <p id="ob-mic-status" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Click to start</p>
+                </div>
+
+                <div id="ob-demo-output" class="hidden space-y-4">
+                    <div class="p-4 bg-black border border-[#222222] rounded-xl text-sm font-mono text-gray-400 h-24 overflow-hidden relative">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black pointer-events-none"></div>
+                        <span id="ob-transcribed-text"></span>
+                    </div>
+                    <button onclick="nextStep(5)" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform">Generate Prompt</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: You're Ready! -->
+            <div id="step-5" class="ob-step space-y-8 hidden text-center">
+                <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
+                    <span class="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+                
+                <h2 class="text-4xl font-bold tracking-tight">You're Ready!</h2>
+                <p class="text-gray-400">Your AI Passport is active. Welcome to the future.</p>
+
+                <div class="text-left bg-black border border-[#222222] rounded-2xl p-6 mt-8 space-y-4">
+                    <div class="flex items-center gap-4 border-b border-[#222222] pb-4">
+                        <div class="w-12 h-12 bg-[#222222] rounded-full flex items-center justify-center text-white font-bold" id="final-avatar">A</div>
+                        <div>
+                            <h4 class="font-bold" id="final-name">Alex</h4>
+                            <p class="text-xs text-gray-500" id="final-role">Software Engineer</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2" id="final-modes">
+                        <!-- Modes will be injected here -->
+                    </div>
+                </div>
+
+                <button onclick="finishOnboarding()" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform mt-8">Go to Dashboard</button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const progressBar = document.getElementById('progress-bar');
+        
+        function nextStep(stepNumber) {
+            document.querySelectorAll('.ob-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
+            
+            // Update Progress
+            const progress = (stepNumber / 5) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            if (stepNumber === 5) {
+                triggerConfetti();
+                populateFinalSummary();
+            }
+        }
+
+        function saveModesAndNext() {
+            const selected = Array.from(document.querySelectorAll('#step-3 input:checked')).map(el => el.value);
+            localStorage.setItem('mindwave_modes', JSON.stringify(selected));
+            nextStep(4);
+        }
+
+        // Fake Voice Demo for Onboarding
+        const micBtn = document.getElementById('ob-mic-btn');
+        const micIcon = document.getElementById('ob-mic-icon');
+        const micRings = document.getElementById('ob-mic-rings');
+        const micStatus = document.getElementById('ob-mic-status');
+        const demoOutput = document.getElementById('ob-demo-output');
+        const transcribedText = document.getElementById('ob-transcribed-text');
+
+        let isRecording = false;
+
+        micBtn.addEventListener('click', () => {
+            if(isRecording) return;
+            isRecording = true;
+            micIcon.textContent = 'graphic_eq';
+            micRings.classList.remove('hidden');
+            micStatus.textContent = 'Listening...';
+            
+            setTimeout(() => {
+                micIcon.textContent = 'mic';
+                micRings.classList.add('hidden');
+                micStatus.textContent = 'Capture Complete';
+                demoOutput.classList.remove('hidden');
+                transcribedText.textContent = "I need a boilerplate for a NextJS app with Tailwind and Supabase auth... make sure it uses the new app router.";
+            }, 3000);
+        });
+
+        function populateFinalSummary() {
+            const name = document.getElementById('ob-name').value || 'User';
+            const role = document.getElementById('ob-role').value || 'AI Architect';
+            
+            document.getElementById('final-name').textContent = name;
+            document.getElementById('final-avatar').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('final-role').textContent = role;
+
+            const modes = JSON.parse(localStorage.getItem('mindwave_modes') || '[]');
+            const modesHTML = modes.map(m => `<span class="bg-[#222222] text-xs px-2 py-1 rounded text-gray-300">${m}</span>`).join('');
+            document.getElementById('final-modes').innerHTML = modesHTML;
+
+            // Save Passport Data temporarily
+            const passportData = {
+                name, role, 
+                goals: document.getElementById('ob-goals').value,
+                style: document.getElementById('ob-style').value
+            };
+            localStorage.setItem('mindwave_passport', JSON.stringify(passportData));
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ffffff', '#aaaaaa', '#555555']
+            });
+        }
+
+        function finishOnboarding() {
+            localStorage.setItem('mindwave_onboarding_complete', 'true');
+            // Init Trial
+            localStorage.setItem('mindwave_trial_start', Date.now().toString());
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

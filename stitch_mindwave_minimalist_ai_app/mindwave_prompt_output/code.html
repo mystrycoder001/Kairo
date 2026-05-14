@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mindwave - Generated Output</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #000000;
+            color: #e2e2e2;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid #222222;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#c8c6c5",
+                        "tertiary": "#ffffff",
+                        "secondary-container": "#4a4949",
+                        "tertiary-fixed": "#e5e2e1",
+                        "tertiary-container": "#e5e2e1",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-background": "#e2e2e2",
+                        "outline": "#8e9192",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "on-secondary-fixed-variant": "#474646",
+                        "primary": "#ffffff",
+                        "on-secondary": "#313030",
+                        "on-primary-fixed-variant": "#454747",
+                        "on-tertiary-container": "#656464",
+                        "inverse-on-surface": "#303030",
+                        "inverse-surface": "#e2e2e2",
+                        "on-surface-variant": "#c4c7c8",
+                        "background": "#131313",
+                        "on-primary-container": "#636565",
+                        "surface-container-low": "#1b1b1b",
+                        "surface-container-highest": "#353535",
+                        "on-primary-fixed": "#1a1c1c",
+                        "primary-container": "#e2e2e2",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "inverse-primary": "#5d5f5f",
+                        "on-primary": "#2f3131",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error": "#ffb4ab",
+                        "on-tertiary": "#303030",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e2e2e2",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "on-secondary-container": "#bab8b7",
+                        "error-container": "#93000a",
+                        "outline-variant": "#444748",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-variant": "#353535",
+                        "on-error": "#690005",
+                        "on-surface": "#e2e2e2",
+                        "surface-tint": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#1f1f1f",
+                        "surface-bright": "#393939"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "section-gap": "80px",
+                        "gutter": "24px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "20px",
+                        "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-black">
+<!-- TopNavBar Navigation Shell -->
+<header class="fixed top-0 left-0 w-full flex justify-between items-center px-margin-desktop py-4 bg-background/80 backdrop-blur-xl border-b border-outline-variant/20 z-50">
+<div class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">Mindwave</div>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-high/50 transition-colors duration-300 font-label-md text-label-md" href="#">Home</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-high/50 transition-colors duration-300 font-label-md text-label-md" href="#">AI Passport</a>
+<a class="text-primary font-bold hover:bg-surface-container-high/50 transition-colors duration-300 font-label-md text-label-md" href="#">Session Sync</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-high/50 transition-colors duration-300 font-label-md text-label-md" href="#">Voice Record</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="bg-primary text-on-primary font-bold px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 active:scale-95 duration-150">Start Free Trial</button>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<!-- SideNavBar (Hidden on small screens) -->
+<aside class="fixed left-0 top-0 h-full hidden lg:flex flex-col p-6 space-y-8 bg-surface-container-lowest/90 backdrop-blur-2xl border-r border-outline-variant/10 w-64 pt-24">
+<div class="space-y-1">
+<div class="font-headline-md text-headline-md font-bold text-primary">Mindwave</div>
+<div class="font-body-md text-body-md text-on-surface-variant opacity-60">Think once.</div>
+</div>
+<nav class="flex-1 space-y-2">
+<div class="flex items-center space-x-3 p-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 cursor-pointer group">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md group-hover:translate-x-1 duration-200">Home</span>
+</div>
+<div class="flex items-center space-x-3 p-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 cursor-pointer group">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span class="font-label-md text-label-md group-hover:translate-x-1 duration-200">AI Passport</span>
+</div>
+<div class="flex items-center space-x-3 p-3 rounded-lg bg-tertiary-container/10 text-primary border-r-2 border-primary transition-all duration-200 cursor-pointer group">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+<span class="font-label-md text-label-md group-hover:translate-x-1 duration-200">Session Sync</span>
+</div>
+<div class="flex items-center space-x-3 p-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 cursor-pointer group">
+<span class="material-symbols-outlined" data-icon="mic">mic</span>
+<span class="font-label-md text-label-md group-hover:translate-x-1 duration-200">Voice Record</span>
+</div>
+</nav>
+<div class="space-y-4 pt-6 border-t border-outline-variant/10">
+<button class="w-full bg-white text-black font-bold py-3 rounded-lg text-label-md">Upgrade to Pro</button>
+<div class="flex items-center space-x-3 p-3 rounded-lg text-on-surface-variant hover:text-primary cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</div>
+<div class="flex items-center space-x-3 p-3 rounded-lg text-on-surface-variant hover:text-primary cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="min-h-screen pt-32 pb-20 px-margin-mobile md:px-margin-desktop lg:ml-64 flex flex-col items-center">
+<!-- Hero Section -->
+<div class="w-full max-w-4xl text-center mb-16">
+<div class="inline-flex items-center space-x-2 bg-surface-container/50 px-4 py-1 rounded-full border border-outline-variant/20 mb-6">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Generation Complete</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg mb-4 text-white">The Intelligence Void</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Your mental synthesis has been processed. Review the architected output below.</p>
+</div>
+<!-- Main Output Card (Glassmorphism & Bento) -->
+<div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 mb-section-gap">
+<!-- Primary Output Panel -->
+<div class="md:col-span-8 glass-panel p-8 md:p-12 rounded-[24px] shadow-2xl">
+<div class="flex items-center justify-between mb-10 border-b border-outline-variant/10 pb-6">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-black" data-icon="psychology">psychology</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-white">AI Synthesis Engine v4.2</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-60">High-fidelity reasoning active</p>
+</div>
+</div>
+<div class="flex space-x-2">
+<button class="p-3 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high/50 transition-colors">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+</button>
+<button class="p-3 rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-high/50 transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</div>
+<article class="prose prose-invert max-w-none space-y-6">
+<h2 class="font-headline-md text-headline-md text-white">Architecture of Silent Thought</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        The convergence of artificial intelligence and minimalist design philosophy creates a unique psychological state known as the <span class="text-white font-medium">Intelligence Void</span>. This space is not empty; rather, it is cleared of all cognitive noise to allow the user's primary intent to resonate with maximum clarity.
+                    </p>
+<div class="bg-black/40 border-l-2 border-primary p-6 rounded-r-xl">
+<p class="font-body-md text-body-md italic text-white/90">
+                            "In the absence of distraction, the speed of synthesis increases by approximately 42% for complex architectural workflows."
+                        </p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Our latest model has identified three critical pillars for your current project:
+                    </p>
+<ul class="space-y-4 list-none p-0">
+<li class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant"><strong class="text-white">Structural Clarity:</strong> Reducing UI elements to their mathematical essence.</span>
+</li>
+<li class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant"><strong class="text-white">Tonal Harmony:</strong> Using deep blacks and high-contrast artifacts to guide focus.</span>
+</li>
+<li class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant"><strong class="text-white">Fluid Interaction:</strong> Ensuring the digital response feels like a physical extension of thought.</span>
+</li>
+</ul>
+</article>
+</div>
+<!-- Sidebar Actions & Links -->
+<div class="md:col-span-4 space-y-8">
+<!-- Quick Links Section -->
+<div class="glass-panel p-6 rounded-[24px]">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-6">Cross-Sync Engine</h3>
+<div class="space-y-4">
+<a class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/20 hover:border-white/40 transition-all bg-black/20 group" href="#">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-white" data-icon="bolt">bolt</span>
+<span class="font-label-md text-label-md text-white">ChatGPT</span>
+</div>
+<span class="material-symbols-outlined text-[18px] opacity-40" data-icon="north_east">north_east</span>
+</a>
+<a class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/20 hover:border-white/40 transition-all bg-black/20 group" href="#">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-white" data-icon="diamond">diamond</span>
+<span class="font-label-md text-label-md text-white">Gemini</span>
+</div>
+<span class="material-symbols-outlined text-[18px] opacity-40" data-icon="north_east">north_east</span>
+</a>
+<a class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/20 hover:border-white/40 transition-all bg-black/20 group" href="#">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-white" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span class="font-label-md text-label-md text-white">Claude</span>
+</div>
+<span class="material-symbols-outlined text-[18px] opacity-40" data-icon="north_east">north_east</span>
+</a>
+</div>
+</div>
+<!-- Abstract Visual -->
+<div class="relative overflow-hidden rounded-[24px] aspect-square border border-outline-variant/20">
+<img alt="Abstract intelligent void" class="w-full h-full object-cover grayscale brightness-75 hover:scale-110 transition-transform duration-700" data-alt="A profound high-end architectural visualization of a pure black and white minimalist space. Liquid dark metal reflections crawl across a polished floor under a singular high-contrast light beam. The mood is silent, expansive, and high-tech, representing the core philosophy of a digital 'intelligent void'. Every surface is sharp and defined by professional architectural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdZvpZ-lDPYWH-_MEu_CwQBnE0B7EiobW_smz7PiREbCvbb2AapyJw7qWBF1Rd9nFoih39ckeuZhV8dzxme8SD2Fe7edwQECDedfLDBd5uGEw4MaKk-GcSuYcvDxKdjxcNRyfuZBtmIVAd_Sph5nHs45SEaXUR2gCXh3Sypx3kzPfjUJjqouukXIjW78NhaqugnIAB8sh_9qvJfcRDC9Z3XkxeXl_3HHNnFJnciuJg5bo8-UJ1Q01nxnhtFtw7HmPDlIaNwDMpAZTC"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<span class="font-label-sm text-label-sm text-white/60">Visualization 09-X</span>
+<h4 class="font-headline-md text-headline-md text-white">Focus State Alpha</h4>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Watermark -->
+<footer class="w-full max-w-5xl flex flex-col items-center border-t border-outline-variant/10 pt-12 space-y-6">
+<div class="flex items-center space-x-2 text-on-surface-variant opacity-40">
+<span class="font-label-sm text-label-sm tracking-widest uppercase">Powered by</span>
+<span class="font-label-md text-label-md font-bold tracking-tighter text-white/50">Mindwave</span>
+</div>
+<div class="flex space-x-8 text-on-surface-variant opacity-30 font-label-sm text-label-sm">
+<a class="hover:text-white transition-colors" href="#">Privacy Protocol</a>
+<a class="hover:text-white transition-colors" href="#">Neural Security</a>
+<a class="hover:text-white transition-colors" href="#">Terms of Thought</a>
+</div>
+</footer>
+</main>
+<!-- FAB Action (Contextual: Only for main interaction) -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-white text-black rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-[32px]" data-icon="add" data-weight="fill">add</span>
+</button>
+</body></html>

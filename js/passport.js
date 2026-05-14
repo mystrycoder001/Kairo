@@ -1,72 +1,113 @@
-// passport.js — AI Passport form logic & localStorage
+// js/passport.js — AI Passport Identity Manager
+import { $, showToast } from './app.js';
 
-const STORAGE_KEY = 'kairo_passport';
+export function initPassport() {
+    const editForm = $('passport-edit-form');
+    const saveBtn = $('save-passport-btn');
+    const nameInput = $('edit-name');
+    const roleInput = $('edit-role');
+    const goalsInput = $('edit-goals');
+    
+    const exportBtn = $('export-passport-btn');
+    const copyBtn = $('copy-passport-btn');
+    const shareBtn = $('share-passport-btn');
 
-export function savePassport(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // Load initial data
+    const savedData = getPassportData();
+    if(savedData && nameInput && roleInput) {
+        nameInput.value = savedData.name || '';
+        roleInput.value = savedData.role || '';
+        goalsInput.value = savedData.goals || '';
+        updateSummaryCard(savedData);
+    }
+    
+    renderPassportText();
+
+    saveBtn?.addEventListener('click', async () => {
+        const data = {
+            name: nameInput.value,
+            role: roleInput.value,
+            goals: goalsInput.value,
+            style: savedData.style || 'Professional'
+        };
+        
+        savePassportData(data);
+        updateSummaryCard(data);
+        
+        saveBtn.textContent = 'Generating...';
+        saveBtn.disabled = true;
+
+        try {
+            const block = await generatePassportAPI(data);
+            localStorage.setItem('mindwave_passport_text', block);
+            renderPassportText();
+            showToast('🪪 Passport Updated');
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        } finally {
+            saveBtn.textContent = 'Save Changes & Regenerate';
+            saveBtn.disabled = false;
+        }
+    });
+
+    exportBtn?.addEventListener('click', () => {
+        const text = getPassportText();
+        if(!text) return showToast('No passport generated yet');
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mindwave-passport-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    copyBtn?.addEventListener('click', () => {
+        const text = getPassportText();
+        if(!text) return showToast('No passport generated yet');
+        navigator.clipboard.writeText(text);
+        showToast('📋 Copied to clipboard');
+    });
+
+    shareBtn?.addEventListener('click', () => {
+        showToast('🖼️ Generating Image (Mocked)');
+        // To fully implement, we would draw the summary card to a canvas and export as PNG.
+        // For now, this is a placeholder to satisfy the UI requirement.
+    });
 }
 
-export function loadPassport() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+function updateSummaryCard(data) {
+    if($('summary-name')) $('summary-name').textContent = data.name || 'User';
+    if($('summary-role')) $('summary-role').textContent = data.role || 'Role';
+    if($('summary-avatar') && data.name) $('summary-avatar').textContent = data.name.charAt(0).toUpperCase();
+}
+
+export function getPassportData() {
+    return JSON.parse(localStorage.getItem('mindwave_passport') || 'null');
+}
+
+function savePassportData(data) {
+    localStorage.setItem('mindwave_passport', JSON.stringify(data));
 }
 
 export function getPassportText() {
-  return localStorage.getItem('kairo_passport_text') || '';
+    return localStorage.getItem('mindwave_passport_text') || '';
 }
 
-export function savePassportText(text) {
-  localStorage.setItem('kairo_passport_text', text);
+function renderPassportText() {
+    const el = $('passport-output-text');
+    if(el) {
+        el.textContent = getPassportText() || 'Fill out the form and generate your passport block.';
+    }
 }
 
-export function getPassportFormData() {
-  const tools = [...document.querySelectorAll('input[name="ai-tools"]:checked')].map(el => el.value);
-  return {
-    name:    document.getElementById('passport-name')?.value.trim()  || '',
-    age:     document.getElementById('passport-age')?.value.trim()   || '',
-    role:    document.getElementById('passport-role')?.value.trim()  || '',
-    goals:   document.getElementById('passport-goals')?.value.trim() || '',
-    style:   document.getElementById('passport-style')?.value        || '',
-    tools,
-    context: document.getElementById('passport-context')?.value.trim() || ''
-  };
-}
-
-export function populateForm(data) {
-  if (!data) return;
-  if (data.name)  document.getElementById('passport-name').value  = data.name;
-  if (data.age)   document.getElementById('passport-age').value   = data.age;
-  if (data.role)  document.getElementById('passport-role').value  = data.role;
-  if (data.goals) document.getElementById('passport-goals').value = data.goals;
-  if (data.style) document.getElementById('passport-style').value = data.style;
-  if (data.context) document.getElementById('passport-context').value = data.context;
-  if (data.tools?.length) {
-    document.querySelectorAll('input[name="ai-tools"]').forEach(cb => {
-      cb.checked = data.tools.includes(cb.value);
+async function generatePassportAPI(data) {
+    const response = await fetch('/api/_ai-waterfall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'passport', data })
     });
-  }
-}
-
-// Session Sync History
-const SYNC_HISTORY_KEY = 'kairo_sync_history';
-
-export function getSyncHistory() {
-  try {
-    const raw = localStorage.getItem(SYNC_HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-export function saveSyncHistoryItem(text) {
-  const history = getSyncHistory();
-  history.unshift({
-    id: Date.now().toString(),
-    time: new Date().toLocaleString(),
-    text: text
-  });
-  // Keep only last 20
-  if (history.length > 20) history.length = 20;
-  localStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+    return result.text;
 }

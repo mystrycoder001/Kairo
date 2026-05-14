@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing — Mindwave</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans">
+
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#222222]">
+        <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-black font-bold">waves</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Mindwave</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Home</a>
+                <a href="dashboard.html" class="text-sm font-medium bg-white text-black px-5 py-2.5 rounded-full hover:scale-105 transition-transform">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 pt-32 pb-20">
+        <div class="max-w-6xl mx-auto px-6 space-y-16">
+            
+            <div class="text-center space-y-4">
+                <h1 class="text-5xl md:text-6xl font-bold tracking-tight">Simple, transparent pricing.</h1>
+                <p class="text-xl text-gray-400">Unlock your memory across every AI tool.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Free Trial -->
+                <div class="bg-[#111111] border border-[#222222] rounded-3xl p-8 flex flex-col glassmorphism">
+                    <div class="space-y-4 mb-8">
+                        <h3 class="text-2xl font-bold">Free Trial</h3>
+                        <div class="text-4xl font-extrabold">$0<span class="text-lg text-gray-500 font-normal">/14 days</span></div>
+                        <p class="text-sm text-gray-400">Test the waters.</p>
+                    </div>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 20 Prompts / day</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 AI Passport Profile</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 5 Session Syncs</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Share with Watermark</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 Memory Mode</li>
+                    </ul>
+                    <a href="onboarding.html" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Start Free Trial</a>
+                </div>
+
+                <!-- Pro -->
+                <div class="bg-black border-2 border-white rounded-3xl p-8 flex flex-col relative transform scale-105 shadow-2xl z-10">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold uppercase tracking-widest py-1 px-4 rounded-full">Most Popular</div>
+                    <div class="space-y-4 mb-8">
+                        <h3 class="text-2xl font-bold">Pro</h3>
+                        <div class="text-4xl font-extrabold">$4.99<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                        <p class="text-sm text-gray-400">For daily AI users.</p>
+                    </div>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Prompts</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 3 AI Passport Profiles</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Session Syncs</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Share without Watermark</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> All Memory Modes</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> History: 50 Prompts</li>
+                    </ul>
+                    <a href="#" class="mt-8 block text-center bg-white text-black font-bold py-4 rounded-xl hover:scale-105 transition-transform">Upgrade to Pro</a>
+                </div>
+
+                <!-- Ultra -->
+                <div class="bg-[#111111] border border-[#222222] rounded-3xl p-8 flex flex-col glassmorphism">
+                    <div class="space-y-4 mb-8">
+                        <h3 class="text-2xl font-bold">Ultra</h3>
+                        <div class="text-4xl font-extrabold">$9.99<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                        <p class="text-sm text-gray-400">For power users & teams.</p>
+                    </div>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Everything in Pro</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Profiles</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Team Sharing (5 members)</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> API Access</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited History</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Priority AI Processing</li>
+                    </ul>
+                    <a href="#" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Upgrade to Ultra</a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-[#222222] bg-black py-12 mt-auto">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-white">waves</span>
+                <span class="font-bold">Mindwave</span>
+            </div>
+            <p class="text-sm text-gray-500">Built with ❤️ for AI users everywhere.</p>
+            <div class="flex items-center gap-6 text-sm text-gray-400">
+                <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

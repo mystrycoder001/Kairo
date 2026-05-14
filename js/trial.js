@@ -1,34 +1,50 @@
-// js/trial.js — 14-Day Free Trial Tracker
+// js/trial.js — 14-Day Free Trial Logic
+import { $, showToast } from './app.js';
 
 const TRIAL_DAYS = 14;
-const TRIAL_KEY = 'kairo_trial_start';
 
-export function checkTrialStatus() {
-  let startStr = localStorage.getItem(TRIAL_KEY);
-  if (!startStr) {
-    startStr = new Date().toISOString();
-    localStorage.setItem(TRIAL_KEY, startStr);
-  }
+export function updateTrialUI() {
+    const trialStartStr = localStorage.getItem('mindwave_trial_start');
+    const banner = $('trial-banner');
+    const daysLeftSpan = $('trial-days-left');
+    
+    if (!trialStartStr) return; // Not started yet
 
-  const startDate = new Date(startStr);
-  const now = new Date();
-  
-  const diffTime = Math.abs(now - startDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-  
-  return {
-    isExpired: diffDays > TRIAL_DAYS,
-    daysLeft: Math.max(0, TRIAL_DAYS - diffDays)
-  };
+    const trialStart = parseInt(trialStartStr, 10);
+    const now = Date.now();
+    const msPassed = now - trialStart;
+    const daysPassed = Math.floor(msPassed / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.max(0, TRIAL_DAYS - daysPassed);
+
+    if (banner && daysLeftSpan) {
+        banner.classList.remove('hidden');
+        daysLeftSpan.textContent = daysLeft;
+        
+        if (daysLeft <= 0) {
+            banner.innerHTML = `⚠️ 14-Day Free Trial Expired. <a href="pricing.html" class="underline hover:text-white font-extrabold">Upgrade to Pro to restore access</a>`;
+            banner.classList.replace('bg-yellow-500', 'bg-red-600');
+            banner.classList.replace('text-black', 'text-white');
+        } else if (daysLeft <= 3) {
+            banner.classList.replace('bg-yellow-500', 'bg-orange-500');
+        }
+    }
 }
 
-export function enforceTrial(modalEl) {
-  const status = checkTrialStatus();
-  if (status.isExpired) {
-    if (modalEl) {
-      modalEl.classList.remove('hidden');
+export function enforceTrial() {
+    const trialStartStr = localStorage.getItem('mindwave_trial_start');
+    if (!trialStartStr) return false;
+
+    const trialStart = parseInt(trialStartStr, 10);
+    const now = Date.now();
+    const msPassed = now - trialStart;
+    const daysPassed = Math.floor(msPassed / (1000 * 60 * 60 * 24));
+    
+    if (daysPassed >= TRIAL_DAYS) {
+        showToast('⚠️ Trial expired. Please upgrade.');
+        // Optionally redirect to pricing
+        window.location.href = 'pricing.html';
+        return true; // Enforced
     }
-    return true; // Trial expired
-  }
-  return false; // Trial active
+
+    return false; // Not enforced
 }

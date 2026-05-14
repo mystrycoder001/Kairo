@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mindwave - Session Sync</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#c8c6c5",
+                    "tertiary": "#ffffff",
+                    "secondary-container": "#4a4949",
+                    "tertiary-fixed": "#e5e2e1",
+                    "tertiary-container": "#e5e2e1",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-background": "#e2e2e2",
+                    "outline": "#8e9192",
+                    "secondary-fixed": "#e5e2e1",
+                    "surface-dim": "#131313",
+                    "surface": "#131313",
+                    "on-secondary-fixed-variant": "#474646",
+                    "primary": "#ffffff",
+                    "on-secondary": "#313030",
+                    "on-primary-fixed-variant": "#454747",
+                    "on-tertiary-container": "#656464",
+                    "inverse-on-surface": "#303030",
+                    "inverse-surface": "#e2e2e2",
+                    "on-surface-variant": "#c4c7c8",
+                    "background": "#131313",
+                    "on-primary-container": "#636565",
+                    "surface-container-low": "#1b1b1b",
+                    "surface-container-highest": "#353535",
+                    "on-primary-fixed": "#1a1c1c",
+                    "primary-container": "#e2e2e2",
+                    "primary-fixed-dim": "#c6c6c7",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "inverse-primary": "#5d5f5f",
+                    "on-primary": "#2f3131",
+                    "surface-container-lowest": "#0e0e0e",
+                    "error": "#ffb4ab",
+                    "on-tertiary": "#303030",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "on-secondary-container": "#bab8b7",
+                    "error-container": "#93000a",
+                    "outline-variant": "#444748",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-variant": "#353535",
+                    "on-error": "#690005",
+                    "on-surface": "#e2e2e2",
+                    "surface-tint": "#c6c6c7",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-container": "#1f1f1f",
+                    "surface-bright": "#393939"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "section-gap": "80px",
+                    "gutter": "24px",
+                    "margin-desktop": "40px",
+                    "margin-mobile": "20px",
+                    "container-max": "1200px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e2e2e2;
+        }
+        .glass-panel {
+            background: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid #222222;
+        }
+        .void-bg {
+            background-color: #000000;
+        }
+        .subtle-border {
+            border: 1px solid #222222;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="antialiased">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-6 space-y-8 bg-surface-container-lowest/90 backdrop-blur-2xl border-r border-outline-variant/10 w-64 z-50">
+<div class="flex flex-col space-y-1">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Mindwave</h1>
+<p class="font-body-md text-label-sm text-on-surface-variant">Think once.</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-label-md text-label-md">AI Passport</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-tertiary-container/10 text-primary border-r-2 border-primary transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined">sync</span>
+<span class="font-label-md text-label-md">Session Sync</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/20 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">mic</span>
+<span class="font-label-md text-label-md">Voice Record</span>
+</a>
+</nav>
+<div class="space-y-4 pt-6 border-t border-outline-variant/10">
+<button class="w-full py-3 px-4 bg-primary text-on-primary font-bold rounded-lg text-label-md hover:opacity-90 transition-opacity">
+                Upgrade to Pro
+            </button>
+<div class="space-y-1">
+<a class="flex items-center space-x-3 px-4 py-2 rounded-lg text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-2 rounded-lg text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Top AppBar -->
+<header class="fixed top-0 left-0 w-full flex justify-between items-center px-margin-desktop py-4 bg-background/80 backdrop-blur-xl border-b border-outline-variant/20 z-40 pl-72">
+<div class="flex items-center space-x-4">
+<h2 class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">Session Sync</h2>
+</div>
+<div class="flex items-center space-x-6">
+<button class="text-primary font-bold font-label-md text-label-md hover:bg-surface-container-high/50 px-4 py-2 rounded-lg transition-colors duration-300">
+                Start Free Trial
+            </button>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">account_circle</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 min-h-screen px-margin-desktop pb-20">
+<div class="max-w-4xl mx-auto space-y-gutter">
+<!-- Header Section -->
+<div class="space-y-2">
+<h3 class="font-headline-lg text-headline-lg text-primary tracking-tight">Continue From Here</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    Paste your previous session transcript or raw notes below. Mindwave will distill the essence and generate a persistent context block for your next AI interaction.
+                </p>
+</div>
+<!-- Interaction Area -->
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col h-[500px]">
+<div class="flex items-center justify-between px-6 py-3 border-b border-[#222222] bg-surface-container-lowest/50">
+<div class="flex space-x-2">
+<div class="w-3 h-3 rounded-full bg-[#222222]"></div>
+<div class="w-3 h-3 rounded-full bg-[#222222]"></div>
+<div class="w-3 h-3 rounded-full bg-[#222222]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Input Buffer</span>
+</div>
+<textarea class="flex-1 w-full bg-transparent p-8 text-primary font-body-md text-body-md border-none focus:ring-0 resize-none placeholder:text-[#555555]" placeholder="Paste session history, ideas, or complex threads here..."></textarea>
+<div class="p-6 bg-surface-container-lowest/50 border-t border-[#222222] flex justify-end">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-bold text-label-md hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center space-x-2">
+<span>Generate Context Block</span>
+<span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+</button>
+</div>
+</div>
+<!-- Bento Grid Preview Area -->
+<div class="grid grid-cols-12 gap-gutter pt-8">
+<div class="col-span-8">
+<div class="glass-panel rounded-xl p-8 space-y-6">
+<div class="flex items-center justify-between">
+<h4 class="font-headline-md text-headline-md text-primary">Output Preview</h4>
+<div class="flex space-x-2">
+<button class="p-2 rounded-lg border border-[#222222] hover:bg-[#111111] transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">content_copy</span>
+</button>
+<button class="p-2 rounded-lg border border-[#222222] hover:bg-[#111111] transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">download</span>
+</button>
+</div>
+</div>
+<div class="space-y-4 font-body-md text-body-md text-on-surface-variant leading-relaxed">
+<p class="border-l-2 border-primary pl-4 py-1 italic text-primary">Generated context blocks will appear here after processing. They are optimized for LLM token efficiency and continuity.</p>
+<div class="h-4 w-3/4 bg-[#111111] rounded"></div>
+<div class="h-4 w-full bg-[#111111] rounded"></div>
+<div class="h-4 w-5/6 bg-[#111111] rounded"></div>
+</div>
+</div>
+</div>
+<div class="col-span-4 space-y-gutter">
+<div class="glass-panel rounded-xl p-6">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-symbols-outlined text-primary">history</span>
+<span class="font-label-md text-label-md text-primary">Recent Syncs</span>
+</div>
+<ul class="space-y-4">
+<li class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Project Phoenix Strateg...</span>
+<span class="text-[10px] text-[#555555] uppercase font-bold tracking-widest">2 hours ago</span>
+</li>
+<li class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">UI Architecture Refactor</span>
+<span class="text-[10px] text-[#555555] uppercase font-bold tracking-widest">Yesterday</span>
+</li>
+</ul>
+</div>
+<div class="relative rounded-xl overflow-hidden h-40 border border-[#222222]">
+<img class="w-full h-full object-cover grayscale opacity-50" data-alt="An abstract, high-contrast digital render of flowing monochromatic waves resembling data streams. The aesthetic is deep black and glowing white, capturing a sophisticated and architectural mood that aligns with the premium minimalist dark mode interface of Mindwave. Soft, diffused lighting highlights the fluid geometry." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAeJB3_ZKUAOOpJ8JoJh_8F5d4Jhzvou4XuKzdnFtj8zQQw0NappMjhftx2ed56UtHX71aF20fgpgoE3YrqV7fImy63c9084pQWnp_8025_j6zMReFd8flk0RRHcADS0qXT-yElbIzE2fQV5HcxGWYqna-UqzjjMRkkx28mLHmwXOOBULhFp2FlBaDqYPj8XEQXtpoIVYwIOAVXidkrKWE69Ay7C0YKpdrYHfu16h5RYH6d_I9qBv_6xtVZGwlS2omp_GaUmtyv3Fw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black to-transparent p-4 flex items-end">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest opacity-80">Synchronized Engine v2.4</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Element -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="flex items-center space-x-3 bg-surface-container-high border border-[#333333] px-6 py-4 rounded-full shadow-2xl hover:bg-surface-container-highest transition-all active:scale-95">
+<span class="material-symbols-outlined text-primary">chat_bubble</span>
+<span class="font-label-md text-label-md text-primary">Ask Mindwave</span>
+</button>
+</div>
+</body></html>

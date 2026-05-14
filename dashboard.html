@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Mindwave</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Driver.js for App Tour -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
+    <style>
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-right: 2px solid white;
+        }
+    </style>
+</head>
+<body class="bg-black text-white h-screen flex flex-col font-sans overflow-hidden">
+
+    <!-- Trial Banner -->
+    <div id="trial-banner" class="bg-yellow-500 text-black text-xs font-bold uppercase tracking-widest py-1.5 text-center hidden">
+        ⚠️ 14-Day Free Trial: <span id="trial-days-left">14</span> days remaining. <a href="pricing.html" class="underline hover:text-white">Upgrade to Pro</a>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-20 lg:w-72 border-r border-[#222222] bg-[#0a0a0a] flex flex-col z-40 relative">
+            <div class="p-6 flex items-center gap-3 border-b border-[#222222]">
+                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-black font-bold text-lg">waves</span>
+                </div>
+                <span class="hidden lg:block text-lg font-bold tracking-tight">Mindwave</span>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <button data-nav="overview" class="sidebar-item active w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-dashboard">
+                    <span class="material-symbols-outlined text-gray-400">space_dashboard</span>
+                    <span class="hidden lg:block font-medium text-sm">Dashboard</span>
+                </button>
+                <button data-nav="voice" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-voice">
+                    <span class="material-symbols-outlined text-gray-400">mic</span>
+                    <span class="hidden lg:block font-medium text-sm">Voice Capture</span>
+                </button>
+                <button data-nav="passport" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-passport">
+                    <span class="material-symbols-outlined text-gray-400">badge</span>
+                    <span class="hidden lg:block font-medium text-sm">AI Passport</span>
+                </button>
+                <button data-nav="sync" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-sync">
+                    <span class="material-symbols-outlined text-gray-400">sync_alt</span>
+                    <span class="hidden lg:block font-medium text-sm">Session Sync</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-[#222222]">
+                <div class="bg-black border border-[#222222] p-3 rounded-xl flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#222222] rounded-full flex items-center justify-center font-bold" id="sidebar-avatar">U</div>
+                    <div class="hidden lg:block flex-1 min-w-0">
+                        <p class="text-sm font-bold truncate" id="sidebar-name">User</p>
+                        <p class="text-[10px] text-gray-500 uppercase">Trial Tier</p>
+                    </div>
+                    <button id="logout-btn" class="hidden lg:block text-gray-500 hover:text-white">
+                        <span class="material-symbols-outlined text-sm">logout</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 bg-black overflow-y-auto relative custom-scrollbar">
+            
+            <!-- OVERVIEW SCREEN -->
+            <section id="screen-overview" class="screen active p-8 lg:p-12 space-y-8 max-w-6xl mx-auto">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight">Welcome back.</h1>
+                        <p class="text-gray-400">Your AI context is synced and ready.</p>
+                    </div>
+                    <button data-nav="voice" class="bg-white text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-transform flex items-center gap-2 shadow-lg">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        New Prompt
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Memory Modes Switcher -->
+                    <div class="lg:col-span-2 bg-[#111111] border border-[#222222] rounded-2xl p-6 glassmorphism" id="tour-modes">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Active Memory Mode</h3>
+                        <div class="flex flex-wrap gap-3" id="modes-container">
+                            <!-- Modes injected by JS -->
+                        </div>
+                        <p class="text-xs text-gray-400 mt-4"><span class="text-white font-medium">Tip:</span> Each mode isolates context and passport injection.</p>
+                    </div>
+
+                    <!-- AI Passport Summary -->
+                    <div class="bg-[#111111] border border-[#222222] rounded-2xl p-6 glassmorphism flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#222222] rounded-full flex items-center justify-center font-bold text-xl mb-3" id="summary-avatar">U</div>
+                        <h4 class="font-bold" id="summary-name">User Identity</h4>
+                        <p class="text-xs text-gray-400 mb-4" id="summary-role">Role</p>
+                        <button data-nav="passport" class="w-full text-xs font-bold bg-[#222222] hover:bg-[#333333] transition-colors py-2 rounded-lg">Edit Passport</button>
+                    </div>
+                </div>
+
+                <!-- Recent History -->
+                <div class="space-y-4 pt-6">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Recent Prompts History</h3>
+                    <div class="bg-[#111111] border border-[#222222] rounded-2xl p-6 min-h-[200px]" id="recent-history-container">
+                        <p class="text-gray-500 text-sm text-center pt-10 italic">No prompts generated yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VOICE CAPTURE SCREEN -->
+            <section id="screen-voice" class="screen p-8 lg:p-12 max-w-4xl mx-auto space-y-12">
+                <div class="text-center space-y-2">
+                    <h1 class="text-3xl font-bold tracking-tight">Voice Capture</h1>
+                    <p class="text-gray-400">Speak naturally. Groq Whisper will perfectly transcribe it.</p>
+                </div>
+
+                <div class="flex flex-col items-center space-y-8 bg-[#111111] border border-[#222222] rounded-3xl p-12 glassmorphism">
+                    <div id="mic-container" class="relative group">
+                        <div id="mic-rings" class="absolute inset-0 rounded-full bg-white/10 scale-100 group-hover:scale-110 transition-transform"></div>
+                        <button id="mic-btn" class="relative w-32 h-32 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-10 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                            <span id="mic-icon" class="material-symbols-outlined text-black text-5xl">mic</span>
+                        </button>
+                    </div>
+                    
+                    <div id="recording-timer" class="text-2xl font-mono tracking-widest">00:00</div>
+                    
+                    <div class="flex gap-4">
+                        <button id="stop-btn" class="bg-red-500/20 text-red-500 border border-red-500/30 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2 disabled:opacity-30" disabled>
+                            <span class="material-symbols-outlined text-sm">stop</span> Stop
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2 items-center">
+                        <span id="recording-dot" class="w-2 h-2 rounded-full bg-red-500 animate-pulse hidden"></span>
+                        <span id="status-text" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ready to record</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <textarea id="transcript-display" class="w-full h-32 bg-[#111111] border border-[#222222] rounded-xl p-4 text-gray-300 focus:border-white focus:ring-0 outline-none resize-none" placeholder="Transcript will appear here..."></textarea>
+                    
+                    <button id="generate-prompt-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform flex justify-center items-center gap-2 disabled:opacity-50">
+                        <span>Generate Perfect Prompt</span>
+                        <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                        <div id="generate-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- PASSPORT SCREEN -->
+            <section id="screen-passport" class="screen p-8 lg:p-12 max-w-5xl mx-auto space-y-8">
+                <div class="flex justify-between items-end">
+                    <div class="space-y-2">
+                        <h1 class="text-3xl font-bold tracking-tight">AI Passport</h1>
+                        <p class="text-gray-400">Manage your identity block.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="export-passport-btn" class="text-xs font-bold px-4 py-2 border border-[#222222] rounded-lg hover:bg-white/5 transition-colors">Export .txt</button>
+                        <button id="copy-passport-btn" class="text-xs font-bold px-4 py-2 border border-[#222222] rounded-lg hover:bg-white/5 transition-colors">Copy Block</button>
+                        <button id="share-passport-btn" class="text-xs font-bold px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors">Share Image</button>
+                    </div>
+                </div>
+
+                <div class="bg-[#111111] border border-[#222222] rounded-2xl p-8 glassmorphism space-y-6">
+                    <form id="passport-edit-form" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Name</label>
+                                <input type="text" id="edit-name" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Role</label>
+                                <input type="text" id="edit-role" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Goals</label>
+                            <textarea id="edit-goals" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white h-24"></textarea>
+                        </div>
+                        <button type="button" id="save-passport-btn" class="bg-white text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-transform text-sm">Save Changes & Regenerate</button>
+                    </form>
+                    
+                    <div class="pt-6 border-t border-[#222222]">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Generated Block</h4>
+                        <div id="passport-output-text" class="bg-black border border-[#222222] rounded-lg p-4 font-mono text-sm text-gray-400 whitespace-pre-wrap min-h-[100px]"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SESSION SYNC SCREEN -->
+            <section id="screen-sync" class="screen p-8 lg:p-12 max-w-5xl mx-auto space-y-8">
+                <div class="space-y-2">
+                    <h1 class="text-3xl font-bold tracking-tight">Session Sync</h1>
+                    <p class="text-gray-400">Paste history from Claude/ChatGPT to carry context forward.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <textarea id="sync-input" class="w-full h-64 bg-[#111111] border border-[#222222] rounded-2xl p-6 text-sm outline-none focus:border-white resize-none" placeholder="Paste entire conversation history here..."></textarea>
+                        <button id="run-sync-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform flex justify-center items-center gap-2">
+                            <span>Extract Context Block</span>
+                            <div id="sync-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                        </button>
+                    </div>
+
+                    <div class="bg-[#111111] border border-[#222222] rounded-2xl p-6 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Condensed Context</h4>
+                            <button id="copy-sync-btn" class="text-xs font-bold text-white hover:text-gray-400">Copy</button>
+                        </div>
+                        <div id="sync-output" class="flex-1 bg-black border border-[#222222] rounded-xl p-4 font-mono text-sm text-gray-400 whitespace-pre-wrap overflow-y-auto"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OUTPUT SCREEN (After Generation) -->
+            <section id="screen-output" class="screen p-8 lg:p-12 max-w-4xl mx-auto space-y-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold tracking-tight">Generated Prompt</h1>
+                    <div class="flex gap-2">
+                        <button id="copy-final-btn" class="bg-white text-black font-bold px-6 py-2 rounded-xl hover:scale-105 transition-transform flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">content_copy</span> Copy Full Prompt
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-[#111111] border border-[#222222] rounded-2xl p-8 glassmorphism space-y-6">
+                    <div class="flex items-center gap-4 bg-black p-3 rounded-lg border border-[#222222]">
+                        <input type="checkbox" id="inject-passport" checked class="w-4 h-4 accent-white bg-black border-[#222222]">
+                        <label for="inject-passport" class="text-sm font-bold">Inject AI Passport Context</label>
+                    </div>
+
+                    <div id="final-prompt-display" class="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-black p-6 rounded-xl border border-[#222222] min-h-[200px]"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl transition-all duration-300 transform translate-y-20 opacity-0"></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
