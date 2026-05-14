@@ -1,14 +1,7 @@
-export const config = {
-    api: {
-        bodyParser: false, // Disabling Vercel's default parser for formidable
-    },
-};
+const { IncomingForm } = require('formidable');
+const fs = require('fs');
 
-import { IncomingForm } from 'formidable';
-import fs from 'fs';
-
-export default async function handler(req, res) {
-    // Force JSON response
+module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
     if (req.method !== 'POST') {
@@ -17,16 +10,12 @@ export default async function handler(req, res) {
 
     if (!process.env.GROQ_API_KEY) {
         console.error('GROQ_API_KEY is missing');
-        return res.status(500).json({ 
-            error: 'Transcription failed',
-            text: '' 
-        });
+        return res.status(500).json({ error: 'Transcription service unavailable', text: '' });
     }
 
     try {
         const form = new IncomingForm();
-        
-        // Wrap form.parse in a Promise to handle it with async/await properly
+
         const data = await new Promise((resolve, reject) => {
             form.parse(req, (err, fields, files) => {
                 if (err) return reject(err);
@@ -38,11 +27,11 @@ export default async function handler(req, res) {
         if (!audioFile) {
             return res.status(400).json({ error: 'No audio file provided', text: '' });
         }
-        
+
         const file = Array.isArray(audioFile) ? audioFile[0] : audioFile;
         const formData = new FormData();
         const fileData = fs.readFileSync(file.filepath);
-        
+
         const blob = new Blob([fileData], { type: file.mimetype || 'audio/webm' });
         formData.append('file', blob, file.originalFilename || 'audio.webm');
         formData.append('model', 'whisper-large-v3');
@@ -56,22 +45,22 @@ export default async function handler(req, res) {
         });
 
         const groqData = await groqRes.json();
-        
+
         if (!groqRes.ok) {
             console.error('Groq API Error:', groqData);
-            return res.status(500).json({ 
-                error: 'Transcription failed',
-                text: '' 
-            });
+            return res.status(500).json({ error: 'Transcription failed', text: '' });
         }
 
         return res.status(200).json({ text: groqData.text });
 
     } catch (e) {
         console.error('Internal Server Error:', e);
-        return res.status(500).json({ 
-            error: 'Transcription failed',
-            text: '' 
-        });
+        return res.status(500).json({ error: 'Transcription failed', text: '' });
     }
-}
+};
+
+module.exports.config = {
+    api: {
+        bodyParser: false,
+    },
+};
