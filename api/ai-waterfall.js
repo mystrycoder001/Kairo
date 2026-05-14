@@ -1,7 +1,8 @@
-// api/_ai-waterfall.js
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+// api/ai-waterfall.js
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
+    res.setHeader('Content-Type', 'application/json');
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const { action, data, mode } = req.body;
