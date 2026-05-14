@@ -98,6 +98,12 @@ export function initVoice(onComplete) {
                 body: formData
             });
             
+            // First check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("API returned non-JSON response");
+            }
+
             const data = await response.json();
             if(!response.ok) throw new Error(data.error || 'Transcription failed');
 
@@ -105,8 +111,38 @@ export function initVoice(onComplete) {
             statusText.textContent = 'Transcription complete';
             if(generateBtn) generateBtn.disabled = false;
         } catch (err) {
-            showToast(`❌ ${err.message}`);
-            statusText.textContent = 'Error';
+            console.error('Groq Transcription Failed, Retrying with Web Speech API:', err);
+            statusText.textContent = 'Retrying...';
+            showToast('🔄 Groq busy. Falling back to local AI...');
+            
+            // FALLBACK: Use Web Speech API for local transcription
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) throw new Error('Web Speech API not supported');
+
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    transcriptDisplay.value = transcript;
+                    statusText.textContent = 'Transcription complete (Local fallback)';
+                    if(generateBtn) generateBtn.disabled = false;
+                };
+
+                recognition.onerror = () => {
+                    statusText.textContent = 'Error';
+                    showToast('❌ Local transcription also failed.');
+                };
+
+                recognition.start();
+                showToast('🎤 Speak now for local backup...');
+            } catch (fallbackErr) {
+                showToast('❌ Transcription unavailable in this browser.');
+                statusText.textContent = 'Error';
+            }
         } finally {
             micIcon.classList.remove('animate-spin');
         }
