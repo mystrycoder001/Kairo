@@ -1,40 +1,120 @@
-// js/auth.js — Vanilla Supabase Auth Integration
-import { showToast } from './app.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-// Will be hydrated if supabase library is loaded, otherwise we use local storage mocks for demo
-let supabase = null;
+const SUPABASE_URL = 'https://ibsngqwkaasswscqnlhl.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_CXDhFswPYDJPIgEFisN8pQ_hiptOkMT'
 
-export async function initAuth() {
-    try {
-        // Assume Supabase client is loaded via CDN in index.html in a real prod env
-        // e.g., <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-        if (window.supabase) {
-            const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'; 
-            const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-    } catch (e) {
-        console.warn('Supabase not fully configured. Using local persistence.');
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// Google Sign In
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + '/dashboard.html',
+      queryParams: {
+        prompt: 'select_account'
+      }
     }
+  })
+  if (error) throw error
+  return data
 }
 
-export function getCurrentUser() {
-    // Check local storage first
-    const localUser = localStorage.getItem('mindwave_session');
-    if (localUser) return JSON.parse(localUser);
-
-    // If supabase was initialized, check session
-    if (supabase) {
-        // Sync logic would go here
-    }
-
-    return null;
+// Email Sign In  
+export async function signInWithEmail(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email, password
+  })
+  if (error) throw error
+  if (data.user) {
+    await initUserProfile(data.user)
+    window.location.href = '/dashboard.html'
+  }
+  return data.user
 }
 
+// Email Sign Up
+export async function signUpWithEmail(email, password) {
+  const { data, error } = await supabase.auth.signUp({
+    email, password
+  })
+  if (error) throw error
+  if (data.user) {
+    await initUserProfile(data.user)
+    window.location.href = '/onboarding.html'
+  }
+  return data.user
+}
+
+// Initialize user profile
+export async function initUserProfile(user) {
+  const { data: existing } = await supabase.from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .single()
+  
+  if (!existing) {
+    await supabase
+    .from('profiles')
+    .insert({
+      id: user.id,
+      email: user.email,
+      trial_start_date: new Date(),
+      trial_end_date: new Date(
+        Date.now() + 14*24*60*60*1000
+      ),
+      plan_tier: 'trial'
+    })
+  }
+}
+
+// Check auth state on every page
+export async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (!session) {
+    window.location.href = '/index.html'
+    return null
+  }
+  
+  return session.user
+}
+
+// Get current session user without redirecting
+export async function getCurrentUser() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session ? session.user : null
+}
+
+// Check trial status
+export async function checkTrial(userId) {
+  const { data: profile } = await supabase.from('profiles')
+  .select('plan_tier, trial_end_date')
+  .eq('id', userId)
+  .single()
+  
+  if (!profile) return 'trial'
+
+  const now = new Date()
+  const trialEnd = new Date(profile.trial_end_date)
+  
+  if (now > trialEnd && profile.plan_tier === 'trial') {
+    await supabase
+    .from('profiles')
+    .update({ plan_tier: 'expired' })
+    .eq('id', userId)
+    return 'expired'
+  }
+  
+  return profile.plan_tier
+}
+
+// Logout
 export async function logout() {
-    localStorage.removeItem('mindwave_session');
-    localStorage.removeItem('mindwave_onboarding_complete');
-    if (supabase) {
-        await supabase.auth.signOut();
-    }
+    const { error } = await supabase.auth.signOut()
+    if (error) console.error('Logout error:', error)
+    window.location.href = '/index.html'
 }
+
+// Export supabase client for other modules
+export { supabase }

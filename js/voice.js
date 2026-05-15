@@ -23,7 +23,7 @@ export function initVoice(onComplete) {
     const hasVoiceSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!SpeechRecognition;
 
     if (!hasVoiceSupport) {
-        statusText.textContent = "Please use Chrome for voice recording";
+        if (statusText) statusText.textContent = "Please use Chrome for voice recording";
         if (micBtn) micBtn.disabled = true;
         if (micIcon) micIcon.style.opacity = '0.3';
     }

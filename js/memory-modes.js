@@ -1,22 +1,37 @@
-// js/memory-modes.js — Memory Modes Switcher Logic
+// js/memory-modes.js — Memory Modes Switcher Logic with Supabase
 import { $ } from './app.js';
+import { supabase, getCurrentUser } from './auth.js';
 
-export function initMemoryModes() {
+export async function initMemoryModes() {
     const container = $('modes-container');
     if(!container) return;
 
-    // Load available modes from what was selected in Onboarding
-    const savedModes = JSON.parse(localStorage.getItem('mindwave_modes') || '["Default"]');
-    if(savedModes.length === 0) savedModes.push('Default');
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    // Load available modes from Supabase
+    let { data: savedModes } = await supabase
+        .from('memory_modes')
+        .select('mode_name')
+        .eq('user_id', user.id);
+
+    let modes = savedModes?.map(m => m.mode_name) || [];
+    if(modes.length === 0) {
+        modes = ["Default", "Professional", "Creative"]; // Default set
+        // Insert defaults if none exist
+        await supabase.from('memory_modes').insert(
+            modes.map(m => ({ user_id: user.id, mode_name: m }))
+        );
+    }
 
     // Get active mode
     let activeMode = localStorage.getItem('mindwave_active_mode');
-    if (!activeMode || !savedModes.includes(activeMode)) {
-        activeMode = savedModes[0];
+    if (!activeMode || !modes.includes(activeMode)) {
+        activeMode = modes[0];
         localStorage.setItem('mindwave_active_mode', activeMode);
     }
 
-    renderModes(container, savedModes, activeMode);
+    renderModes(container, modes, activeMode);
 }
 
 function renderModes(container, modes, activeMode) {

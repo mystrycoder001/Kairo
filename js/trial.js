@@ -1,50 +1,81 @@
-// js/trial.js — 14-Day Free Trial Logic
+// js/trial.js — 14-Day Free Trial Logic using Supabase
 import { $, showToast } from './app.js';
+import { supabase, getCurrentUser } from './auth.js';
 
-const TRIAL_DAYS = 14;
+export async function updateTrialUI() {
+    const user = await getCurrentUser();
+    if (!user) return;
 
-export function updateTrialUI() {
-    const trialStartStr = localStorage.getItem('mindwave_trial_start');
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('trial_start_date, trial_end_date, plan_tier')
+        .eq('id', user.id)
+        .single();
+
+    if (error || !profile) return;
+
     const banner = $('trial-banner');
     const daysLeftSpan = $('trial-days-left');
+    const progressBar = $('trial-progress-bar');
+    const progressText = $('trial-progress-text');
     
-    if (!trialStartStr) return; // Not started yet
-
-    const trialStart = parseInt(trialStartStr, 10);
-    const now = Date.now();
+    const trialEnd = new Date(profile.trial_end_date);
+    const now = new Date();
+    
+    // Calculate days left
+    const diffTime = trialEnd - now;
+    const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    
+    // Calculate progress (assuming 14 days)
+    const totalTrialMs = 14 * 24 * 60 * 60 * 1000;
+    const trialStart = profile.trial_start_date ? new Date(profile.trial_start_date) : new Date(trialEnd.getTime() - totalTrialMs);
     const msPassed = now - trialStart;
-    const daysPassed = Math.floor(msPassed / (1000 * 60 * 60 * 24));
-    const daysLeft = Math.max(0, TRIAL_DAYS - daysPassed);
+    const progressPercent = Math.max(0, Math.min(100, (msPassed / totalTrialMs) * 100));
 
-    if (banner && daysLeftSpan) {
+    // Update Banner
+    if (banner) {
+        if (daysLeftSpan) daysLeftSpan.textContent = daysLeft;
         banner.classList.remove('hidden');
-        daysLeftSpan.textContent = daysLeft;
         
-        if (daysLeft <= 0) {
-            banner.innerHTML = `⚠️ 14-Day Free Trial Expired. <a href="pricing.html" class="underline hover:text-white font-extrabold">Upgrade to Pro to restore access</a>`;
-            banner.classList.replace('bg-yellow-500', 'bg-red-600');
-            banner.classList.replace('text-black', 'text-white');
-        } else if (daysLeft <= 3) {
-            banner.classList.replace('bg-yellow-500', 'bg-orange-500');
+        if (daysLeft <= 0 || profile.plan_tier === 'expired') {
+            banner.innerHTML = `⚠️ Trial Expired. <a href="pricing.html" class="underline hover:text-white font-extrabold">Upgrade to Pro</a>`;
+            banner.classList.add('bg-red-600', 'text-white');
+            banner.classList.remove('bg-yellow-500', 'text-black');
+        } else {
+            banner.classList.add('bg-yellow-500', 'text-black');
+            banner.classList.remove('bg-red-600', 'text-white');
         }
+    }
+
+    // Update Progress Section (Sidebar)
+    if (progressBar) {
+        progressBar.style.width = `${progressPercent}%`;
+    }
+    if (progressText) {
+        progressText.textContent = daysLeft > 0 ? `${daysLeft} days left` : "Trial expired";
     }
 }
 
-export function enforceTrial() {
-    const trialStartStr = localStorage.getItem('mindwave_trial_start');
-    if (!trialStartStr) return false;
+export async function enforceTrial() {
+    const user = await getCurrentUser();
+    if (!user) return false;
 
-    const trialStart = parseInt(trialStartStr, 10);
-    const now = Date.now();
-    const msPassed = now - trialStart;
-    const daysPassed = Math.floor(msPassed / (1000 * 60 * 60 * 24));
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan_tier, trial_end_date')
+        .eq('id', user.id)
+        .single();
+
+    if (!profile) return false;
+
+    const trialEnd = new Date(profile.trial_end_date);
+    const now = new Date();
     
-    if (daysPassed >= TRIAL_DAYS) {
+    if (now > trialEnd || profile.plan_tier === 'expired') {
         showToast('⚠️ Trial expired. Please upgrade.');
-        // Optionally redirect to pricing
         window.location.href = 'pricing.html';
-        return true; // Enforced
+        return true;
     }
 
-    return false; // Not enforced
+    return false;
 }

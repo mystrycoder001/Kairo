@@ -10,8 +10,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Confetti for Step 5 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script type="module">
+        import { checkAuth } from './js/auth.js';
+        checkAuth();
+    </script>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col font-sans overflow-x-hidden">
 
@@ -197,10 +202,12 @@
         </div>
     </main>
 
-    <script>
+    <script type="module">
+        import { supabase, getCurrentUser } from './js/auth.js';
+
         const progressBar = document.getElementById('progress-bar');
         
-        function nextStep(stepNumber) {
+        window.nextStep = function(stepNumber) {
             document.querySelectorAll('.ob-step').forEach(el => el.classList.add('hidden'));
             document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
             
@@ -214,8 +221,18 @@
             }
         }
 
-        function saveModesAndNext() {
+        window.saveModesAndNext = async function() {
             const selected = Array.from(document.querySelectorAll('#step-3 input:checked')).map(el => el.value);
+            
+            const user = await getCurrentUser();
+            if (user) {
+                // Save modes to Supabase
+                await supabase.from('memory_modes').delete().eq('user_id', user.id); // Clear existing
+                await supabase.from('memory_modes').insert(
+                    selected.map(m => ({ user_id: user.id, mode_name: m }))
+                );
+            }
+            
             localStorage.setItem('mindwave_modes', JSON.stringify(selected));
             nextStep(4);
         }
@@ -230,7 +247,7 @@
 
         let isRecording = false;
 
-        micBtn.addEventListener('click', () => {
+        micBtn?.addEventListener('click', () => {
             if(isRecording) return;
             isRecording = true;
             micIcon.textContent = 'graphic_eq';
@@ -246,9 +263,11 @@
             }, 3000);
         });
 
-        function populateFinalSummary() {
+        async function populateFinalSummary() {
             const name = document.getElementById('ob-name').value || 'User';
             const role = document.getElementById('ob-role').value || 'AI Architect';
+            const goals = document.getElementById('ob-goals').value;
+            const style = document.getElementById('ob-style').value;
             
             document.getElementById('final-name').textContent = name;
             document.getElementById('final-avatar').textContent = name.charAt(0).toUpperCase();
@@ -258,13 +277,13 @@
             const modesHTML = modes.map(m => `<span class="bg-[#222222] text-xs px-2 py-1 rounded text-gray-300">${m}</span>`).join('');
             document.getElementById('final-modes').innerHTML = modesHTML;
 
-            // Save Passport Data temporarily
-            const passportData = {
-                name, role, 
-                goals: document.getElementById('ob-goals').value,
-                style: document.getElementById('ob-style').value
-            };
-            localStorage.setItem('mindwave_passport', JSON.stringify(passportData));
+            // Save Passport Data to Supabase
+            const user = await getCurrentUser();
+            if (user) {
+                await supabase.from('profiles').update({
+                    name, role, goals, communication_style: style
+                }).eq('id', user.id);
+            }
         }
 
         function triggerConfetti() {
@@ -276,10 +295,8 @@
             });
         }
 
-        function finishOnboarding() {
+        window.finishOnboarding = function() {
             localStorage.setItem('mindwave_onboarding_complete', 'true');
-            // Init Trial
-            localStorage.setItem('mindwave_trial_start', Date.now().toString());
             window.location.href = 'dashboard.html';
         }
     </script>

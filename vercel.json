@@ -1,3 +1,19 @@
 {
-  "version": 2
+  "version": 2,
+  "env": {
+    "SUPABASE_URL": "https://ibsngqwkaasswscqnlhl.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_CXDhFswPYDJPIgEFisN8pQ_hiptOkMT"
+  },
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/onboarding", "destination": "/onboarding.html" }
+  ]
 }

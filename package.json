@@ -4,6 +4,7 @@
   "description": "Mindwave AI - Personalized AI Prompts",
   "dependencies": {
     "@google/generative-ai": "^0.11.1",
-    "formidable": "^3.5.1"
+    "formidable": "^3.5.1",
+    "node-fetch": "^2.6.9"
   }
 }
