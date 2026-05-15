@@ -10,7 +10,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/dashboard.html',
+      redirectTo: 'https://kairo-omega-three.vercel.app/dashboard.html',
       queryParams: {
         prompt: 'select_account'
       }
@@ -34,20 +34,27 @@ export async function signInWithEmail(email, password) {
 }
 
 // Email Sign Up
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email, password, name) {
   const { data, error } = await supabase.auth.signUp({
-    email, password
+    email, password,
+    options: { data: { full_name: name } }
   })
   if (error) throw error
   if (data.user) {
-    await initUserProfile(data.user)
+    await initUserProfile(data.user, name)
     window.location.href = '/onboarding.html'
   }
   return data.user
 }
 
 // Initialize user profile
-export async function initUserProfile(user) {
+export async function initUserProfile(user, name = null) {
+  const displayName = name 
+    || user?.user_metadata?.full_name 
+    || user?.user_metadata?.name 
+    || user?.email?.split('@')[0] 
+    || 'User';
+
   const { data: existing } = await supabase.from('profiles')
   .select('*')
   .eq('id', user.id)
@@ -59,12 +66,17 @@ export async function initUserProfile(user) {
     .insert({
       id: user.id,
       email: user.email,
+      name: displayName,
       trial_start_date: new Date(),
       trial_end_date: new Date(
         Date.now() + 14*24*60*60*1000
       ),
       plan_tier: 'trial'
     })
+  } else {
+    // Ensure name is up to date if we just got it
+    await supabase.from('profiles')
+      .upsert({ id: user.id, name: displayName });
   }
 }
 

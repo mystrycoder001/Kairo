@@ -32,17 +32,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (user) {
-        if ($('sidebar-name')) $('sidebar-name').textContent = user.email || 'User';
-        if ($('sidebar-avatar')) $('sidebar-avatar').textContent = (user.email || 'U').charAt(0).toUpperCase();
-        if ($('summary-name')) $('summary-name').textContent = user.email ? user.email.split('@')[0] : 'User Identity';
+        // Fetch profile data for summary and sidebar
+        const { data: profile } = await supabase.from('profiles').select('name, role, active_mode').eq('id', user.id).single();
         
-        // Fetch profile data for summary
-        const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', user.id).single();
-        if (profile) {
-            if ($('summary-name')) $('summary-name').textContent = profile.name || user.email.split('@')[0];
-            if ($('summary-role')) $('summary-role').textContent = profile.role || 'Role';
-            if ($('sidebar-name')) $('sidebar-name').textContent = profile.name || user.email;
-        }
+        const displayName = profile?.name 
+            || user?.user_metadata?.full_name 
+            || user?.user_metadata?.name 
+            || user?.email?.split('@')[0] 
+            || 'User';
+
+        if ($('sidebar-name')) $('sidebar-name').textContent = displayName;
+        if ($('sidebar-avatar')) $('sidebar-avatar').textContent = displayName.charAt(0).toUpperCase();
+        if ($('summary-name')) $('summary-name').textContent = displayName;
+        if ($('summary-role')) $('summary-role').textContent = profile?.role || 'Role';
     }
 
     $('logout-btn')?.addEventListener('click', async () => {
@@ -108,7 +110,8 @@ async function handleGeneration(text) {
     if(btnText) btnText.textContent = 'Generating...';
 
     try {
-        const activeMode = localStorage.getItem('mindwave_active_mode') || 'Default';
+        const { data: profile } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
+        const activeMode = profile?.active_mode || 'Founder Mode';
         const prompt = await generatePrompt(text, activeMode);
         if (!prompt) throw new Error('Empty response from AI');
 
@@ -171,13 +174,15 @@ async function saveToHistory(promptText, inputText) {
     const user = await getCurrentUser();
     if (!user) return;
 
+    const { data: profile } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
+
     const { error } = await supabase
         .from('prompts')
         .insert({
             user_id: user.id,
             input_text: inputText,
             generated_prompt: promptText,
-            memory_mode: localStorage.getItem('mindwave_active_mode') || 'Default'
+            memory_mode: profile?.active_mode || 'Founder Mode'
         });
     
     if (error) console.error('Error saving prompt:', error);

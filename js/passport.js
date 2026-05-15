@@ -27,10 +27,12 @@ export async function initPassport() {
             if (roleInput) roleInput.value = profile.role || '';
             if (goalsInput) goalsInput.value = profile.goals || '';
             updateSummaryCard(profile);
+            
+            if ($('passport-output-text')) {
+                $('passport-output-text').textContent = profile.passport_text || 'Fill out the form and generate your passport block.';
+            }
         }
     }
-    
-    renderPassportText();
 
     saveBtn?.addEventListener('click', async () => {
         if (!user) return showToast('Please sign in first');
@@ -55,17 +57,14 @@ export async function initPassport() {
             
             updateSummaryCard(data);
             
-            // Generate passport text via API
-            saveBtn.textContent = 'Generating...';
-            const block = await generatePassportAPI(data);
-            
-            // Save generated text to Supabase (we'll store it in a local variable or re-fetch)
-            // For now, let's keep the generated text in localStorage or a specific column if added.
-            // Actually, the request says "All user data must save to Supabase".
-            // I'll assume we can use the 'communication_style' or just 'goals' for now, 
-            // but the generated text is a derived value. I'll save it to localStorage for speed
-            // but keep the source data in Supabase.
-            localStorage.setItem('mindwave_passport_text', block);
+            // Save generated text to Supabase
+            saveBtn.textContent = 'Saving...';
+            const { error: textError } = await supabase
+                .from('profiles')
+                .update({ passport_text: block })
+                .eq('id', user.id);
+
+            if (textError) throw textError;
             
             renderPassportText();
             showToast('🪪 Passport Updated');
@@ -109,7 +108,8 @@ function updateSummaryCard(data) {
 }
 
 export function getPassportText() {
-    return localStorage.getItem('mindwave_passport_text') || '';
+    const el = $('passport-output-text');
+    return el ? el.textContent : '';
 }
 
 function renderPassportText() {

@@ -9,7 +9,13 @@ export async function initMemoryModes() {
     const user = await getCurrentUser();
     if (!user) return;
 
-    // Load available modes from Supabase
+    // Load available modes and active mode from Supabase
+    let { data: profile } = await supabase
+        .from('profiles')
+        .select('active_mode')
+        .eq('id', user.id)
+        .single();
+
     let { data: savedModes } = await supabase
         .from('memory_modes')
         .select('mode_name')
@@ -24,11 +30,11 @@ export async function initMemoryModes() {
         );
     }
 
-    // Get active mode
-    let activeMode = localStorage.getItem('mindwave_active_mode');
+    // Get active mode from profile
+    let activeMode = profile?.active_mode;
     if (!activeMode || !modes.includes(activeMode)) {
-        activeMode = modes[0];
-        localStorage.setItem('mindwave_active_mode', activeMode);
+        activeMode = modes[0] || 'Founder Mode';
+        await supabase.from('profiles').update({ active_mode: activeMode }).eq('id', user.id);
     }
 
     renderModes(container, modes, activeMode);
@@ -50,9 +56,12 @@ function renderModes(container, modes, activeMode) {
 
     // Attach listeners
     container.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const newMode = btn.dataset.mode;
-            localStorage.setItem('mindwave_active_mode', newMode);
+            const user = await getCurrentUser();
+            if (user) {
+                await supabase.from('profiles').update({ active_mode: newMode }).eq('id', user.id);
+            }
             renderModes(container, modes, newMode);
         });
     });

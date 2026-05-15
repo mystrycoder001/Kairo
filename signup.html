@@ -6,6 +6,7 @@
     <title>Sign Up — Mindwave</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
+    <meta name="vercel-toolbar" content="false">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -49,6 +50,10 @@
                 <!-- Email Form -->
                 <form id="signup-form" class="space-y-4">
                     <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Full Name</label>
+                        <input type="text" id="signup-name" required class="w-full bg-[#111111] border border-[#222222] rounded-xl px-4 py-3 focus:border-white outline-none transition-colors" placeholder="Alex Rivers">
+                    </div>
+                    <div class="space-y-1">
                         <label class="text-xs font-bold text-gray-500 uppercase ml-1">Email Address</label>
                         <input type="email" id="email" required class="w-full bg-[#111111] border border-[#222222] rounded-xl px-4 py-3 focus:border-white outline-none transition-colors" placeholder="alex@example.com">
                     </div>
@@ -80,6 +85,7 @@
             
             $('signup-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const name = $('signup-name').value;
                 const email = $('email').value;
                 const password = $('password').value;
                 const btn = e.target.querySelector('button');
@@ -87,7 +93,7 @@
                 try {
                     btn.textContent = 'Creating Account...';
                     btn.disabled = true;
-                    await signUpWithEmail(email, password);
+                    await signUpWithEmail(email, password, name);
                 } catch (err) {
                     showToast('❌ Signup failed: ' + err.message);
                 } finally {

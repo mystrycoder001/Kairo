@@ -13,6 +13,22 @@
   }
 }
 
+@layer base {
+    :root {
+        --glass: rgba(255, 255, 255, 0.03);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+}
+
+@keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+}
+
 @layer components {
   .glassmorphism {
     background: rgba(17, 17, 17, 0.7);

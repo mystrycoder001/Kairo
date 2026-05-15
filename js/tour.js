@@ -1,64 +1,69 @@
-// js/tour.js — App Tour using Driver.js
-export function initTour() {
-    const tourDone = localStorage.getItem('mindwave_tour_done');
-    if (tourDone) return; // Skip if already completed
+import { supabase, getCurrentUser } from './auth.js';
+import { $ } from './app.js';
 
-    // Ensure Driver is available
-    if (!window.driver) {
-        console.warn('Driver.js not loaded. Skipping tour.');
-        return;
+export async function initTour() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('tour_completed')
+        .eq('id', user.id)
+        .single();
+
+    if (profile?.tour_completed) return;
+
+    const steps = [
+        { target: 'tour-voice', text: 'Record your idea here', side: 'right' },
+        { target: 'tour-passport', text: 'Save your identity once', side: 'right' },
+        { target: 'tour-sync', text: 'Continue any AI session', side: 'right' }
+    ];
+
+    let currentStep = 0;
+
+    function showStep(index) {
+        // Remove existing tooltips
+        document.querySelectorAll('.tour-tooltip').forEach(el => el.remove());
+
+        if (index >= steps.length) {
+            finishTour();
+            return;
+        }
+
+        const step = steps[index];
+        const targetEl = $(step.target);
+        if (!targetEl) {
+            showStep(index + 1);
+            return;
+        }
+
+        const rect = targetEl.getBoundingClientRect();
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tour-tooltip fixed z-[100] bg-white text-black px-4 py-3 rounded-xl font-bold shadow-2xl animate-bounce-subtle flex flex-col gap-2 max-w-[200px]';
+        tooltip.style.left = `${rect.right + 20}px`;
+        tooltip.style.top = `${rect.top + (rect.height / 2) - 30}px`;
+        
+        tooltip.innerHTML = `
+            <p class="text-sm">${step.text}</p>
+            <button class="bg-black text-white text-[10px] px-3 py-1.5 rounded-lg uppercase tracking-widest hover:scale-105 transition-transform">
+                ${index === steps.length - 1 ? 'Finish' : 'Next'}
+            </button>
+            <div class="absolute left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-right-[8px] border-r-white"></div>
+        `;
+
+        document.body.appendChild(tooltip);
+
+        tooltip.querySelector('button').onclick = () => {
+            showStep(index + 1);
+        };
     }
 
-    const driverObj = window.driver.js.driver({
-        showProgress: true,
-        steps: [
-            {
-                element: '#tour-voice',
-                popover: {
-                    title: '1. Voice Capture',
-                    description: 'Start here. Speak your raw ideas into the mic. We use Groq Whisper for near-instant, perfect transcription.',
-                    side: "right", 
-                    align: 'start'
-                }
-            },
-            {
-                element: '#tour-passport',
-                popover: {
-                    title: '2. AI Passport',
-                    description: 'Your identity block. Define your role and style once, and we automatically inject it into every prompt.',
-                    side: "right", 
-                    align: 'start'
-                }
-            },
-            {
-                element: '#tour-sync',
-                popover: {
-                    title: '3. Session Sync',
-                    description: 'Moving from ChatGPT to Claude? Paste your history here to carry the context forward seamlessly.',
-                    side: "right", 
-                    align: 'start'
-                }
-            },
-            {
-                element: '#tour-modes',
-                popover: {
-                    title: 'Memory Modes',
-                    description: 'Isolate your contexts. Switch between Founder, Coding, or Study mode so AI never confuses your projects.',
-                    side: "bottom", 
-                    align: 'start'
-                }
-            }
-        ],
-        onDestroyStarted: () => {
-            if (!driverObj.hasNextStep() || confirm("Are you sure you want to skip the tour?")) {
-                driverObj.destroy();
-                localStorage.setItem('mindwave_tour_done', 'true');
-            }
-        },
-    });
+    async function finishTour() {
+        if (user) {
+            await supabase.from('profiles').update({ tour_completed: true }).eq('id', user.id);
+        }
+    }
 
-    // Short delay to ensure UI is fully rendered
-    setTimeout(() => {
-        driverObj.drive();
-    }, 500);
+    // Start tour
+    setTimeout(() => showStep(0), 1000);
 }
