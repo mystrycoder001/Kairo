@@ -42,7 +42,7 @@ export async function signUpWithEmail(email, password, name) {
   if (error) throw error
   if (data.user) {
     await initUserProfile(data.user, name)
-    window.location.href = '/onboarding.html'
+    window.location.href = '/dashboard.html'
   }
   return data.user
 }
@@ -125,8 +125,20 @@ export async function checkTrial(userId) {
 export async function logout() {
     const { error } = await supabase.auth.signOut()
     if (error) console.error('Logout error:', error)
-    window.location.href = '/index.html'
 }
+
+// Global Auth State Change Listener
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    const currentPage = window.location.pathname;
+    if (currentPage.includes('login.html') || currentPage.includes('signup.html') || currentPage === '/') {
+      window.location.href = '/dashboard.html';
+    }
+  }
+  if (event === 'SIGNED_OUT') {
+    window.location.href = '/login.html';
+  }
+});
 
 // Export supabase client for other modules
 export { supabase }
