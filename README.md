@@ -1,33 +1,38 @@
-# Mindwave — One Mind. All AIs.
+# 🌊 Mindwave — Your Personal AI Memory Layer
 
-Mindwave is an intelligent architectural AI prompting system that turns your thoughts and session history into perfect, reusable context blocks. It bridges the gap between different AI tools while maintaining a persistent digital identity.
+Mindwave is an intelligent architectural AI system that transforms rough thoughts, voice notes, and session histories into high-precision context blocks. It bridges the gap between major AI tools (ChatGPT, Claude, Gemini) while maintaining a persistent digital identity (AI Passport).
 
-## Key Features
-- **Voice-to-Prompt**: High-precision architectural instruction generation from speech.
-- **AI Identity Seed**: Define your role, goals, and style once—attach it to every prompt.
-- **Session Sync**: Bridge context between ChatGPT, Claude, and Gemini seamlessly.
-- **14-Day Pro Trial**: Full access to all features for 14 days, with proactive usage monitoring.
+## 🚀 Key Features
+- **🎙️ Voice-to-Prompt**: High-precision architectural instruction generation from speech with 3-tier fallback.
+- **🪪 AI Passport**: Define your role, goals, and style once—automatically attached to every generated prompt.
+- **🔄 Session Sync**: Dense context extraction to bridge conversations across different AI platforms seamlessly.
+- **⏳ Account-Linked Trial**: Secure 14-day Pro trial managed via Supabase, persisting across all your devices.
+- **⚡ AI Waterfall**: Robust processing pipeline using Gemini 1.5 Flash -> Groq (Llama 3) -> OpenRouter.
 
-## Tech Stack
+## 🛠️ Tech Stack
 - **Frontend**: Vanilla JS, TailwindCSS, Stitch Design System ("Intelligent Void").
+- **Auth & Database**: [Supabase](https://supabase.com/) (Google OAuth, RLS, PostgreSQL).
 - **Backend**: Vercel Serverless Functions (Node.js).
-- **AI Pipeline**: Gemini 1.5 Flash -> Groq (Llama 3) -> OpenRouter.
-- **Auth**: Supabase (Google OAuth & Magic Links).
+- **PWA**: Fully installable Progressive Web App.
 
-## Environment Variables
-Create a `.env` file with the following:
+## 🔑 Environment Variables
+The application requires the following variables in Vercel or your `.env` file:
 ```env
-GEMINI_API_KEY=your_key
-GROQ_API_KEY=your_key
-OPENROUTER_API_KEY=your_key
-SUPABASE_URL=your_project_url
-SUPABASE_ANON_KEY=your_anon_key
+GEMINI_API_KEY=
+GROQ_API_KEY=
+OPENROUTER_API_KEY=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
 ```
 
-## Getting Started
-1. Install dependencies: `npm install`
-2. Run locally: `npx serve .` (or use VS Code Live Server)
-3. Deploy: `vercel`
+## 📦 Getting Started
+1. **Clone & Install**: `git clone` then `npm install`.
+2. **Database Setup**: Run the SQL schema provided in the conversation history in your Supabase SQL Editor.
+3. **Local Dev**: `npx serve .` or use the Vercel CLI.
+4. **Deploy**: `vercel --prod`.
 
-## Branding
-Mindwave uses a high-contrast, black-and-white "Intelligent Void" aesthetic for maximum focus and architectural precision.
+## 🎨 Design Philosophy
+Mindwave utilizes a high-contrast **"Intelligent Void"** aesthetic—a minimalist black-and-white system designed for maximum focus, architectural precision, and a premium feel.
+
+---
+*Built for architects of the future.*
