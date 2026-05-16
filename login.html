@@ -53,11 +53,18 @@
                     <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform mt-2">Continue with Email</button>
                 </form>
 
-                <div id="success-msg" class="hidden text-center p-6 bg-white/5 border border-white/10 rounded-2xl space-y-3 animate-in fade-in zoom-in duration-300">
-                    <span class="material-symbols-outlined text-green-500 text-4xl">mark_email_read</span>
-                    <p class="text-sm font-medium">Magic link sent!</p>
-                    <p class="text-xs text-gray-400">Check your inbox to sign in instantly.</p>
-                </div>
+                <!-- OTP Form (Hidden initially) -->
+                <form id="otp-form" class="space-y-4 hidden animate-in slide-in-from-right duration-300">
+                    <div class="space-y-2 text-center pb-2">
+                        <p class="text-xs text-gray-400">We've sent a 6-digit code to <span id="display-email" class="text-white font-medium"></span></p>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Enter 6-digit code</label>
+                        <input type="text" id="otp-code" required maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full bg-[#111111] border border-[#222222] rounded-xl px-4 py-3 focus:border-white outline-none transition-colors text-center text-2xl tracking-[0.5em] font-mono" placeholder="000000">
+                    </div>
+                    <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform mt-2">Verify & Login</button>
+                    <button type="button" id="back-btn" class="w-full text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Change Email</button>
+                </form>
 
                 <div class="flex items-center gap-4 py-2">
                     <div class="h-px flex-1 bg-[#222222]"></div>
@@ -86,7 +93,7 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 translate-y-20 transition-all duration-300 z-[100]"></div>
 
     <script type="module">
-        import { signInWithGoogle, signInWithMagicLink, getCurrentUser } from './js/auth.js';
+        import { signInWithGoogle, requestOtp, verifyOtp, getCurrentUser, supabase } from './js/auth.js';
         import { $, showToast } from './js/app.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -96,27 +103,69 @@
                 return;
             }
             
+            let userEmail = '';
+
+            // Step 1: Request OTP
             $('login-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const email = $('email').value;
+                userEmail = $('email').value;
                 const btn = e.target.querySelector('button');
-                const successMsg = $('success-msg');
 
                 try {
-                    btn.textContent = 'Sending link...';
+                    btn.textContent = 'Sending Code...';
                     btn.disabled = true;
-                    await signInWithMagicLink(email);
+                    await requestOtp(userEmail);
                     
-                    // Show success state
+                    // Show OTP form
                     $('login-form').classList.add('hidden');
-                    successMsg.classList.remove('hidden');
-                    successMsg.classList.add('flex', 'flex-col', 'items-center');
-                    showToast('✅ Magic link sent to ' + email);
+                    $('otp-form').classList.remove('hidden');
+                    $('display-email').textContent = userEmail;
+                    showToast('✅ Code sent to ' + userEmail);
                 } catch (err) {
                     showToast('❌ Failed: ' + err.message);
                     btn.textContent = 'Continue with Email';
                     btn.disabled = false;
                 }
+            });
+
+            // Step 2: Verify OTP
+            $('otp-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const code = $('otp-code').value;
+                const btn = e.target.querySelector('button');
+
+                try {
+                    btn.textContent = 'Verifying...';
+                    btn.disabled = true;
+                    
+                    const { data } = await verifyOtp(userEmail, code);
+                    
+                    if (data?.user) {
+                        showToast('✅ Verified! Entering MindWave...');
+                        
+                        // Check if onboarding is needed
+                        const { data: profile } = await supabase.from('profiles')
+                            .select('onboarding_completed')
+                            .eq('id', data.user.id)
+                            .single();
+                        
+                        if (!profile || !profile.onboarding_completed) {
+                            window.location.href = '/onboarding.html';
+                        } else {
+                            window.location.href = '/dashboard.html';
+                        }
+                    }
+                } catch (err) {
+                    showToast('❌ Invalid code: ' + err.message);
+                    btn.textContent = 'Verify & Login';
+                    btn.disabled = false;
+                }
+            });
+
+            // Back button
+            $('back-btn')?.addEventListener('click', () => {
+                $('otp-form').classList.add('hidden');
+                $('login-form').classList.remove('hidden');
             });
 
             $('google-login-btn')?.addEventListener('click', async () => {
