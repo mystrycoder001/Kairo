@@ -9,7 +9,7 @@
     <meta name="vercel-toolbar" content="false">
 
     <!-- SEO & Open Graph -->
-    <meta name="title" content="MindWave — One memory. Every AI tool.">
+    <meta name="title" content="MindWave — Your memory across every AI.">
     <meta name="description" content="MindWave keeps your prompts, communication style, and context synced across AI platforms.">
     <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
@@ -403,13 +403,21 @@
                 }
 
                 console.log("[IdentityForm] Calling saveOnboardingStep...");
+                const modeMap = {
+                    'Professional': 'founder',
+                    'Casual': 'creator',
+                    'Technical': 'coding',
+                    'Creative': 'freelancer'
+                };
+
                 await saveOnboardingStep({
                     full_name: name,
                     role: role,
                     goals: goals,
                     communication_style: style,
                     favourite_tools: toolsString,
-                    active_context: context
+                    active_context: context,
+                    active_mode: modeMap[style] || 'founder'
                 });
 
                 console.log("[IdentityForm] Save successful. Moving to next step.");
