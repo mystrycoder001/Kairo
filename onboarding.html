@@ -109,6 +109,18 @@
                         </select>
                     </div>
 
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Favourite AI Tools</label>
+                            <input type="text" id="ob-tools" class="w-full bg-black border border-white/10 rounded-2xl px-5 py-4 focus:border-white/40 outline-none transition-all placeholder:text-gray-700" placeholder="e.g. Claude, ChatGPT, Midjourney">
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Additional Context</label>
+                        <textarea id="ob-context" class="w-full bg-black border border-white/10 rounded-2xl px-5 py-4 focus:border-white/40 outline-none transition-all resize-none h-20 placeholder:text-gray-700" placeholder="Anything else your AI should know?"></textarea>
+                    </div>
+
                     <button type="submit" class="w-full bg-white text-black font-bold py-5 rounded-2xl hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Save Identity</button>
                 </form>
             </div>
@@ -206,14 +218,21 @@
     </main>
 
     <script type="module">
-        import { supabase, getCurrentUser, checkAuth } from './js/auth.js';
+        import { supabase, getCurrentUser, checkAuth, saveOnboardingStep } from './js/auth.js';
 
         const progressBar = document.getElementById('progress-bar');
         
         // Initial auth check
         checkAuth();
 
-        window.nextStep = function(stepNumber) {
+        window.nextStep = async function(stepNumber) {
+            // Save data from previous step if applicable
+            if (stepNumber === 3) {
+                const name = document.getElementById('ob-name').value;
+                const role = document.getElementById('ob-role').value;
+                await saveOnboardingStep({ full_name: name, role: role });
+            }
+
             document.querySelectorAll('.ob-step').forEach(el => el.classList.add('hidden'));
             document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
             
@@ -229,9 +248,22 @@
 
         window.saveModesAndNext = async function() {
             const selected = Array.from(document.querySelectorAll('#step-3 input[type="checkbox"]:checked')).map(cb => cb.value);
+            const goals = document.getElementById('ob-goals').value;
+            const style = document.getElementById('ob-style').value;
+            const tools = document.getElementById('ob-tools').value;
+            const context = document.getElementById('ob-context').value;
+            
             const user = await getCurrentUser();
             if (user) {
                 try {
+                    // Save goals, style, tools and context
+                    await saveOnboardingStep({ 
+                        goals: goals, 
+                        communication_style: style,
+                        favourite_tools: tools,
+                        active_context: context
+                    });
+
                     // Clear existing modes
                     await supabase.from('memory_modes').delete().eq('user_id', user.id);
                     // Insert new ones
@@ -250,8 +282,6 @@
         async function populateFinalSummary() {
             const name = document.getElementById('ob-name').value || 'User';
             const role = document.getElementById('ob-role').value || 'AI Architect';
-            const goals = document.getElementById('ob-goals').value;
-            const style = document.getElementById('ob-style').value;
             
             if (document.getElementById('final-name')) document.getElementById('final-name').textContent = name;
             if (document.getElementById('final-avatar')) document.getElementById('final-avatar').textContent = name.charAt(0).toUpperCase();
@@ -271,20 +301,6 @@
             if (document.getElementById('final-modes')) {
                 const modesHTML = modes.map(m => `<span class="bg-[#222222] text-xs px-2 py-1 rounded text-gray-300">${m}</span>`).join('');
                 document.getElementById('final-modes').innerHTML = modesHTML;
-            }
-
-            // Save Passport Data to Supabase
-            if (user) {
-                try {
-                    await supabase.from('profiles').update({
-                        full_name: name, 
-                        role: role, 
-                        goals: goals, 
-                        communication_style: style
-                    }).eq('id', user.id);
-                } catch (err) {
-                    console.error("Error updating profile:", err);
-                }
             }
         }
 
@@ -326,15 +342,13 @@
         }
 
         window.finishOnboarding = async function() {
-            const user = await getCurrentUser();
-            if (user) {
-                try {
-                    await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
-                } catch (err) {
-                    console.error("Error finishing onboarding:", err);
-                }
+            try {
+                await saveOnboardingStep({ onboarding_completed: true });
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                console.error("Error finishing onboarding:", err);
+                window.location.href = 'dashboard.html';
             }
-            window.location.href = 'dashboard.html';
         }
     </script>
 </body>

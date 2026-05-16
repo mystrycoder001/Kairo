@@ -173,5 +173,42 @@ export async function checkAuth() {
   }
 }
 
+// Run immediately on every page load to process Magic Link callbacks
+export async function handleAuthCallback() {
+  const hash = window.location.hash
+  
+  if (hash && hash.includes('access_token')) {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (session) {
+      const { data: profile } = await supabase.from('profiles')
+      .select('full_name, onboarding_completed')
+      .eq('id', session.user.id)
+      .single()
+      
+      window.history.replaceState({}, document.title, window.location.pathname)
+      
+      if (!profile || !profile.onboarding_completed) {
+        window.location.href = '/onboarding.html'
+        return
+      }
+      window.location.href = '/dashboard.html'
+      return
+    }
+  }
+}
+
+// Onboarding data saving helper
+export async function saveOnboardingStep(data) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  
+  const { error } = await supabase.from('profiles').update(data).eq('id', user.id)
+  if (error) throw error
+}
+
+// Call callback handler immediately
+handleAuthCallback();
+
 export { supabase }
 

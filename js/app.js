@@ -51,18 +51,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (user) {
         // Fetch profile data for summary and sidebar
-        const { data: profile } = await supabase.from('profiles').select('full_name, role, active_mode').eq('id', user.id).single();
+        const { data: profile } = await supabase.from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
         
+        // Redirect to onboarding if not completed
+        if (isDashboard && (!profile || !profile.onboarding_completed)) {
+            window.location.href = '/onboarding.html';
+            return;
+        }
+
         const displayName = profile?.full_name 
-            || user?.user_metadata?.full_name 
-            || user?.user_metadata?.name 
             || user?.email?.split('@')[0] 
             || 'User';
 
+        // Update UI Elements
         if ($('sidebar-name')) $('sidebar-name').textContent = displayName;
         if ($('sidebar-avatar')) $('sidebar-avatar').textContent = displayName.charAt(0).toUpperCase();
+        if ($('user-name')) $('user-name').textContent = displayName;
+        if ($('user-email')) $('user-email').textContent = user.email;
+        if ($('user-avatar')) $('user-avatar').textContent = displayName.charAt(0).toUpperCase();
+        if ($('user-plan')) $('user-plan').textContent = (profile?.subscription_plan || 'Free');
+        if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile?.subscription_plan || 'Free').toUpperCase() + ' TIER';
+        
+        // Summary elements (backward compatibility)
         if ($('summary-name')) $('summary-name').textContent = displayName;
-        if ($('summary-role')) $('summary-role').textContent = profile?.role || 'Role';
+        if ($('summary-role')) $('summary-role').textContent = profile?.role || 'AI Architect';
+
+        // Load usage stats
+        const { data: usage } = await supabase.from('usage_tracking')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+        
+        if (usage && $('prompts-used')) {
+            $('prompts-used').textContent = usage.prompts_used || 0;
+        }
     }
 
     $('logout-btn')?.addEventListener('click', async () => {
