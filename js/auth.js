@@ -30,7 +30,19 @@ export async function signInWithGoogle() {
   return data
 }
 
-// Email Sign In  
+// Magic Link Sign In
+export async function signInWithMagicLink(email) {
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: window.location.origin + '/dashboard.html'
+    }
+  })
+  if (error) throw error
+  return data
+}
+
+// Email Sign In (Legacy/Alternative)
 export async function signInWithEmail(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email, password
