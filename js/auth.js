@@ -102,6 +102,21 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     currentUser = session.user;
     if (event === 'SIGNED_IN') {
         await initUserProfile(session.user);
+        
+        // Check onboarding status
+        const { data: profile } = await supabase.from('profiles')
+            .select('onboarding_completed')
+            .eq('id', session.user.id)
+            .single();
+            
+        const path = window.location.pathname;
+        if (path.includes('login.html') || path === '/' || path === '') {
+            if (!profile || !profile.onboarding_completed) {
+                window.location.href = '/onboarding.html';
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        }
     }
   } else {
     currentUser = null;

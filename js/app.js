@@ -2,19 +2,8 @@ import { initVoice } from './voice.js';
 import { generatePrompt } from './gemini.js';
 import { initPassport, getPassportText } from './passport.js';
 import { initSessionSync } from './session-sync.js';
-// trial.js logic removed for Free-Forever model
 import { getCurrentUser, logout, supabase } from './auth.js';
 import { initTour } from './tour.js';
-import { initMemoryModes } from './memory-modes.js';
-import { checkPromptLimit } from './usage.js';
-
-export function cleanPrompt(text) {
-  if (!text) return '';
-  return text
-    .replace(/\*\*/g, '').replace(/\*/g, '')
-    .replace(/#{1,6}\s/g, '').replace(/`{1,3}/g, '')
-    .replace(/^\s*[-•]\s/gm, '').trim();
-}
 
 // DOM Utilities
 export const $ = (id) => document.getElementById(id);
@@ -29,172 +18,238 @@ export function showToast(msg) {
   }, 3000);
 }
 
+export function cleanPrompt(text) {
+    if (!text) return '';
+    return text
+      .replace(/\*\*/g, '').replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '').replace(/`{1,3}/g, '')
+      .replace(/^\s*[-•]\s/gm, '').trim();
+}
+
+const memoryModes = [
+  { id: 'founder', label: 'Founder', icon: '🚀' },
+  { id: 'study', label: 'Study', icon: '📚' },
+  { id: 'coding', label: 'Coding', icon: '💻' },
+  { id: 'creator', label: 'Creator', icon: '🎨' },
+  { id: 'freelancer', label: 'Freelancer', icon: '💼' }
+];
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Auth
     const user = await getCurrentUser();
-    
     const isDashboard = window.location.pathname.includes('dashboard.html');
 
     if (!user && isDashboard) {
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return;
     }
 
     if (isDashboard) {
+        await loadDashboard();
+        
+        // Handle URL params
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('upgraded') === 'true') {
             showToast('🎉 Welcome to MindWave Pro! Unlimited access unlocked.');
-            // Remove the param from URL without refreshing
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
 
-    if (user) {
-        // Fetch profile data for summary and sidebar
-        const { data: profile } = await supabase.from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-        
-        // Redirect to onboarding if not completed
-        if (isDashboard && (!profile || !profile.onboarding_completed)) {
-            window.location.href = '/onboarding.html';
-            return;
-        }
-
-        const displayName = profile?.full_name 
-            || user?.email?.split('@')[0] 
-            || 'User';
-
-        // Update UI Elements
-        if ($('sidebar-name')) $('sidebar-name').textContent = displayName;
-        if ($('sidebar-avatar')) $('sidebar-avatar').textContent = displayName.charAt(0).toUpperCase();
-        if ($('user-name')) $('user-name').textContent = displayName;
-        if ($('user-email')) $('user-email').textContent = user.email;
-        if ($('user-avatar')) $('user-avatar').textContent = displayName.charAt(0).toUpperCase();
-        if ($('user-plan')) $('user-plan').textContent = (profile?.subscription_plan || 'Free');
-        if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile?.subscription_plan || 'Free').toUpperCase() + ' TIER';
-        
-        // Summary elements (backward compatibility)
-        if ($('summary-name')) $('summary-name').textContent = displayName;
-        if ($('summary-role')) $('summary-role').textContent = profile?.role || 'AI Architect';
-
-        // Load usage stats
-        const { data: usage } = await supabase.from('usage_tracking')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-        
-        if (usage && $('prompts-used')) {
-            $('prompts-used').textContent = usage.prompts_used || 0;
-        }
-    }
-
-    $('logout-btn')?.addEventListener('click', async () => {
-        await logout();
-    });
-
-    // 2. (Removed Trial Logic)
-    
-    // 3. Navigation inside Dashboard
-    document.querySelectorAll('[data-nav]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const target = btn.getAttribute('data-nav');
-            navigateTo(target);
-        });
-    });
-
-    // Handle Upgrade Modal
-    const upgradeModal = $('upgrade-modal');
-    $('close-upgrade-btn')?.addEventListener('click', () => {
-        upgradeModal.classList.add('hidden');
-        upgradeModal.classList.remove('flex');
-    });
-
-    // Sidebar Upgrade button removed in premium pass - listener deactivated
-    /*
-    $('upgrade-btn-sidebar')?.addEventListener('click', () => {
-        upgradeModal.classList.remove('hidden');
-        upgradeModal.classList.add('flex');
-    });
-    */
-
-    $('checkout-btn')?.addEventListener('click', async () => {
-        const currentUser = await getCurrentUser();
-        if (!currentUser) return;
-        
-        const loader = $('checkout-loader');
-        const text = $('checkout-btn').querySelector('span');
-        if (loader) loader.classList.remove('hidden');
-        if (text) text.textContent = 'Preparing...';
-        
-        try {
-            const response = await fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: currentUser.id, plan_tier: 'pro' })
-            });
-            const data = await response.json();
-            if (data.order_id) {
-                const options = {
-                    "key": data.key_id,
-                    "amount": data.amount,
-                    "currency": data.currency,
-                    "name": "MindWave",
-                    "description": "MindWave Pro Subscription",
-                    "order_id": data.order_id,
-                    "handler": function (response){
-                        showToast('✅ Payment successful. Upgrading account...');
-                        setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
-                    },
-                    "prefill": {
-                        "email": currentUser.email
-                    },
-                    "theme": {
-                        "color": "#000000"
-                    }
-                };
-                const rzp = new window.Razorpay(options);
-                rzp.open();
-            } else {
-                throw new Error(data.error || 'No order ID returned');
-            }
-        } catch (err) {
-            showToast('❌ Failed to start checkout');
-            console.error(err);
-        } finally {
-            if (loader) loader.classList.add('hidden');
-            if (text) text.textContent = 'Upgrade Now ($4.99/mo)';
-        }
-    });
-
-    // 4. Initialize Sub-modules
+    // Initialize Global Modules
     initVoice(handleGeneration);
     await initPassport();
     initSessionSync();
-    initMemoryModes();
-    
-    // 5. App Tour (Runs once)
     initTour();
+    
+    // Global Event Listeners
+    $('logout-btn')?.addEventListener('click', async () => await logout());
+    
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-nav');
+            if (target === 'upgrade') {
+                showUpgradeModal();
+            } else {
+                navigateTo(target);
+            }
+        });
+    });
 
-    // 6. Initial History Render
-    renderHistory();
+    $('close-upgrade-btn')?.addEventListener('click', hideUpgradeModal);
+    $('banner-upgrade-btn')?.addEventListener('click', showUpgradeModal);
+    $('sidebar-upgrade-btn')?.addEventListener('click', showUpgradeModal);
+
+    $('checkout-btn')?.addEventListener('click', handleUpgrade);
 });
 
+async function loadDashboard() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const user = session.user;
+
+  // 1. Get Profile
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  
+  if (!profile || !profile.onboarding_completed) {
+    window.location.href = '/onboarding.html';
+    return;
+  }
+
+  // 2. Update UI with real data
+  const displayName = profile.full_name || user.email.split('@')[0];
+  if ($('user-name')) $('user-name').textContent = displayName;
+  if ($('sidebar-name')) $('sidebar-name').textContent = displayName;
+  if ($('user-email')) $('user-email').textContent = user.email;
+  if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
+  if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
+  
+  const avatarChar = displayName[0].toUpperCase();
+  if ($('user-avatar')) $('user-avatar').textContent = avatarChar;
+  if ($('sidebar-avatar')) $('sidebar-avatar').textContent = avatarChar;
+
+  // 3. Issue 6: Active Profile Card Details
+  if ($('summary-role')) $('summary-role').textContent = profile.role || 'AI Architect';
+  if ($('summary-style')) $('summary-style').textContent = profile.comm_style || 'Balanced';
+  if ($('summary-mode')) $('summary-mode').textContent = (profile.active_mode || 'founder').charAt(0).toUpperCase() + (profile.active_mode || 'founder').slice(1);
+  if ($('summary-tools')) {
+      const toolCount = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0;
+      $('summary-tools').textContent = `${toolCount} Tool${toolCount === 1 ? '' : 's'} Connected`;
+  }
+
+  // 4. Load Usage
+  const { data: usage } = await supabase.from('usage_tracking').select('*').eq('user_id', user.id).single();
+  if (usage && $('prompts-used')) {
+    $('prompts-used').textContent = usage.prompts_used || 0;
+  }
+
+  // 5. Memory Modes
+  loadMemoryModes(profile);
+
+  // 6. Check Usage Limits
+  checkUsageLimit(usage, profile);
+  
+  // Render History
+  renderHistory();
+}
+
+function loadMemoryModes(profile) {
+  const container = $('modes-container');
+  if (!container) return;
+
+  const activeMode = profile.active_mode || 'founder';
+
+  container.innerHTML = memoryModes.map(mode => `
+    <button class="mode-card flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all ${activeMode === mode.id ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}" 
+            onclick="window.setActiveMode('${mode.id}')">
+      <span class="text-xl">${mode.icon}</span>
+      <span class="font-bold text-sm tracking-tight">${mode.label}</span>
+    </button>
+  `).join('');
+}
+
+window.setActiveMode = async (modeId) => {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    try {
+        const { error } = await supabase.from('profiles').update({ active_mode: modeId }).eq('id', user.id);
+        if (error) throw error;
+        showToast(`🧠 Switched to ${modeId.charAt(0).toUpperCase() + modeId.slice(1)} Memory`);
+        await loadDashboard(); // Refresh UI
+    } catch (err) {
+        showToast('❌ Failed to switch mode');
+    }
+};
+
+function checkUsageLimit(usage, profile) {
+  const limit = 5;
+  const promptsUsed = usage?.prompts_used || 0;
+  const isFree = (profile.subscription_plan || 'free').toLowerCase() === 'free';
+  
+  const banner = $('upgrade-banner');
+  const sidebarUpgrade = $('sidebar-upgrade-container');
+
+  if (isFree) {
+    if (sidebarUpgrade) sidebarUpgrade.classList.remove('hidden');
+    
+    if (promptsUsed >= limit) {
+      if (banner) banner.classList.remove('hidden');
+      if ($('generate-prompt-btn')) $('generate-prompt-btn').disabled = true;
+    }
+  }
+}
+
+function showUpgradeModal() {
+    const modal = $('upgrade-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function hideUpgradeModal() {
+    const modal = $('upgrade-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+async function handleUpgrade() {
+    const user = await getCurrentUser();
+    if (!user) return;
+    
+    const loader = $('checkout-loader');
+    const btn = $('checkout-btn');
+    if (loader) loader.classList.remove('hidden');
+    if (btn) btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.id, plan_tier: 'pro' })
+        });
+        const data = await response.json();
+        
+        if (data.order_id) {
+            const options = {
+                "key": data.key_id,
+                "amount": data.amount,
+                "currency": data.currency,
+                "name": "MindWave",
+                "description": "MindWave Pro Subscription",
+                "order_id": data.order_id,
+                "handler": async function (response) {
+                    showToast('✅ Payment successful. Upgrading account...');
+                    // Ideally verify on server, but for now we redirect to a success state
+                    setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
+                },
+                "prefill": { "email": user.email },
+                "theme": { "color": "#000000" }
+            };
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } else {
+            throw new Error(data.error || 'Checkout initialization failed');
+        }
+    } catch (err) {
+        showToast('❌ Error: ' + err.message);
+    } finally {
+        if (loader) loader.classList.add('hidden');
+        if (btn) btn.disabled = false;
+    }
+}
+
 function navigateTo(screenId) {
-    // Update Screens
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     $(`screen-${screenId}`)?.classList.add('active');
 
-    // Update Sidebar
     document.querySelectorAll('.sidebar-item').forEach(item => {
         if(item.getAttribute('data-nav') === screenId) {
-            item.classList.add('active');
-            item.classList.add('text-white');
+            item.classList.add('active', 'text-white');
             item.classList.remove('text-gray-400');
         } else {
-            item.classList.remove('active');
-            item.classList.remove('text-white');
+            item.classList.remove('active', 'text-white');
             item.classList.add('text-gray-400');
         }
     });
@@ -203,39 +258,43 @@ function navigateTo(screenId) {
 async function handleGeneration(text) {
     if (!text) return;
     const user = await getCurrentUser();
-    if (!user) {
-        showToast('Please sign in to generate prompts.');
-        setTimeout(() => window.location.href = 'login.html', 1500);
+    if (!user) return;
+
+    // Check limit again before generation
+    const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
+    const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+    
+    if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
+        showUpgradeModal();
         return;
     }
-    if (!(await checkPromptLimit(user))) return;
 
     const loader = $('generate-loader');
-    const generateBtn = $('generate-prompt-btn');
-    const btnText = generateBtn ? generateBtn.querySelector('span') : null;
-    
-    if(loader) loader.classList.remove('hidden');
-    if(btnText) btnText.textContent = 'Generating...';
+    const btnText = $('generate-prompt-btn')?.querySelector('span');
+    if (loader) loader.classList.remove('hidden');
+    if (btnText) btnText.textContent = 'Thinking...';
 
     try {
-        const { data: profile } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
-        const activeMode = profile?.active_mode || 'Founder Mode';
+        const { data: p } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
+        const activeMode = p?.active_mode || 'founder';
+        
         let prompt = await generatePrompt(text, activeMode);
-        if (!prompt) throw new Error('Empty response from AI');
+        if (!prompt) throw new Error('AI failed to respond');
         prompt = cleanPrompt(prompt);
 
         window._mindwaveGeneratedPrompt = prompt;
-        window._lastInputText = text;
         navigateTo('output');
         initOutputScreen();
+        await saveToHistory(prompt, text, activeMode);
         
-        // Save to history (Supabase)
-        await saveToHistory(prompt, text);
+        // Increment usage
+        await supabase.rpc('increment_prompts_used', { user_id_param: user.id });
+        await loadDashboard(); // Refresh usage count
     } catch (err) {
         showToast(`❌ Error: ${err.message}`);
     } finally {
-        if(loader) loader.classList.add('hidden');
-        if(btnText) btnText.textContent = 'Generate Perfect Prompt';
+        if (loader) loader.classList.add('hidden');
+        if (btnText) btnText.textContent = 'Generate Perfect Prompt';
     }
 }
 
@@ -254,14 +313,11 @@ function initOutputScreen() {
         return basePrompt;
     }
 
-    if (outputEl) {
-        outputEl.textContent = getFinalPrompt();
-    }
+    if (outputEl) outputEl.textContent = getFinalPrompt();
 
     if (toggle) {
         const newToggle = toggle.cloneNode(true);
         toggle.parentNode.replaceChild(newToggle, toggle);
-        
         newToggle.addEventListener('change', () => {
             if (outputEl) outputEl.textContent = getFinalPrompt();
             showToast(newToggle.checked ? '🪪 Identity Attached' : '🪪 Identity Removed');
@@ -271,59 +327,51 @@ function initOutputScreen() {
     if (copyBtn) {
         const newCopyBtn = copyBtn.cloneNode(true);
         copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
-
         newCopyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(getFinalPrompt());
-            showToast('📋 Prompt Copied to Clipboard');
+            showToast('📋 Prompt Copied');
         });
     }
 }
 
-async function saveToHistory(promptText, inputText) {
+async function saveToHistory(promptText, inputText, mode) {
     const user = await getCurrentUser();
     if (!user) return;
-
-    const { data: profile } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
-
-    const { error } = await supabase
-        .from('prompts')
-        .insert({
-            user_id: user.id,
-            input_text: inputText,
-            generated_prompt: promptText,
-            memory_mode: profile?.active_mode || 'Founder Mode'
-        });
-    
-    if (error) console.error('Error saving prompt:', error);
-    renderHistory();
+    await supabase.from('prompts').insert({
+        user_id: user.id,
+        input_text: inputText,
+        generated_prompt: promptText,
+        memory_mode: mode
+    });
 }
 
-export async function renderHistory() {
+async function renderHistory() {
     const historyContainer = $('recent-history-container');
     if(!historyContainer) return;
 
     const user = await getCurrentUser();
     if (!user) return;
 
-    const { data: history, error } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+    const { data: history } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
     
-    if(error || !history || history.length === 0) {
-        historyContainer.innerHTML = '<p class="text-gray-500 text-sm text-center pt-10 italic">No prompts generated yet.</p>';
+    if(!history || history.length === 0) {
+        historyContainer.innerHTML = `
+            <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-gray-600 text-3xl">history</span>
+            </div>
+            <p class="text-gray-400 font-medium">No recent syncs.</p>
+            <p class="text-xs text-gray-600">Your memory will appear here after capture.</p>
+        `;
         return;
     }
 
     historyContainer.innerHTML = history.map(item => `
-        <div class="bg-black border border-[#222222] p-4 rounded-xl mb-3 space-y-2">
+        <div class="w-full bg-black border border-[#222222] p-4 rounded-xl text-left space-y-2 hover:border-white/20 transition-colors">
             <div class="flex justify-between">
-                <span class="text-[10px] text-gray-500 font-bold uppercase">${new Date(item.created_at).toLocaleString()}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-white/10 text-gray-400">${item.memory_mode}</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">${new Date(item.created_at).toLocaleDateString()}</span>
+                <span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold uppercase">${item.memory_mode}</span>
             </div>
-            <p class="text-sm text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 150)}...</p>
+            <p class="text-xs text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 120)}...</p>
         </div>
     `).join('');
 }

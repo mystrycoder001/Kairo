@@ -137,3 +137,13 @@ create trigger update_subscriptions_modtime before update on subscriptions for e
 create index if not exists idx_profiles_email on profiles(email);
 create index if not exists idx_subscriptions_user_id on subscriptions(user_id);
 create index if not exists idx_usage_user_id on usage_tracking(user_id);
+
+-- RPC to increment prompts used safely
+create or replace function increment_prompts_used(user_id_param uuid)
+returns void as $$
+begin
+  update usage_tracking
+  set prompts_used = prompts_used + 1
+  where user_id = user_id_param;
+end;
+$$ language plpgsql security definer;
