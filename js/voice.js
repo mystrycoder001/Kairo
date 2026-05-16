@@ -147,7 +147,7 @@ export function initVoice(onComplete) {
 
     function updateUIForRecording(status) {
         micIcon.textContent = 'graphic_eq';
-        statusText.textContent = status;
+        statusText.textContent = status || 'Capture Active';
         recordingDot?.classList.remove('hidden');
         if (stopBtn) stopBtn.disabled = false;
         startTimer();

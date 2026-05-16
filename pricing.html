@@ -3,139 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="vercel-toolbar" content="false">
     <title>Pricing — Mindwave</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="vercel-toolbar" content="false">
 
     <!-- SEO & Open Graph -->
-    <meta name="title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
-    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
-    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
-    <meta property="og:description" content="Never repeat yourself to AI again.">
-    <meta property="og:image" content="/logo/mindwave-logo.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="twitter:description" content="Never repeat yourself to AI again.">
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Mindwave",
-      "description": "AI memory and identity layer",
-      "applicationCategory": "ProductivityApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      }
-    }
-    </script>
-
+    <meta name="title" content="Pricing — Mindwave">
+    <meta name="description" content="Simple, transparent pricing for persistent AI memory.">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col font-sans">
 
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#222222]">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="index.html" class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                     <span class="material-symbols-outlined text-black font-bold">waves</span>
                 </div>
-                <span class="text-xl font-bold tracking-tight">Mindwave</span>
+                <span class="text-xl font-bold tracking-tight text-gradient">MindWave</span>
             </a>
             <nav class="hidden md:flex items-center gap-8">
-                <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Home</a>
-                <a href="dashboard.html" class="text-sm font-medium bg-white text-black px-5 py-2.5 rounded-full hover:scale-105 transition-transform">Dashboard</a>
+                <a href="index.html" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Home</a>
+                <a href="dashboard.html" class="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all">Dashboard</a>
             </nav>
         </div>
     </header>
 
-    <main class="flex-1 pt-32 pb-20">
-        <div class="max-w-6xl mx-auto px-6 space-y-16">
+    <main class="flex-1 pt-40 pb-20">
+        <div class="max-w-6xl mx-auto px-6 space-y-20">
             
-            <div class="text-center space-y-4 mb-20">
-                <h1 class="text-5xl font-bold tracking-tight">Simple, Transparent Pricing</h1>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto font-light">
-                    Choose the plan that fits your workflow. From individual memory to professional identity layers.
+            <div class="text-center space-y-6 max-w-2xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold tracking-tight text-gradient leading-[1.1]">Transparent Pricing</h1>
+                <p class="text-gray-500 text-xl font-light">
+                    Choose the plan that fits your workflow. From casual users to professional AI builders.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 
                 <!-- Free Forever -->
-                <div class="bg-[#111111] border border-[#222222] rounded-3xl p-8 flex flex-col glassmorphism">
-                    <div class="space-y-2 mb-8">
-                        <h3 class="text-xl font-bold">Free Plan</h3>
-                        <p class="text-gray-400 text-sm">Essential memory for individuals.</p>
-                        <div class="text-4xl font-extrabold pt-4">$0<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                <div class="premium-card rounded-3xl p-10 flex flex-col space-y-8">
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold">Personal</h3>
+                        <p class="text-gray-500 text-sm">Essential context for individuals.</p>
+                        <div class="text-4xl font-extrabold pt-6">$0<span class="text-lg text-gray-600 font-normal">/mo</span></div>
                     </div>
-                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 5 Prompts / day</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 AI Passport Identity</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 2 Session Syncs / week</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Basic Memory Modes</li>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-400">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> 5 Capture events / day</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> 1 AI Passport Identity</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Standard Sync Engine</li>
                     </ul>
-                    <a href="signup.html" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Get Started Free</a>
+                    <a href="signup.html" class="block text-center bg-white/5 border border-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all">Get Started</a>
                 </div>
 
                 <!-- Pro -->
-                <div class="bg-black border-2 border-white rounded-3xl p-8 flex flex-col relative transform scale-105 shadow-2xl z-10">
-                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold uppercase tracking-widest py-1 px-4 rounded-full">Most Popular</div>
-                    <div class="space-y-2 mb-8">
-                        <h3 class="text-xl font-bold">Pro Plan</h3>
-                        <p class="text-gray-400 text-sm">Enhanced context for power users.</p>
-                        <div class="text-4xl font-extrabold pt-4">$4.99<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                <div class="premium-card rounded-3xl p-10 flex flex-col space-y-8 relative border-white/20 bg-white/[0.02]">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold uppercase tracking-[0.2em] py-1.5 px-6 rounded-full shadow-xl">Most Popular</div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold">Professional</h3>
+                        <p class="text-gray-500 text-sm">Enhanced context for power users.</p>
+                        <div class="text-4xl font-extrabold pt-6 text-gradient">$4.99<span class="text-lg text-gray-600 font-normal">/mo</span></div>
                     </div>
-                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Prompts</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 3 AI Passport Profiles</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Session Syncs</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Share without Watermark</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> All Memory Modes</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> History: 50 Prompts</li>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-400">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Unlimited Captures</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> 5 AI Passport Identities</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Priority Neural Sync</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> 30-Day History Access</li>
                     </ul>
-                    <a href="#" class="mt-8 block text-center bg-white text-black font-bold py-4 rounded-xl hover:scale-105 transition-transform">Upgrade to Pro</a>
+                    <a href="#" class="block text-center bg-white text-black font-bold py-4 rounded-xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Upgrade to Pro</a>
                 </div>
 
                 <!-- Ultra -->
-                <div class="bg-[#111111] border border-[#222222] rounded-3xl p-8 flex flex-col glassmorphism">
-                    <div class="space-y-2 mb-8">
-                        <h3 class="text-xl font-bold">Ultra Plan</h3>
-                        <p class="text-gray-400 text-sm">Unlimited identity layers for professionals.</p>
-                        <div class="text-4xl font-extrabold pt-4">$9.99<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                <div class="premium-card rounded-3xl p-10 flex flex-col space-y-8">
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold">Enterprise</h3>
+                        <p class="text-gray-500 text-sm">Infinite identity for builders.</p>
+                        <div class="text-4xl font-extrabold pt-6">$9.99<span class="text-lg text-gray-600 font-normal">/mo</span></div>
                     </div>
-                    <ul class="space-y-4 flex-1 text-sm text-gray-300">
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Everything in Pro</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited Profiles</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Team Sharing (5 members)</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> API Access</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Unlimited History</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Priority AI Processing</li>
+                    <ul class="space-y-4 flex-1 text-sm text-gray-400">
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Everything in Pro</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Unlimited AI Passports</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Full API Connectivity</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Unlimited History</li>
                     </ul>
-                    <a href="#" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Upgrade to Ultra</a>
+                    <a href="#" class="block text-center bg-white/5 border border-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all">Contact Us</a>
                 </div>
 
             </div>
         </div>
     </main>
 
-    <footer class="border-t border-[#222222] bg-black py-12 mt-auto">
-        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-2">
+    <footer class="border-t border-white/5 bg-black py-16">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-white">waves</span>
-                <span class="font-bold">Mindwave</span>
+                <span class="text-white">MindWave</span>
             </div>
-            <p class="text-sm text-gray-500">Built with ❤️ for AI users everywhere.</p>
-            <div class="flex items-center gap-6 text-sm text-gray-400">
-                <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
-                <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+            <div class="flex items-center gap-10">
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms</a>
             </div>
+            <p class="text-gray-600">© 2026 MystryX. All rights reserved.</p>
         </div>
     </footer>
 </body>

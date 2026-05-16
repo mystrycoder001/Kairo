@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isDashboard) {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('upgraded') === 'true') {
-            showToast('🎉 Welcome to Mindwave Pro! Unlimited access unlocked.');
+            showToast('🎉 Welcome to MindWave Pro! Unlimited access unlocked.');
             // Remove the param from URL without refreshing
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -86,10 +86,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         upgradeModal.classList.remove('flex');
     });
 
+    // Sidebar Upgrade button removed in premium pass - listener deactivated
+    /*
     $('upgrade-btn-sidebar')?.addEventListener('click', () => {
         upgradeModal.classList.remove('hidden');
         upgradeModal.classList.add('flex');
     });
+    */
 
     $('checkout-btn')?.addEventListener('click', async () => {
         const currentUser = await getCurrentUser();
@@ -112,8 +115,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     "key": data.key_id,
                     "amount": data.amount,
                     "currency": data.currency,
-                    "name": "Mindwave",
-                    "description": "Mindwave Pro Subscription",
+                    "name": "MindWave",
+                    "description": "MindWave Pro Subscription",
                     "order_id": data.order_id,
                     "handler": function (response){
                         showToast('✅ Payment successful. Upgrading account...');
@@ -162,8 +165,12 @@ function navigateTo(screenId) {
     document.querySelectorAll('.sidebar-item').forEach(item => {
         if(item.getAttribute('data-nav') === screenId) {
             item.classList.add('active');
+            item.classList.add('text-white');
+            item.classList.remove('text-gray-400');
         } else {
             item.classList.remove('active');
+            item.classList.remove('text-white');
+            item.classList.add('text-gray-400');
         }
     });
 }

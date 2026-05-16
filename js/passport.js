@@ -120,7 +120,7 @@ export async function initPassport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `mindwave-passport-${Date.now()}.txt`;
+        a.download = `mindwave-profile-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
     });

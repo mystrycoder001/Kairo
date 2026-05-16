@@ -9,13 +9,13 @@
     <meta name="vercel-toolbar" content="false">
 
     <!-- SEO & Open Graph -->
-    <meta name="title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
-    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
+    <meta name="title" content="MindWave — One memory. Every AI tool.">
+    <meta name="description" content="MindWave keeps your prompts, communication style, and context synced across AI platforms.">
+    <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
-    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
-    <meta property="og:description" content="Never repeat yourself to AI again.">
+    <meta property="og:title" content="MindWave — One memory. Every AI tool.">
+    <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/mindwave-logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
@@ -60,44 +60,41 @@
     <div class="flex flex-1 overflow-hidden">
         
         <!-- SIDEBAR -->
-        <aside class="w-20 lg:w-72 border-r border-[#222222] bg-[#0a0a0a] flex flex-col z-40 relative">
-            <div class="p-6 flex items-center gap-3 border-b border-[#222222]">
-                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
+        <aside class="w-20 lg:w-72 border-r border-white/5 bg-black flex flex-col z-40 relative">
+            <div class="p-8 flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined text-black font-bold text-lg">waves</span>
                 </div>
-                <span class="hidden lg:block text-lg font-bold tracking-tight">Mindwave</span>
+                <span class="hidden lg:block text-xl font-bold tracking-tight text-gradient">MindWave</span>
             </div>
 
-            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                <button data-nav="overview" class="sidebar-item active w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-dashboard">
-                    <span class="material-symbols-outlined text-gray-400">space_dashboard</span>
-                    <span class="hidden lg:block font-medium text-sm">Dashboard</span>
+            <nav class="flex-1 px-4 py-8 space-y-1">
+                <button data-nav="overview" class="sidebar-item active w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 text-gray-400 hover:text-white" id="tour-dashboard">
+                    <span class="material-symbols-outlined">space_dashboard</span>
+                    <span class="hidden lg:block font-medium text-sm">Overview</span>
                 </button>
-                <button data-nav="voice" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-voice">
-                    <span class="material-symbols-outlined text-gray-400">mic</span>
-                    <span class="hidden lg:block font-medium text-sm">Voice Recording</span>
+                <button data-nav="voice" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 text-gray-400 hover:text-white" id="tour-voice">
+                    <span class="material-symbols-outlined">mic</span>
+                    <span class="hidden lg:block font-medium text-sm">Capture</span>
                 </button>
-                <button data-nav="passport" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-passport">
-                    <span class="material-symbols-outlined text-gray-400">badge</span>
+                <button data-nav="passport" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 text-gray-400 hover:text-white" id="tour-passport">
+                    <span class="material-symbols-outlined">badge</span>
                     <span class="hidden lg:block font-medium text-sm">AI Passport</span>
                 </button>
-                <button data-nav="sync" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:bg-white/5" id="tour-sync">
-                    <span class="material-symbols-outlined text-gray-400">sync_alt</span>
-                    <span class="hidden lg:block font-medium text-sm">Session Sync</span>
+                <button data-nav="sync" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 text-gray-400 hover:text-white" id="tour-sync">
+                    <span class="material-symbols-outlined">sync_alt</span>
+                    <span class="hidden lg:block font-medium text-sm">Sync Status</span>
                 </button>
             </nav>
 
-            <div class="p-4 border-t border-[#222222]">
-                <div class="bg-black border border-[#222222] p-3 rounded-xl flex items-center gap-3">
-                    <div class="w-10 h-10 bg-[#222222] rounded-full flex items-center justify-center font-bold" id="sidebar-avatar">U</div>
+            <div class="p-6">
+                <div class="glassmorphism p-4 rounded-2xl flex items-center gap-3 border border-white/5 shadow-lg">
+                    <div class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold text-sm shadow-inner" id="sidebar-avatar">U</div>
                     <div class="hidden lg:block flex-1 min-w-0">
-                        <p class="text-sm font-bold truncate" id="sidebar-name">User</p>
-                        <p class="text-[10px] text-gray-500 uppercase" id="sidebar-tier">Free Tier</p>
+                        <p class="text-sm font-bold truncate text-white" id="sidebar-name">User</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest" id="sidebar-tier">Free Tier</p>
                     </div>
-                    <button id="upgrade-btn-sidebar" class="hidden lg:block bg-yellow-500 text-black text-xs font-bold px-3 py-1.5 rounded-full hover:scale-105 transition-transform">
-                        Upgrade
-                    </button>
-                    <button id="logout-btn" class="hidden lg:block text-gray-500 hover:text-white">
+                    <button id="logout-btn" class="hidden lg:block text-gray-600 hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-sm">logout</span>
                     </button>
                 </div>
@@ -108,42 +105,54 @@
         <main class="flex-1 bg-black overflow-y-auto relative custom-scrollbar">
             
             <!-- OVERVIEW SCREEN -->
-            <section id="screen-overview" class="screen active p-8 lg:p-12 space-y-8 max-w-6xl mx-auto">
-                <div class="flex justify-between items-center">
+            <section id="screen-overview" class="screen active p-10 lg:p-16 space-y-12 max-w-6xl mx-auto">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
                     <div>
-                        <h1 class="text-3xl font-bold tracking-tight">Welcome back.</h1>
-                        <p class="text-gray-400 font-light">Your AI context is synced and ready.</p>
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-gradient">Workspace</h1>
+                        <p class="text-gray-500 text-lg font-light leading-relaxed">Your AI context is synchronized.</p>
                     </div>
-                    <button data-nav="voice" class="bg-white text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-transform flex items-center gap-2 shadow-lg">
-                        <span class="material-symbols-outlined text-sm">add</span>
-                        New Prompt
+                    <button data-nav="voice" class="w-full md:w-auto bg-white text-black font-bold px-8 py-4 rounded-2xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">mic</span>
+                        Capture
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Memory Modes Switcher -->
-                    <div class="lg:col-span-2 bg-[#111111] border border-[#222222] rounded-2xl p-6 glassmorphism" id="tour-modes">
-                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Active Memory Mode</h3>
-                        <div class="flex flex-wrap gap-3" id="modes-container">
+                    <div class="lg:col-span-2 premium-card rounded-3xl p-8 space-y-6" id="tour-modes">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Active Profile</h3>
+                            <span class="text-[10px] font-bold text-green-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Synchronized
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-4" id="modes-container">
                             <!-- Modes injected by JS -->
                         </div>
-                        <p class="text-xs text-gray-400 mt-4"><span class="text-white font-medium">Tip:</span> Each mode isolates context and passport injection.</p>
                     </div>
 
                     <!-- AI Passport Summary -->
-                    <div class="bg-[#111111] border border-[#222222] rounded-2xl p-6 glassmorphism flex flex-col items-center text-center">
-                        <div class="w-16 h-16 bg-[#222222] rounded-full flex items-center justify-center font-bold text-xl mb-3" id="summary-avatar">U</div>
-                        <h4 class="font-bold" id="summary-name">User Identity</h4>
-                        <p class="text-xs text-gray-400 mb-4" id="summary-role">Role</p>
-                        <button data-nav="passport" class="w-full text-xs font-bold bg-[#222222] hover:bg-[#333333] transition-colors py-2 rounded-lg">Edit Passport</button>
+                    <div class="premium-card rounded-3xl p-8 flex flex-col items-center text-center space-y-6">
+                        <div class="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center font-bold text-2xl shadow-xl" id="summary-avatar">U</div>
+                        <div class="space-y-1">
+                            <h4 class="font-bold text-lg" id="summary-name">User Profile</h4>
+                            <p class="text-xs text-gray-500 uppercase tracking-widest font-bold" id="summary-role">Identity Active</p>
+                        </div>
+                        <button data-nav="passport" class="w-full text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/5 hover:bg-white/10 transition-all py-3 rounded-xl">Edit Passport</button>
                     </div>
                 </div>
 
                 <!-- Recent History -->
-                <div class="space-y-4 pt-6">
-                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Recent Prompts History</h3>
-                    <div class="bg-[#111111] border border-[#222222] rounded-2xl p-6 min-h-[200px]" id="recent-history-container">
-                        <p class="text-gray-500 text-sm text-center pt-10 italic">No prompts generated yet.</p>
+                <div class="space-y-6 pt-8">
+                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Sync History</h3>
+                    <div class="premium-card rounded-3xl p-10 min-h-[300px] flex flex-col items-center justify-center text-center space-y-4" id="recent-history-container">
+                        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-gray-600 text-3xl">history</span>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-gray-400 font-medium">No recent syncs.</p>
+                            <p class="text-xs text-gray-600">Your memory will appear here after capture.</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -192,13 +201,12 @@
             <section id="screen-passport" class="screen p-8 lg:p-12 max-w-5xl mx-auto space-y-8">
                 <div class="flex justify-between items-end">
                     <div class="space-y-2">
-                        <h1 class="text-3xl font-bold tracking-tight">AI Passport</h1>
-                        <p class="text-gray-400">Manage your identity block.</p>
+                        <h1 class="text-3xl font-bold tracking-tight">AI Identity</h1>
+                        <p class="text-gray-400 text-sm font-light">Manage your persistent context profile.</p>
                     </div>
                     <div class="flex gap-2">
                         <button id="export-passport-btn" class="text-xs font-bold px-4 py-2 border border-[#222222] rounded-lg hover:bg-white/5 transition-colors">Export .txt</button>
                         <button id="copy-passport-btn" class="text-xs font-bold px-4 py-2 border border-[#222222] rounded-lg hover:bg-white/5 transition-colors">Copy Block</button>
-                        <button id="share-passport-btn" class="text-xs font-bold px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors">Share Image</button>
                     </div>
                 </div>
 
@@ -360,7 +368,7 @@
                 <div class="bg-[#111111] border border-[#222222] rounded-2xl p-8 glassmorphism space-y-6">
                     <div class="flex items-center gap-4 bg-black p-3 rounded-lg border border-[#222222]">
                         <input type="checkbox" id="inject-passport" checked class="w-4 h-4 accent-white bg-black border-[#222222]">
-                        <label for="inject-passport" class="text-sm font-bold">Inject AI Passport Context</label>
+                        <label for="inject-passport" class="text-sm font-bold">Include Profile Context</label>
                     </div>
 
                     <div id="final-prompt-display" class="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-black p-6 rounded-xl border border-[#222222] min-h-[200px]"></div>

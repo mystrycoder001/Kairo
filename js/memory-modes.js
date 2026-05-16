@@ -44,10 +44,10 @@ function renderModes(container, modes, activeMode) {
     container.innerHTML = modes.map(mode => {
         const isActive = mode === activeMode;
         return `
-            <button class="mode-btn px-4 py-2 rounded-full text-xs font-bold transition-all ${
+            <button class="mode-btn px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] transition-all ${
                 isActive 
-                ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                : 'bg-black text-gray-400 border border-[#222222] hover:border-white/50 hover:text-white'
+                ? 'bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.2)]' 
+                : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10 hover:text-white'
             }" data-mode="${mode}">
                 ${mode}
             </button>

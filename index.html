@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mindwave — Your memory across every AI</title>
+    <title>Mindwave — Your persistent memory across AI</title>
     
     <!-- PWA & SEO -->
     <link rel="manifest" href="manifest.json">
@@ -11,31 +11,14 @@
     <meta name="vercel-toolbar" content="false">
 
     <!-- SEO & Open Graph -->
-    <meta name="title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
-    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
+    <meta name="title" content="MindWave — One memory. Every AI tool.">
+    <meta name="description" content="MindWave keeps your prompts, communication style, and context synced across AI platforms.">
+    <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
-    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
-    <meta property="og:description" content="Never repeat yourself to AI again.">
+    <meta property="og:title" content="MindWave — One memory. Every AI tool.">
+    <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/mindwave-logo.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="twitter:description" content="Never repeat yourself to AI again.">
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Mindwave",
-      "description": "AI memory and identity layer",
-      "applicationCategory": "ProductivityApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      }
-    }
-    </script>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,216 +30,123 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col font-sans selection:bg-white selection:text-black">
 
     <!-- HEADER -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#222222]">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                     <span class="material-symbols-outlined text-black font-bold">waves</span>
                 </div>
-                <span class="text-xl font-bold tracking-tight">Mindwave</span>
+                <span class="text-xl font-bold tracking-tight text-gradient">MindWave</span>
             </div>
             <nav class="hidden md:flex items-center gap-8">
-                <a href="#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
-                <a href="pricing.html" class="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
-                <a href="signup.html" class="text-sm font-medium bg-white text-black px-5 py-2.5 rounded-full hover:scale-105 transition-transform">Get Started</a>
+                <a href="#features" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Features</a>
+                <a href="pricing.html" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Pricing</a>
+                <a href="signup.html" class="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Start Free</a>
             </nav>
         </div>
     </header>
 
-    <!-- HERO SECTION -->
-    <main class="flex-1 pt-32 pb-20">
-    <main class="flex-1">
-        <section class="max-w-6xl mx-auto px-6 pt-20 pb-32 text-center">
-            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
-                Never repeat yourself<br>to AI again.
-            </h1>
-            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-light">
-                Mindwave is your persistent memory layer. It securely stores your context, identity, and preferences across ChatGPT, Claude, and Gemini.
-            </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="signup.html" class="w-full sm:w-auto bg-white text-black px-8 py-4 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                    Get Started Free
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 pt-40 pb-20">
+        <!-- Hero -->
+        <section class="max-w-6xl mx-auto px-6 text-center space-y-12 mb-32">
+            <div class="animate-slide-up">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500 mb-8">
+                    Your Personal AI Layer
+                </span>
+                <h1 class="text-6xl md:text-8xl font-bold tracking-tighter mb-8 text-gradient leading-[1.05]">
+                    One memory.<br>Every AI tool.
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto font-light leading-relaxed">
+                    MindWave keeps your prompts, communication style, and context synced across AI platforms.
+                </p>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 animate-slide-up" style="animation-delay: 0.1s;">
+                <a href="signup.html" class="w-full sm:w-auto bg-white text-black font-bold px-10 py-5 rounded-full hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+                    Start Free
                 </a>
-                <a href="pricing.html" class="w-full sm:w-auto bg-[#111111] border border-[#222222] text-white px-8 py-4 rounded-full font-bold hover:bg-[#222222] transition-colors">
-                    View Pricing
+                <a href="#demo" class="w-full sm:w-auto bg-white/5 border border-white/10 text-white font-medium px-10 py-5 rounded-full hover:bg-white/10 transition-all">
+                    Watch Demo
                 </a>
             </div>
         </section>
 
-        <!-- INTERACTIVE DEMO (BEFORE SIGNUP) -->
-        <div id="demo" class="max-w-5xl mx-auto px-6 mt-32 relative">
-            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-white/5 blur-[100px] rounded-full pointer-events-none"></div>
-            
-            <div class="bg-[#111111] border border-[#222222] rounded-3xl overflow-hidden shadow-2xl relative z-10 glassmorphism">
-                <!-- Demo Header -->
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-[#222222] bg-black/50">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                    <div class="mx-auto text-xs font-mono text-gray-500">mindwave-demo.app</div>
-                </div>
-
-                <!-- Demo Content Area -->
-                <div class="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center min-h-[500px]">
-                    
-                    <!-- Left: Interactive Controls -->
-                    <div class="space-y-8">
-                        <div class="space-y-2">
-                            <h3 class="text-2xl font-bold">Watch the magic.</h3>
-                            <p class="text-gray-400">Click to simulate a real workflow.</p>
-                        </div>
-
-                        <div class="space-y-4">
-                            <!-- Step 1: Voice -->
-                            <div id="demo-step-1" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group">
-                                <div class="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <span class="material-symbols-outlined">mic</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold">1. Voice Record</h4>
-                                    <p class="text-xs text-gray-400">Capture the raw idea.</p>
-                                </div>
-                            </div>
-
-                            <!-- Step 2: Passport -->
-                            <div id="demo-step-2" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group opacity-50">
-                                <div class="w-12 h-12 rounded-full bg-[#222222] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <span class="material-symbols-outlined">badge</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold">2. Attach AI Passport</h4>
-                                    <p class="text-xs text-gray-400">Inject your context.</p>
-                                </div>
-                            </div>
-
-                            <!-- Step 3: Session Sync -->
-                            <div id="demo-step-3" class="demo-step p-4 rounded-xl border border-[#222222] bg-black/40 cursor-pointer hover:border-white/50 transition-colors flex items-center gap-4 group opacity-50">
-                                <div class="w-12 h-12 rounded-full bg-[#222222] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <span class="material-symbols-outlined">sync_alt</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold">3. Session Sync</h4>
-                                    <p class="text-xs text-gray-400">Carry on from Claude.</p>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Demo -->
+        <section id="demo" class="max-w-4xl mx-auto px-6 mb-40 animate-fade-in">
+            <div class="glassmorphism rounded-[32px] p-1 shadow-2xl relative">
+                <div class="bg-black/20 rounded-[31px] p-8 md:p-16 flex flex-col items-center text-center">
+                    <div class="mb-12">
+                        <h2 class="text-3xl font-bold tracking-tight mb-4">Sync Your Context</h2>
+                        <p class="text-gray-500 text-lg">Your AI identity stays consistent everywhere.</p>
                     </div>
 
-                    <!-- Right: Visual Output -->
-                    <div class="relative h-full w-full bg-black/80 rounded-2xl border border-[#222222] p-6 overflow-hidden flex flex-col justify-center">
+                    <div class="w-full bg-black border border-white/5 rounded-3xl p-10 relative shadow-inner overflow-hidden">
+                        <div class="flex items-center justify-between mb-10 pb-4 border-b border-white/5">
+                            <div class="flex gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-[0.2em] text-gray-600 font-bold">Sync Engine Ready</span>
+                        </div>
                         
-                        <!-- Output 1: Voice Visualizer -->
-                        <div id="demo-output-1" class="demo-output absolute inset-0 flex flex-col items-center justify-center p-8 text-center transition-all duration-500">
-                            <div class="relative w-32 h-32 flex items-center justify-center mb-6">
-                                <div class="absolute inset-0 border border-white/20 rounded-full animate-ping"></div>
-                                <div class="absolute inset-2 border border-white/40 rounded-full animate-ping" style="animation-delay: 0.2s;"></div>
-                                <span class="material-symbols-outlined text-6xl text-white">graphic_eq</span>
-                            </div>
-                            <p class="typewriter text-lg font-medium text-gray-300">"I want to build a landing page for Mindwave... make it dark mode."</p>
+                        <div class="flex flex-col items-center space-y-8 py-10 relative z-10">
+                            <button id="mic-btn" class="w-28 h-28 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_60px_rgba(255,255,255,0.15)] group">
+                                <span id="mic-icon" class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">mic</span>
+                            </button>
+                            <p id="mic-status" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Click to Capture</p>
                         </div>
-
-                        <!-- Output 2: AI Passport -->
-                        <div id="demo-output-2" class="demo-output absolute inset-0 flex flex-col items-center justify-center p-8 opacity-0 pointer-events-none transition-all duration-500 scale-95">
-                            <div class="w-full bg-[#111111] border border-[#222222] rounded-xl p-6 space-y-4">
-                                <div class="flex items-center gap-4">
-                                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Demo" class="w-16 h-16 rounded-full bg-white/10">
-                                    <div>
-                                        <h4 class="font-bold text-lg">Alex (Founder Mode)</h4>
-                                        <p class="text-xs text-gray-400">Prefers concise, technical code. Tailwind + React.</p>
-                                    </div>
-                                </div>
-                                <div class="text-xs font-mono text-gray-500 bg-black p-3 rounded border border-[#222222]">
-                                    <span class="text-green-400">Attached:</span> Identity block injected into prompt.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Output 3: Final Prompt -->
-                        <div id="demo-output-3" class="demo-output absolute inset-0 flex flex-col items-start justify-center p-8 opacity-0 pointer-events-none transition-all duration-500 scale-95">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Final Generated Prompt</h4>
-                            <div class="w-full h-full text-sm text-gray-300 font-mono leading-relaxed bg-black border border-[#222222] rounded-lg p-4 overflow-y-auto custom-scrollbar">
-                                <span class="text-blue-400"># Context:</span> Alex (Founder Mode) - Technical, Tailwind, React<br><br>
-                                <span class="text-blue-400"># Previous Session:</span> User was debugging dark mode toggle. Continue from there.<br><br>
-                                <span class="text-blue-400"># Task:</span> Build a landing page for Mindwave, ensure it's dark mode focused.<br><br>
-                                <span class="text-green-400 animate-pulse">Ready to paste into ChatGPT/Claude.</span>
-                            </div>
-                        </div>
-
+                        <div class="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent pointer-events-none"></div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 py-20">
+            <div class="premium-card p-10 rounded-3xl space-y-6">
+                <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white">badge</span>
+                </div>
+                <h3 class="text-xl font-bold">AI Identity</h3>
+                <p class="text-gray-500 text-sm leading-relaxed">Save your communication style once and keep it consistent across every chat.</p>
+            </div>
+            <div class="premium-card p-10 rounded-3xl space-y-6">
+                <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white">sync_alt</span>
+                </div>
+                <h3 class="text-xl font-bold">Session Sync</h3>
+                <p class="text-gray-500 text-sm leading-relaxed">Sync context between ChatGPT, Claude, and Gemini with a single click.</p>
+            </div>
+            <div class="premium-card p-10 rounded-3xl space-y-6">
+                <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white">memory</span>
+                </div>
+                <h3 class="text-xl font-bold">Memory Sync</h3>
+                <p class="text-gray-500 text-sm leading-relaxed">Your AI memory across every tool. No more repeating yourself to different models.</p>
+            </div>
+        </section>
     </main>
 
     <!-- FOOTER -->
-    <footer class="border-t border-[#222222] bg-black py-12 mt-20">
-        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-2">
+    <footer class="border-t border-white/5 bg-black py-16">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-3">
                 <span class="material-symbols-outlined text-white">waves</span>
-                <span class="font-bold">Mindwave</span>
+                <span class="font-bold tracking-tight">MindWave</span>
             </div>
-            
-            <p class="text-sm text-gray-500">Built with ❤️ for AI users everywhere.</p>
-            
-            <div class="flex items-center gap-6 text-sm text-gray-400">
-                <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
-                <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+            <div class="flex items-center gap-10 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms</a>
                 <a href="#" class="hover:text-white transition-colors">Twitter</a>
-                <a href="#" class="hover:text-white transition-colors">ProductHunt</a>
             </div>
+            <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">© 2026 MystryX. All rights reserved.</p>
         </div>
     </footer>
-
-    <!-- Demo Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const steps = [$('demo-step-1'), $('demo-step-2'), $('demo-step-3')];
-            const outputs = [$('demo-output-1'), $('demo-output-2'), $('demo-output-3')];
-            let currentStep = 0;
-            let autoPlayInterval;
-
-            function $(id) { return document.getElementById(id); }
-
-            function runStep(index) {
-                // Update steps UI
-                steps.forEach((s, i) => {
-                    if (i <= index) s.classList.remove('opacity-50');
-                    else s.classList.add('opacity-50');
-                });
-                
-                // Update output UI
-                outputs.forEach((o, i) => {
-                    if (i === index) {
-                        o.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
-                    } else {
-                        o.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
-                    }
-                });
-                currentStep = index;
-            }
-
-            steps.forEach((step, index) => {
-                step.addEventListener('click', () => {
-                    if(autoPlayInterval) clearInterval(autoPlayInterval);
-                    runStep(index);
-                });
-            });
-            
-            // Initial run
-            runStep(0);
-
-            // Auto play demo
-            autoPlayInterval = setInterval(() => {
-                currentStep = (currentStep + 1) % 3;
-                runStep(currentStep);
-            }, 5000);
-        });
-    </script>
 </body>
 </html>
