@@ -1,6 +1,7 @@
 // js/session-sync.js — Session Sync Logic with Supabase
-import { $, showToast } from './app.js';
+import { $, showToast, cleanPrompt } from './app.js';
 import { supabase, getCurrentUser } from './auth.js';
+import { checkSessionAccess } from './usage.js';
 
 export function initSessionSync() {
     const syncInput = $('sync-input');
@@ -18,11 +19,16 @@ export function initSessionSync() {
         const user = await getCurrentUser();
         if (!user) return showToast('Please sign in first');
 
+        // Check if user has session sync quota
+        if (!(await checkSessionAccess(user))) return;
+
         if(loader) loader.classList.remove('hidden');
         runBtn.disabled = true;
 
         try {
-            const block = await extractContextAPI(text);
+            const rawBlock = await extractContextAPI(text);
+            const cleanBlock = cleanPrompt(rawBlock);
+            const block = `${cleanBlock}\n\n[Mindwave Intelligence Continuity]`;
             syncOutput.textContent = block;
 
             // Save to Supabase

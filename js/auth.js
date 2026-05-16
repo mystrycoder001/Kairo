@@ -3,14 +3,24 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = 'https://ibsngqwkaasswscqnlhl.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_CXDhFswPYDJPIgEFisN8pQ_hiptOkMT'
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// Initialize Supabase with explicit auth settings for reliability
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+})
+
+// Global auth state cache
+let currentUser = null;
 
 // Google Sign In
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://kairo-omega-three.vercel.app/dashboard.html',
+      redirectTo: window.location.origin + '/dashboard.html',
       queryParams: {
         prompt: 'select_account'
       }
@@ -28,7 +38,6 @@ export async function signInWithEmail(email, password) {
   if (error) throw error
   if (data.user) {
     await initUserProfile(data.user)
-    window.location.href = '/dashboard.html'
   }
   return data.user
 }
@@ -37,108 +46,120 @@ export async function signInWithEmail(email, password) {
 export async function signUpWithEmail(email, password, name) {
   const { data, error } = await supabase.auth.signUp({
     email, password,
-    options: { data: { full_name: name } }
+    options: { 
+        data: { full_name: name },
+        emailRedirectTo: window.location.origin + '/dashboard.html'
+    }
   })
   if (error) throw error
   if (data.user) {
     await initUserProfile(data.user, name)
-    window.location.href = '/dashboard.html'
   }
   return data.user
 }
 
 // Initialize user profile
 export async function initUserProfile(user, name = null) {
+  if (!user) return;
   const displayName = name 
     || user?.user_metadata?.full_name 
     || user?.user_metadata?.name 
     || user?.email?.split('@')[0] 
     || 'User';
 
-  const { data: existing } = await supabase.from('profiles')
-  .select('*')
-  .eq('id', user.id)
-  .single()
-  
-  if (!existing) {
-    await supabase
-    .from('profiles')
-    .insert({
-      id: user.id,
-      email: user.email,
-      name: displayName,
-      trial_start_date: new Date(),
-      trial_end_date: new Date(
-        Date.now() + 14*24*60*60*1000
-      ),
-      plan_tier: 'trial'
-    })
-  } else {
-    // Ensure name is up to date if we just got it
+  const avatarUrl = user?.user_metadata?.avatar_url || '';
+
+  // Update profile and last login
+  try {
     await supabase.from('profiles')
-      .upsert({ id: user.id, name: displayName });
+        .upsert({ 
+            id: user.id,
+            full_name: displayName, 
+            avatar_url: avatarUrl,
+            email: user.email,
+            last_login: new Date().toISOString()
+        }, { onConflict: 'id' });
+  } catch (err) {
+      console.error("Profile sync error:", err);
   }
 }
 
-// Check auth state on every page
-export async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
-    window.location.href = '/index.html'
-    return null
-  }
-  
-  return session.user
-}
-
-// Get current session user without redirecting
+// Robust session retrieval
 export async function getCurrentUser() {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session ? session.user : null
-}
+  if (currentUser) return currentUser;
 
-// Check trial status
-export async function checkTrial(userId) {
-  const { data: profile } = await supabase.from('profiles')
-  .select('plan_tier, trial_end_date')
-  .eq('id', userId)
-  .single()
-  
-  if (!profile) return 'trial'
-
-  const now = new Date()
-  const trialEnd = new Date(profile.trial_end_date)
-  
-  if (now > trialEnd && profile.plan_tier === 'trial') {
-    await supabase
-    .from('profiles')
-    .update({ plan_tier: 'expired' })
-    .eq('id', userId)
-    return 'expired'
+  const { data: { session }, error } = await supabase.auth.getSession()
+  if (error) {
+      console.error("Session fetch error:", error);
+      return null;
   }
   
-  return profile.plan_tier
+  if (session?.user) {
+      currentUser = session.user;
+      return currentUser;
+  }
+  
+  return null;
+}
+
+// Get user subscription plan
+export async function getUserPlan(userId) {
+  try {
+      const { data: profile } = await supabase.from('profiles')
+      .select('subscription_plan')
+      .eq('id', userId)
+      .single()
+      
+      return profile?.subscription_plan || 'free';
+  } catch (err) {
+      return 'free';
+  }
 }
 
 // Logout
 export async function logout() {
+    currentUser = null;
     const { error } = await supabase.auth.signOut()
     if (error) console.error('Logout error:', error)
+    window.location.href = '/login.html';
 }
 
-// Global Auth State Change Listener
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    const currentPage = window.location.pathname;
-    if (currentPage.includes('login.html') || currentPage.includes('signup.html') || currentPage === '/') {
-      window.location.href = '/dashboard.html';
+// Centralized Auth State Handler
+supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log("Auth Event:", event);
+  
+  if (session?.user) {
+    currentUser = session.user;
+    if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        await initUserProfile(session.user);
     }
+  } else {
+    currentUser = null;
   }
-  if (event === 'SIGNED_OUT') {
+
+  const path = window.location.pathname;
+  const isAuthPage = path.includes('login.html') || path.includes('signup.html') || path === '/' || path === '';
+  const isDashboard = path.includes('dashboard.html');
+
+  if (event === 'SIGNED_IN' && isAuthPage) {
+    window.location.href = '/dashboard.html';
+  }
+  
+  if (event === 'SIGNED_OUT' && isDashboard) {
     window.location.href = '/login.html';
   }
 });
 
-// Export supabase client for other modules
+// Route Guard helper
+export async function checkAuth() {
+  const user = await getCurrentUser();
+  if (!user) {
+    const path = window.location.pathname;
+    if (!path.includes('login.html') && !path.includes('signup.html') && path !== '/' && path !== '') {
+        window.location.href = '/login.html';
+    }
+  }
+}
+
 export { supabase }
+

@@ -1,13 +1,23 @@
 // js/passport.js — AI Passport Identity Manager with Supabase
-import { $, showToast } from './app.js';
+import { $, showToast, cleanPrompt } from './app.js';
 import { supabase, getCurrentUser } from './auth.js';
+import { checkPassportLimit, incrementPassportCount } from './usage.js';
 
 export async function initPassport() {
     const editForm = $('passport-edit-form');
     const saveBtn = $('save-passport-btn');
+    
+    // Layer inputs
     const nameInput = $('edit-name');
     const roleInput = $('edit-role');
-    const goalsInput = $('edit-goals');
+    const focusInput = $('edit-focus');
+    const commStyleInput = $('edit-comm-style');
+    const commFormatInput = $('edit-comm-format');
+    const commToneInput = $('edit-comm-tone');
+    const contextInput = $('edit-context');
+    const behaviorInput = $('edit-behavior');
+    const neverForgetInput = $('edit-never-forget');
+    const targetAiInput = $('edit-target-ai');
     
     const exportBtn = $('export-passport-btn');
     const copyBtn = $('copy-passport-btn');
@@ -18,14 +28,27 @@ export async function initPassport() {
     if (user) {
         const { data: profile } = await supabase
             .from('profiles')
-            .select('name, role, goals')
+            .select('full_name, role, goals, communication_style, active_context, behavioral_memory, never_forget, target_ai, passport_text')
             .eq('id', user.id)
             .single();
 
         if (profile) {
-            if (nameInput) nameInput.value = profile.name || '';
-            if (roleInput) roleInput.value = profile.role || '';
-            if (goalsInput) goalsInput.value = profile.goals || '';
+            if (nameInput) nameInput.value = profile.full_name || '';
+            if (roleInput) roleInput.value = profile.role || 'Founder';
+            if (focusInput) focusInput.value = profile.goals || ''; // Map goals to focus
+            
+            if (profile.communication_style) {
+                const parts = profile.communication_style.split('|');
+                if (commStyleInput) commStyleInput.value = parts[0] || 'Balanced';
+                if (commFormatInput) commFormatInput.value = parts[1] || 'Mixed';
+                if (commToneInput) commToneInput.value = parts[2] || 'Professional';
+            }
+            
+            if (contextInput) contextInput.value = profile.active_context || '';
+            if (behaviorInput) behaviorInput.value = profile.behavioral_memory || '';
+            if (neverForgetInput) neverForgetInput.value = profile.never_forget || '';
+            if (targetAiInput) targetAiInput.value = profile.target_ai || 'All';
+            
             updateSummaryCard(profile);
             
             if ($('passport-output-text')) {
@@ -36,14 +59,21 @@ export async function initPassport() {
 
     saveBtn?.addEventListener('click', async () => {
         if (!user) return showToast('Please sign in first');
+        
+        if (!(await checkPassportLimit(user))) return;
 
         const data = {
-            name: nameInput ? nameInput.value : '',
+            full_name: nameInput ? nameInput.value : '',
             role: roleInput ? roleInput.value : '',
-            goals: goalsInput ? goalsInput.value : ''
+            goals: focusInput ? focusInput.value : '',
+            communication_style: `${commStyleInput?.value || ''}|${commFormatInput?.value || ''}|${commToneInput?.value || ''}`,
+            active_context: contextInput ? contextInput.value : '',
+            behavioral_memory: behaviorInput ? behaviorInput.value : '',
+            never_forget: neverForgetInput ? neverForgetInput.value : '',
+            target_ai: targetAiInput ? targetAiInput.value : 'All'
         };
         
-        saveBtn.textContent = 'Saving...';
+        saveBtn.textContent = 'Saving & Generating...';
         saveBtn.disabled = true;
 
         try {
@@ -57,8 +87,11 @@ export async function initPassport() {
             
             updateSummaryCard(data);
             
+            // Generate passport
+            const generatedPrompt = await generatePassportAPI(data);
+            const block = cleanPrompt(generatedPrompt);
+            
             // Save generated text to Supabase
-            saveBtn.textContent = 'Saving...';
             const { error: textError } = await supabase
                 .from('profiles')
                 .update({ passport_text: block })
@@ -66,8 +99,12 @@ export async function initPassport() {
 
             if (textError) throw textError;
             
-            renderPassportText();
-            showToast('🪪 Passport Updated');
+            await incrementPassportCount(user);
+            
+            if ($('passport-output-text')) {
+                $('passport-output-text').textContent = block;
+            }
+            showToast('🪪 Passport Updated & Generated');
         } catch (err) {
             showToast(`❌ ${err.message}`);
         } finally {
@@ -76,10 +113,9 @@ export async function initPassport() {
         }
     });
 
-    // ... rest of export, copy, share logic ...
     exportBtn?.addEventListener('click', () => {
         const text = getPassportText();
-        if(!text) return showToast('No passport generated yet');
+        if(!text || text.includes('Fill out the form')) return showToast('No passport generated yet');
         const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -91,7 +127,7 @@ export async function initPassport() {
 
     copyBtn?.addEventListener('click', () => {
         const text = getPassportText();
-        if(!text) return showToast('No passport generated yet');
+        if(!text || text.includes('Fill out the form')) return showToast('No passport generated yet');
         navigator.clipboard.writeText(text);
         showToast('📋 Copied to clipboard');
     });
@@ -102,21 +138,14 @@ export async function initPassport() {
 }
 
 function updateSummaryCard(data) {
-    if($('summary-name')) $('summary-name').textContent = data.name || 'User';
+    if($('summary-name')) $('summary-name').textContent = data.full_name || 'User';
     if($('summary-role')) $('summary-role').textContent = data.role || 'Role';
-    if($('summary-avatar') && data.name) $('summary-avatar').textContent = data.name.charAt(0).toUpperCase();
+    if($('summary-avatar') && data.full_name) $('summary-avatar').textContent = data.full_name.charAt(0).toUpperCase();
 }
 
 export function getPassportText() {
     const el = $('passport-output-text');
     return el ? el.textContent : '';
-}
-
-function renderPassportText() {
-    const el = $('passport-output-text');
-    if(el) {
-        el.textContent = getPassportText() || 'Fill out the form and generate your passport block.';
-    }
 }
 
 async function generatePassportAPI(data) {

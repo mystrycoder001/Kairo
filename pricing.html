@@ -5,10 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="vercel-toolbar" content="false">
     <title>Pricing — Mindwave</title>
+
+    <!-- SEO & Open Graph -->
+    <meta name="title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
+    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
+    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
+    <meta property="og:description" content="Never repeat yourself to AI again.">
+    <meta property="og:image" content="/logo/mindwave-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="twitter:description" content="Never repeat yourself to AI again.">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mindwave",
+      "description": "AI memory and identity layer",
+      "applicationCategory": "ProductivityApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col font-sans">
 
@@ -37,21 +66,20 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 
-                <!-- Free Trial -->
+                <!-- Free Forever -->
                 <div class="bg-[#111111] border border-[#222222] rounded-3xl p-8 flex flex-col glassmorphism">
                     <div class="space-y-4 mb-8">
-                        <h3 class="text-2xl font-bold">Free Trial</h3>
-                        <div class="text-4xl font-extrabold">$0<span class="text-lg text-gray-500 font-normal">/14 days</span></div>
-                        <p class="text-sm text-gray-400">Test the waters.</p>
+                        <h3 class="text-2xl font-bold">Free Forever</h3>
+                        <div class="text-4xl font-extrabold">$0<span class="text-lg text-gray-500 font-normal">/mo</span></div>
+                        <p class="text-sm text-gray-400">Everything you need to get started.</p>
                     </div>
                     <ul class="space-y-4 flex-1 text-sm text-gray-300">
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 20 Prompts / day</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 AI Passport Profile</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 5 Session Syncs</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Share with Watermark</li>
-                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 Memory Mode</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 5 Prompts / day</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 1 AI Passport Identity</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> 2 Session Syncs / week</li>
+                        <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check</span> Basic Memory Modes</li>
                     </ul>
-                    <a href="onboarding.html" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Start Free Trial</a>
+                    <a href="signup.html" class="mt-8 block text-center bg-[#222222] text-white font-bold py-4 rounded-xl hover:bg-[#333333] transition-colors">Get Started Free</a>
                 </div>
 
                 <!-- Pro -->

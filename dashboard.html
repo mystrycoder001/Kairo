@@ -7,11 +7,40 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="vercel-toolbar" content="false">
+
+    <!-- SEO & Open Graph -->
+    <meta name="title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
+    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
+    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
+    <meta property="og:description" content="Never repeat yourself to AI again.">
+    <meta property="og:image" content="/logo/mindwave-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="twitter:description" content="Never repeat yourself to AI again.">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mindwave",
+      "description": "AI memory and identity layer",
+      "applicationCategory": "ProductivityApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
         .screen { display: none; }
@@ -25,17 +54,8 @@
             border-right: 2px solid white;
         }
     </style>
-    <script type="module">
-        import { checkAuth } from './js/auth.js';
-        checkAuth();
-    </script>
 </head>
 <body class="bg-black text-white h-screen flex flex-col font-sans overflow-hidden">
-
-    <!-- Trial Banner -->
-    <div id="trial-banner" class="bg-yellow-500 text-black text-xs font-bold uppercase tracking-widest py-1.5 text-center hidden">
-        ⚠️ 14-Day Free Trial: <span id="trial-days-left">14</span> days remaining. <a href="pricing.html" class="underline hover:text-white">Upgrade to Pro</a>
-    </div>
 
     <div class="flex flex-1 overflow-hidden">
         
@@ -67,33 +87,16 @@
                 </button>
             </nav>
 
-            <!-- Trial Progress Section -->
-            <div class="px-6 py-2 hidden lg:block">
-                <div style="margin-top: 8px;">
-                  <div style="display:flex; justify-content:space-between; 
-                    font-size:11px; color:#888; margin-bottom:4px;">
-                    <span id="trial-days-text">14 days left</span>
-                    <span>Free Trial</span>
-                  </div>
-                  <div style="background:#222; border-radius:999px; 
-                    height:4px; width:100%;">
-                    <div id="trial-progress-bar" style="
-                      background: linear-gradient(90deg, #7c3aed, #a855f7);
-                      height:4px; border-radius:999px; 
-                      transition: width 0.3s ease;
-                      width: 100%;">
-                    </div>
-                  </div>
-                </div>
-            </div>
-
             <div class="p-4 border-t border-[#222222]">
                 <div class="bg-black border border-[#222222] p-3 rounded-xl flex items-center gap-3">
                     <div class="w-10 h-10 bg-[#222222] rounded-full flex items-center justify-center font-bold" id="sidebar-avatar">U</div>
                     <div class="hidden lg:block flex-1 min-w-0">
                         <p class="text-sm font-bold truncate" id="sidebar-name">User</p>
-                        <p class="text-[10px] text-gray-500 uppercase">Trial Tier</p>
+                        <p class="text-[10px] text-gray-500 uppercase" id="sidebar-tier">Free Tier</p>
                     </div>
+                    <button id="upgrade-btn-sidebar" class="hidden lg:block bg-yellow-500 text-black text-xs font-bold px-3 py-1.5 rounded-full hover:scale-105 transition-transform">
+                        Upgrade
+                    </button>
                     <button id="logout-btn" class="hidden lg:block text-gray-500 hover:text-white">
                         <span class="material-symbols-outlined text-sm">logout</span>
                     </button>
@@ -201,21 +204,113 @@
 
                 <div class="bg-[#111111] border border-[#222222] rounded-2xl p-8 glassmorphism space-y-6">
                     <form id="passport-edit-form" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-gray-500 uppercase">Name</label>
-                                <input type="text" id="edit-name" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                        <!-- Layer 1 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">1. Identity</h3>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Name</label>
+                                    <input type="text" id="edit-name" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Role</label>
+                                    <select id="edit-role" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                                        <option value="Student">Student</option>
+                                        <option value="Founder">Founder</option>
+                                        <option value="Developer">Developer</option>
+                                        <option value="Creator">Creator</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="space-y-2">
-                                <label class="text-xs font-bold text-gray-500 uppercase">Role</label>
-                                <input type="text" id="edit-role" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Primary Focus</label>
+                                <input type="text" id="edit-focus" placeholder="e.g. Building SaaS apps, studying biology" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
                             </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-gray-500 uppercase">Goals</label>
-                            <textarea id="edit-goals" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white h-24"></textarea>
+
+                        <!-- Layer 2 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">2. Communication Style</h3>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Style</label>
+                                    <select id="edit-comm-style" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 text-sm outline-none focus:border-white">
+                                        <option value="Direct">Direct</option>
+                                        <option value="Detailed">Detailed</option>
+                                        <option value="Creative">Creative</option>
+                                        <option value="Balanced">Balanced</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Format</label>
+                                    <select id="edit-comm-format" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 text-sm outline-none focus:border-white">
+                                        <option value="Bullet points">Bullet points</option>
+                                        <option value="Prose">Prose</option>
+                                        <option value="Mixed">Mixed</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Tone</label>
+                                    <select id="edit-comm-tone" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 text-sm outline-none focus:border-white">
+                                        <option value="Professional">Professional</option>
+                                        <option value="Casual">Casual</option>
+                                        <option value="Technical">Technical</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" id="save-passport-btn" class="bg-white text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-transform text-sm">Save Changes & Regenerate</button>
+
+                        <!-- Layer 3 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">3. Active Context</h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Current Projects & Goals</label>
+                                    <textarea id="edit-context" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white h-20" placeholder="What are you working on right now?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer 4 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">4. Behavioral Memory</h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">How you work & tools used</label>
+                                    <textarea id="edit-behavior" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white h-20" placeholder="e.g. Visual thinker, prefers VS Code..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer 5 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">5. Never Forget</h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Critical Permanent Context</label>
+                                    <textarea id="edit-never-forget" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white h-20" placeholder="e.g. I am dyslexic, keep paragraphs short."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer 6 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-white border-b border-[#222222] pb-2">6. AI Optimization Target</h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Target AI</label>
+                                    <select id="edit-target-ai" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white">
+                                        <option value="All">All / Universal</option>
+                                        <option value="ChatGPT">ChatGPT (structured + balanced)</option>
+                                        <option value="Claude">Claude (detailed + contextual)</option>
+                                        <option value="Gemini">Gemini (concise + organized)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="save-passport-btn" class="w-full bg-white text-black font-bold px-6 py-4 rounded-xl hover:scale-[1.02] transition-transform text-sm">Save Changes & Regenerate</button>
                     </form>
                     
                     <div class="pt-6 border-t border-[#222222]">
@@ -278,13 +373,41 @@
     <!-- Toast -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl transition-all duration-300 transform translate-y-20 opacity-0"></div>
 
-    <script type="module">
-        import { supabase } from './js/auth.js';
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          window.location.href = '/login.html';
-        }
-    </script>
+    <!-- Upgrade Modal -->
+    <div id="upgrade-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center">
+        <div class="bg-[#111111] border border-[#333333] rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl relative">
+            <button id="close-upgrade-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="text-center space-y-4">
+                <div class="w-16 h-16 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                    <span class="material-symbols-outlined text-black text-3xl font-bold">star</span>
+                </div>
+                <h3 class="text-2xl font-bold">Upgrade to Pro</h3>
+                <p id="upgrade-message" class="text-gray-400">Unlock unlimited AI power and advanced customization.</p>
+                
+                <div class="bg-black border border-[#222222] rounded-xl p-4 text-left space-y-3 mt-6">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                        <span class="text-sm text-gray-300">Unlimited Prompts</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                        <span class="text-sm text-gray-300">Unlimited Passports</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                        <span class="text-sm text-gray-300">Unlimited Session History</span>
+                    </div>
+                </div>
+
+                <button id="checkout-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform flex justify-center items-center gap-2 mt-6">
+                    <span>Upgrade Now ($4.99/mo)</span>
+                    <div id="checkout-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                </button>
+            </div>
+        </div>
+    </div>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

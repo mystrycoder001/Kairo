@@ -2,10 +2,19 @@ import { initVoice } from './voice.js';
 import { generatePrompt } from './gemini.js';
 import { initPassport, getPassportText } from './passport.js';
 import { initSessionSync } from './session-sync.js';
-import { updateTrialUI, enforceTrial } from './trial.js';
+// trial.js logic removed for Free-Forever model
 import { getCurrentUser, logout, supabase } from './auth.js';
 import { initTour } from './tour.js';
 import { initMemoryModes } from './memory-modes.js';
+import { checkPromptLimit } from './usage.js';
+
+export function cleanPrompt(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*/g, '').replace(/\*/g, '')
+    .replace(/#{1,6}\s/g, '').replace(/`{1,3}/g, '')
+    .replace(/^\s*[-•]\s/gm, '').trim();
+}
 
 // DOM Utilities
 export const $ = (id) => document.getElementById(id);
@@ -31,11 +40,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    if (isDashboard) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('upgraded') === 'true') {
+            showToast('🎉 Welcome to Mindwave Pro! Unlimited access unlocked.');
+            // Remove the param from URL without refreshing
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     if (user) {
         // Fetch profile data for summary and sidebar
-        const { data: profile } = await supabase.from('profiles').select('name, role, active_mode').eq('id', user.id).single();
+        const { data: profile } = await supabase.from('profiles').select('full_name, role, active_mode').eq('id', user.id).single();
         
-        const displayName = profile?.name 
+        const displayName = profile?.full_name 
             || user?.user_metadata?.full_name 
             || user?.user_metadata?.name 
             || user?.email?.split('@')[0] 
@@ -51,17 +69,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         await logout();
     });
 
-    // 2. Initialize Trial
-    await updateTrialUI();
-    setInterval(updateTrialUI, 60000); // Check trial every minute
-
+    // 2. (Removed Trial Logic)
+    
     // 3. Navigation inside Dashboard
     document.querySelectorAll('[data-nav]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const target = btn.getAttribute('data-nav');
-            if (await enforceTrial()) return;
             navigateTo(target);
         });
+    });
+
+    // Handle Upgrade Modal
+    const upgradeModal = $('upgrade-modal');
+    $('close-upgrade-btn')?.addEventListener('click', () => {
+        upgradeModal.classList.add('hidden');
+        upgradeModal.classList.remove('flex');
+    });
+
+    $('upgrade-btn-sidebar')?.addEventListener('click', () => {
+        upgradeModal.classList.remove('hidden');
+        upgradeModal.classList.add('flex');
+    });
+
+    $('checkout-btn')?.addEventListener('click', async () => {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) return;
+        
+        const loader = $('checkout-loader');
+        const text = $('checkout-btn').querySelector('span');
+        if (loader) loader.classList.remove('hidden');
+        if (text) text.textContent = 'Preparing...';
+        
+        try {
+            const response = await fetch('/api/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUser.id, plan_tier: 'pro' })
+            });
+            const data = await response.json();
+            if (data.order_id) {
+                const options = {
+                    "key": data.key_id,
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "Mindwave",
+                    "description": "Mindwave Pro Subscription",
+                    "order_id": data.order_id,
+                    "handler": function (response){
+                        showToast('✅ Payment successful. Upgrading account...');
+                        setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
+                    },
+                    "prefill": {
+                        "email": currentUser.email
+                    },
+                    "theme": {
+                        "color": "#000000"
+                    }
+                };
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } else {
+                throw new Error(data.error || 'No order ID returned');
+            }
+        } catch (err) {
+            showToast('❌ Failed to start checkout');
+            console.error(err);
+        } finally {
+            if (loader) loader.classList.add('hidden');
+            if (text) text.textContent = 'Upgrade Now ($4.99/mo)';
+        }
     });
 
     // 4. Initialize Sub-modules
@@ -100,7 +176,7 @@ async function handleGeneration(text) {
         setTimeout(() => window.location.href = 'login.html', 1500);
         return;
     }
-    if (await enforceTrial()) return;
+    if (!(await checkPromptLimit(user))) return;
 
     const loader = $('generate-loader');
     const generateBtn = $('generate-prompt-btn');
@@ -112,8 +188,9 @@ async function handleGeneration(text) {
     try {
         const { data: profile } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
         const activeMode = profile?.active_mode || 'Founder Mode';
-        const prompt = await generatePrompt(text, activeMode);
+        let prompt = await generatePrompt(text, activeMode);
         if (!prompt) throw new Error('Empty response from AI');
+        prompt = cleanPrompt(prompt);
 
         window._mindwaveGeneratedPrompt = prompt;
         window._lastInputText = text;
@@ -214,7 +291,7 @@ export async function renderHistory() {
                 <span class="text-[10px] text-gray-500 font-bold uppercase">${new Date(item.created_at).toLocaleString()}</span>
                 <span class="text-[10px] px-2 py-0.5 rounded bg-white/10 text-gray-400">${item.memory_mode}</span>
             </div>
-            <p class="text-sm text-gray-300 font-mono line-clamp-2">${item.generated_prompt.substring(0, 150)}...</p>
+            <p class="text-sm text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 150)}...</p>
         </div>
     `).join('');
 }

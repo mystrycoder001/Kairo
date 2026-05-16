@@ -7,6 +7,20 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="vercel-toolbar" content="false">
+
+    <!-- SEO & Open Graph -->
+    <meta name="title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
+    <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
+    <meta property="og:title" content="Mindwave — Your Memory Across Every AI">
+    <meta property="og:description" content="Never repeat yourself to AI again.">
+    <meta property="og:image" content="/logo/mindwave-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mindwave — Your Memory Across Every AI">
+    <meta name="twitter:description" content="Never repeat yourself to AI again.">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -204,17 +218,20 @@
     </main>
 
     <script type="module">
-        import { supabase, getCurrentUser } from './js/auth.js';
+        import { supabase, getCurrentUser, checkAuth } from './js/auth.js';
 
         const progressBar = document.getElementById('progress-bar');
         
+        // Initial auth check
+        checkAuth();
+
         window.nextStep = function(stepNumber) {
             document.querySelectorAll('.ob-step').forEach(el => el.classList.add('hidden'));
             document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
             
             // Update Progress
             const progress = (stepNumber / 5) * 100;
-            progressBar.style.width = `${progress}%`;
+            if (progressBar) progressBar.style.width = `${progress}%`;
 
             if (stepNumber === 5) {
                 triggerConfetti();
@@ -222,16 +239,65 @@
             }
         }
 
+        window.saveModesAndNext = async function() {
+            const selected = Array.from(document.querySelectorAll('#step-3 input[type="checkbox"]:checked')).map(cb => cb.value);
             const user = await getCurrentUser();
             if (user) {
-                // Save modes to Supabase
-                await supabase.from('memory_modes').delete().eq('user_id', user.id); // Clear existing
-                await supabase.from('memory_modes').insert(
-                    selected.map(m => ({ user_id: user.id, mode_name: m }))
-                );
+                try {
+                    // Clear existing modes
+                    await supabase.from('memory_modes').delete().eq('user_id', user.id);
+                    // Insert new ones
+                    if (selected.length > 0) {
+                        await supabase.from('memory_modes').insert(
+                            selected.map(m => ({ user_id: user.id, mode_name: m }))
+                        );
+                    }
+                } catch (err) {
+                    console.error("Error saving modes:", err);
+                }
+            }
+            nextStep(4);
+        }
+
+        async function populateFinalSummary() {
+            const name = document.getElementById('ob-name').value || 'User';
+            const role = document.getElementById('ob-role').value || 'AI Architect';
+            const goals = document.getElementById('ob-goals').value;
+            const style = document.getElementById('ob-style').value;
+            
+            if (document.getElementById('final-name')) document.getElementById('final-name').textContent = name;
+            if (document.getElementById('final-avatar')) document.getElementById('final-avatar').textContent = name.charAt(0).toUpperCase();
+            if (document.getElementById('final-role')) document.getElementById('final-role').textContent = role;
+
+            const user = await getCurrentUser();
+            let modes = [];
+            if (user) {
+                try {
+                    const { data: savedModes } = await supabase.from('memory_modes').select('mode_name').eq('user_id', user.id);
+                    modes = savedModes?.map(m => m.mode_name) || [];
+                } catch (err) {
+                    console.error("Error fetching modes:", err);
+                }
             }
             
-            nextStep(4);
+            if (document.getElementById('final-modes')) {
+                const modesHTML = modes.map(m => `<span class="bg-[#222222] text-xs px-2 py-1 rounded text-gray-300">${m}</span>`).join('');
+                document.getElementById('final-modes').innerHTML = modesHTML;
+            }
+
+            // Save Passport Data to Supabase
+            if (user) {
+                try {
+                    await supabase.from('profiles').update({
+                        full_name: name, 
+                        role: role, 
+                        goals: goals, 
+                        communication_style: style
+                    }).eq('id', user.id);
+                } catch (err) {
+                    console.error("Error updating profile:", err);
+                }
+            }
         }
 
         // Fake Voice Demo for Onboarding
@@ -247,60 +313,38 @@
         micBtn?.addEventListener('click', () => {
             if(isRecording) return;
             isRecording = true;
-            micIcon.textContent = 'graphic_eq';
-            micRings.classList.remove('hidden');
-            micStatus.textContent = 'Listening...';
+            if (micIcon) micIcon.textContent = 'graphic_eq';
+            if (micRings) micRings.classList.remove('hidden');
+            if (micStatus) micStatus.textContent = 'Listening...';
             
             setTimeout(() => {
-                micIcon.textContent = 'mic';
-                micRings.classList.add('hidden');
-                micStatus.textContent = 'Capture Complete';
-                demoOutput.classList.remove('hidden');
-                transcribedText.textContent = "I need a boilerplate for a NextJS app with Tailwind and Supabase auth... make sure it uses the new app router.";
+                if (micIcon) micIcon.textContent = 'mic';
+                if (micRings) micRings.classList.add('hidden');
+                if (micStatus) micStatus.textContent = 'Capture Complete';
+                if (demoOutput) demoOutput.classList.remove('hidden');
+                if (transcribedText) transcribedText.textContent = "I need a boilerplate for a NextJS app with Tailwind and Supabase auth... make sure it uses the new app router.";
             }, 3000);
         });
 
-            const name = document.getElementById('ob-name').value || 'User';
-            const role = document.getElementById('ob-role').value || 'AI Architect';
-            const goals = document.getElementById('ob-goals').value;
-            const style = document.getElementById('ob-style').value;
-            
-            document.getElementById('final-name').textContent = name;
-            document.getElementById('final-avatar').textContent = name.charAt(0).toUpperCase();
-            document.getElementById('final-role').textContent = role;
-
-            const user = await getCurrentUser();
-            let modes = [];
-            if (user) {
-                const { data: savedModes } = await supabase.from('memory_modes').select('mode_name').eq('user_id', user.id);
-                modes = savedModes?.map(m => m.mode_name) || [];
-            }
-            
-            const modesHTML = modes.map(m => `<span class="bg-[#222222] text-xs px-2 py-1 rounded text-gray-300">${m}</span>`).join('');
-            document.getElementById('final-modes').innerHTML = modesHTML;
-
-            // Save Passport Data to Supabase
-            const user = await getCurrentUser();
-            if (user) {
-                await supabase.from('profiles').update({
-                    name, role, goals, communication_style: style
-                }).eq('id', user.id);
-            }
-        }
-
         function triggerConfetti() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ffffff', '#aaaaaa', '#555555']
-            });
+            if (window.confetti) {
+                window.confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ffffff', '#aaaaaa', '#555555']
+                });
+            }
         }
 
         window.finishOnboarding = async function() {
             const user = await getCurrentUser();
             if (user) {
-                await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
+                try {
+                    await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
+                } catch (err) {
+                    console.error("Error finishing onboarding:", err);
+                }
             }
             window.location.href = 'dashboard.html';
         }
