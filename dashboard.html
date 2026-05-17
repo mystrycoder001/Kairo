@@ -60,7 +60,7 @@
     <div class="flex flex-1 overflow-hidden">
         
         <!-- SIDEBAR -->
-        <aside class="w-20 lg:w-72 border-r border-white/5 bg-black flex flex-col z-40 relative">
+        <aside id="sidebar" class="hidden-mobile w-20 lg:w-72 border-r border-white/5 bg-black flex flex-col z-40 relative">
             <div class="p-8 flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined text-black font-bold text-lg">waves</span>
@@ -110,6 +110,19 @@
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 bg-black overflow-y-auto relative custom-scrollbar">
+            
+            <!-- Mobile Header -->
+            <div class="lg:hidden flex items-center justify-between p-6 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-black font-bold text-sm">waves</span>
+                    </div>
+                    <span class="text-lg font-bold tracking-tight text-gradient">MindWave</span>
+                </div>
+                <button id="mobile-menu-toggle" class="p-2 text-gray-400 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
             
             <!-- OVERVIEW SCREEN -->
             <section id="screen-overview" class="screen active p-10 lg:p-16 space-y-12 max-w-6xl mx-auto">
@@ -445,7 +458,7 @@
                     <span class="material-symbols-outlined text-black text-3xl font-bold">star</span>
                 </div>
                 <h3 class="text-2xl font-bold">Upgrade to Pro</h3>
-                <p id="upgrade-message" class="text-gray-400">Unlock unlimited AI power and advanced customization.</p>
+                <p id="upgrade-message" class="text-gray-400">You've used all 5 free prompts today. Upgrade to Pro for unlimited access. $4.99/month. Cancel anytime.</p>
                 
                 <div class="bg-black border border-[#222222] rounded-xl p-4 text-left space-y-3 mt-6">
                     <div class="flex items-center gap-3">

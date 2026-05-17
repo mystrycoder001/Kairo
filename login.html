@@ -10,7 +10,7 @@
 
     <!-- SEO & Open Graph -->
     <meta name="title" content="Mindwave — Your Memory Across Every AI">
-    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini. Free forever.">
+    <meta name="description" content="Never repeat yourself to AI again. Voice to perfect prompt. AI Passport. Session Sync across ChatGPT, Claude, Gemini.">
     <meta name="keywords" content="AI prompt generator, voice to prompt, AI memory, ChatGPT prompt builder, AI passport, session sync, continue AI conversation">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
@@ -46,19 +46,62 @@
                 <p class="text-gray-400 text-lg font-light max-w-xs mx-auto">Your memory across every AI.</p>
             </div>
 
-            <div class="space-y-6">
-                <!-- Google Sign In Only -->
-                <button id="google-login-btn" class="w-full bg-white text-black font-bold py-5 rounded-2xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] group">
-                    <svg class="w-6 h-6 transition-transform group-hover:rotate-12" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            <!-- Step 1: Email Input -->
+            <div id="step-email" class="space-y-6">
+                <div class="space-y-3 text-left">
+                    <label for="login-email" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
+                    <input type="email" id="login-email" required
+                        class="w-full bg-[#111111] border border-white/10 rounded-2xl px-5 py-4 focus:border-white/40 outline-none transition-all placeholder:text-gray-700 text-white"
+                        placeholder="you@example.com">
+                </div>
+
+                <button id="send-otp-btn" class="w-full bg-white text-black font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    <span class="material-symbols-outlined text-sm">mail</span>
+                    <span id="send-otp-text">Continue with Email</span>
+                    <div id="send-otp-loader" class="hidden w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                </button>
+
+                <div class="flex items-center gap-4 py-2">
+                    <div class="flex-1 h-px bg-white/10"></div>
+                    <span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">or</span>
+                    <div class="flex-1 h-px bg-white/10"></div>
+                </div>
+
+                <button id="google-login-btn" class="w-full bg-[#111111] border border-white/10 text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all hover:border-white/20 group">
+                    <svg class="w-5 h-5 transition-transform group-hover:rotate-12" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Continue with Google
                 </button>
-                
-                <p class="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">Free forever. No credit card required.</p>
+
+                <p class="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">Your memory across every AI.</p>
+            </div>
+
+            <!-- Step 2: OTP Verification (hidden by default) -->
+            <div id="step-otp" class="space-y-6 hidden">
+                <div class="space-y-2">
+                    <p class="text-gray-400 text-sm">We sent a 6-digit code to</p>
+                    <p class="text-white font-bold" id="otp-email-display">you@example.com</p>
+                </div>
+
+                <div class="space-y-3 text-left">
+                    <label for="otp-code" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Verification Code</label>
+                    <input type="text" id="otp-code" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                        class="w-full bg-[#111111] border border-white/10 rounded-2xl px-5 py-5 focus:border-white/40 outline-none transition-all placeholder:text-gray-700 text-white text-center text-2xl font-mono tracking-[0.5em]"
+                        placeholder="000000">
+                </div>
+
+                <button id="verify-otp-btn" class="w-full bg-white text-black font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    <span id="verify-otp-text">Verify & Sign In</span>
+                    <div id="verify-otp-loader" class="hidden w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                </button>
+
+                <button id="back-to-email-btn" class="text-sm text-gray-500 hover:text-white transition-colors">
+                    ← Use a different email
+                </button>
             </div>
         </div>
     </main>
@@ -70,33 +113,118 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 translate-y-20 transition-all duration-300 z-[100]"></div>
 
     <script type="module">
-        import { signInWithGoogle, getCurrentUser } from './js/auth.js';
-        import { $, showToast } from './js/app.js';
+        import { signInWithGoogle, signInWithOTP, verifyOTP, getCurrentUser } from './js/auth.js';
+
+        const $ = (id) => document.getElementById(id);
+
+        function showToast(msg) {
+            const toast = $('toast');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-20');
+            setTimeout(() => toast.classList.add('opacity-0', 'translate-y-20'), 3000);
+        }
+
+        let pendingEmail = '';
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = await getCurrentUser();
-            if (user) {
-                window.location.href = '/dashboard.html';
-                return;
-            }
-            
+            // If already logged in, auth.js onAuthStateChange will handle redirect
+
+            // --- Send OTP ---
+            $('send-otp-btn')?.addEventListener('click', async () => {
+                const email = $('login-email')?.value.trim();
+                if (!email || !email.includes('@')) {
+                    showToast('Please enter a valid email');
+                    return;
+                }
+
+                const btn = $('send-otp-btn');
+                const text = $('send-otp-text');
+                const loader = $('send-otp-loader');
+                btn.disabled = true;
+                if (text) text.textContent = 'Sending code...';
+                if (loader) loader.classList.remove('hidden');
+
+                try {
+                    await signInWithOTP(email);
+                    pendingEmail = email;
+                    $('otp-email-display').textContent = email;
+                    $('step-email').classList.add('hidden');
+                    $('step-otp').classList.remove('hidden');
+                    showToast('✉️ Verification code sent!');
+                    // Auto-focus OTP input
+                    setTimeout(() => $('otp-code')?.focus(), 100);
+                } catch (err) {
+                    showToast('❌ ' + (err.message || 'Failed to send code'));
+                } finally {
+                    btn.disabled = false;
+                    if (text) text.textContent = 'Continue with Email';
+                    if (loader) loader.classList.add('hidden');
+                }
+            });
+
+            // --- Verify OTP ---
+            $('verify-otp-btn')?.addEventListener('click', async () => {
+                const code = $('otp-code')?.value.trim();
+                if (!code || code.length < 6) {
+                    showToast('Please enter the 6-digit code');
+                    return;
+                }
+
+                const btn = $('verify-otp-btn');
+                const text = $('verify-otp-text');
+                const loader = $('verify-otp-loader');
+                btn.disabled = true;
+                if (text) text.textContent = 'Verifying...';
+                if (loader) loader.classList.remove('hidden');
+
+                try {
+                    await verifyOTP(pendingEmail, code);
+                    showToast('✅ Signed in successfully!');
+                    // Auth state change handler in auth.js will redirect
+                } catch (err) {
+                    showToast('❌ ' + (err.message || 'Invalid code'));
+                    btn.disabled = false;
+                    if (text) text.textContent = 'Verify & Sign In';
+                    if (loader) loader.classList.add('hidden');
+                }
+            });
+
+            // Enter key for OTP input
+            $('otp-code')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') $('verify-otp-btn')?.click();
+            });
+
+            // Enter key for email input
+            $('login-email')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') $('send-otp-btn')?.click();
+            });
+
+            // --- Back to email ---
+            $('back-to-email-btn')?.addEventListener('click', () => {
+                $('step-otp').classList.add('hidden');
+                $('step-email').classList.remove('hidden');
+                $('otp-code').value = '';
+            });
+
+            // --- Google Login ---
             $('google-login-btn')?.addEventListener('click', async () => {
                 try {
                     const btn = $('google-login-btn');
                     btn.disabled = true;
-                    btn.innerHTML = '<div class="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
-                    showToast('Redirecting to Google Secure Login...');
+                    btn.innerHTML = '<div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>';
+                    showToast('Redirecting to Google...');
                     await signInWithGoogle();
                 } catch (err) {
                     showToast('❌ Login failed: ' + err.message);
                     const btn = $('google-login-btn');
                     btn.disabled = false;
                     btn.innerHTML = `
-                        <svg class="w-6 h-6" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
                         Continue with Google
                     `;

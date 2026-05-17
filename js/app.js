@@ -2,7 +2,7 @@ import { initVoice } from './voice.js';
 import { generatePrompt } from './gemini.js';
 import { initPassport, getPassportText } from './passport.js';
 import { initSessionSync } from './session-sync.js';
-import { getCurrentUser, logout, supabase } from './auth.js';
+import { getCurrentUser, logout, supabase, getAccessToken } from './auth.js';
 import { initTour } from './tour.js';
 
 // DOM Utilities
@@ -16,6 +16,22 @@ export function showToast(msg) {
   setTimeout(() => {
     toast.classList.add('opacity-0', 'translate-y-20');
   }, 3000);
+}
+
+// Centralized Error Logging
+export function logError(component, error) {
+    console.error(`[MindWave Error] Component: ${component} | Message: ${error.message || error}`, error);
+}
+
+// Safe Async Wrapper
+async function safeRun(component, fn) {
+    try {
+        const result = await fn();
+        return result;
+    } catch (err) {
+        logError(component, err);
+        showToast(`⚠️ ${component} failed. Please refresh.`);
+    }
 }
 
 export function cleanPrompt(text) {
@@ -34,8 +50,12 @@ const memoryModes = [
   { id: 'freelancer', label: 'Freelancer', icon: '💼' }
 ];
 
+// Cache profile data to avoid redundant fetches
+let _cachedProfile = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = await getCurrentUser();
+    // 1. Initial Auth Check
+    const user = await safeRun('AuthInit', getCurrentUser);
     const isDashboard = window.location.pathname.includes('dashboard.html');
 
     if (!user && isDashboard) {
@@ -43,10 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // 2. Initialize Core Modules Safely
     if (isDashboard) {
-        await loadDashboard();
+        // Show loading state
+        showLoadingSkeleton(true);
+        await safeRun('DashboardLoad', loadDashboard);
+        showLoadingSkeleton(false);
         
-        // Handle URL params
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('upgraded') === 'true') {
             showToast('🎉 Welcome to MindWave Pro! Unlimited access unlocked.');
@@ -54,14 +77,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Initialize Global Modules
-    initVoice(handleGeneration);
-    await initPassport();
-    initSessionSync();
-    initTour();
+    // 3. Initialize Secondary Modules
+    safeRun('VoiceInit', () => initVoice(handleGeneration));
+    safeRun('PassportInit', initPassport);
+    safeRun('SessionSyncInit', initSessionSync);
+    safeRun('TourInit', initTour);
     
-    // Global Event Listeners
-    $('logout-btn')?.addEventListener('click', async () => await logout());
+    // Global Runtime Error Capture
+    window.onerror = (msg, url, lineNo, columnNo, error) => {
+        logError('Runtime', error || msg);
+        return false;
+    };
+
+    window.onunhandledrejection = (event) => {
+        logError('UnhandledPromise', event.reason);
+    };
+
+    // 4. Attach Global Listeners Defensively
+    $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
+    $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
     
     document.querySelectorAll('[data-nav]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -70,29 +104,72 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showUpgradeModal();
             } else {
                 navigateTo(target);
+                // Load settings data when navigating to settings
+                if (target === 'settings') {
+                    safeRun('SettingsLoad', loadSettings);
+                }
             }
+            // Close mobile menu if open
+            closeMobileSidebar();
         });
     });
+
+    $('mobile-menu-toggle')?.addEventListener('click', () => {
+        const sidebar = $('sidebar');
+        const overlay = $('sidebar-overlay');
+        if (sidebar) {
+            sidebar.classList.remove('hidden-mobile');
+            if (overlay) overlay.classList.remove('hidden');
+        }
+    });
+
+    // Mobile sidebar overlay close
+    $('sidebar-overlay')?.addEventListener('click', closeMobileSidebar);
 
     $('close-upgrade-btn')?.addEventListener('click', hideUpgradeModal);
     $('banner-upgrade-btn')?.addEventListener('click', showUpgradeModal);
     $('sidebar-upgrade-btn')?.addEventListener('click', showUpgradeModal);
+    $('checkout-btn')?.addEventListener('click', () => safeRun('Upgrade', handleUpgrade));
 
-    $('checkout-btn')?.addEventListener('click', handleUpgrade);
+    // Settings save button
+    $('save-settings-btn')?.addEventListener('click', () => safeRun('SettingsSave', saveSettings));
 });
+
+function closeMobileSidebar() {
+    const sidebar = $('sidebar');
+    const overlay = $('sidebar-overlay');
+    if (sidebar) sidebar.classList.add('hidden-mobile');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+function showLoadingSkeleton(show) {
+    const skeleton = $('loading-skeleton');
+    const content = $('dashboard-content');
+    if (skeleton) skeleton.classList.toggle('hidden', !show);
+    if (content) content.classList.toggle('hidden', show);
+}
 
 async function loadDashboard() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
   const user = session.user;
 
-  // 1. Get Profile
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  // 1. Get Profile — handle missing row gracefully
+  const { data: profile, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   
-  if (!profile || !profile.onboarding_completed) {
+  // No profile row (PGRST116) or null → onboarding
+  if (!profile || (profileErr && profileErr.code === 'PGRST116')) {
     window.location.href = '/onboarding.html';
     return;
   }
+  if (profileErr) throw profileErr;
+  
+  if (!profile.onboarding_completed) {
+    window.location.href = '/onboarding.html';
+    return;
+  }
+
+  _cachedProfile = profile;
 
   // 2. Update UI with real data
   const displayName = profile.full_name || user.email.split('@')[0];
@@ -102,13 +179,16 @@ async function loadDashboard() {
   if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
   if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
   
-  const avatarChar = displayName[0].toUpperCase();
+  const avatarChar = displayName[0]?.toUpperCase() || 'U';
   if ($('user-avatar')) $('user-avatar').textContent = avatarChar;
   if ($('sidebar-avatar')) $('sidebar-avatar').textContent = avatarChar;
 
-  // 3. Issue 6: Active Profile Card Details
+  // 3. Profile Card Details — fixed field name: communication_style (not comm_style)
   if ($('summary-role')) $('summary-role').textContent = profile.role || 'AI Architect';
-  if ($('summary-style')) $('summary-style').textContent = profile.comm_style || 'Balanced';
+  if ($('summary-style')) {
+    const style = profile.communication_style || 'Balanced';
+    $('summary-style').textContent = style.includes('|') ? style.split('|')[0] : style;
+  }
   if ($('summary-mode')) $('summary-mode').textContent = (profile.active_mode || 'founder').charAt(0).toUpperCase() + (profile.active_mode || 'founder').slice(1);
   if ($('summary-tools')) {
       const toolCount = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0;
@@ -127,8 +207,8 @@ async function loadDashboard() {
   // 6. Check Usage Limits
   checkUsageLimit(usage, profile);
   
-  // Render History
-  renderHistory();
+  // 7. Render History
+  safeRun('HistoryLoad', renderHistory);
 }
 
 function loadMemoryModes(profile) {
@@ -138,26 +218,37 @@ function loadMemoryModes(profile) {
   const activeMode = profile.active_mode || 'founder';
 
   container.innerHTML = memoryModes.map(mode => `
-    <button class="mode-card flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all ${activeMode === mode.id ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}" 
-            onclick="window.setActiveMode('${mode.id}')">
+    <button class="mode-card flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all cursor-pointer ${activeMode === mode.id ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}" 
+            data-mode-id="${mode.id}">
       <span class="text-xl">${mode.icon}</span>
       <span class="font-bold text-sm tracking-tight">${mode.label}</span>
     </button>
   `).join('');
+
+  // Attach listeners via delegation (no onclick in HTML)
+  container.querySelectorAll('.mode-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modeId = btn.getAttribute('data-mode-id');
+      if (modeId) window.setActiveMode(modeId);
+    });
+  });
 }
 
 window.setActiveMode = async (modeId) => {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    try {
+    await safeRun('SetMode', async () => {
+        const user = await getCurrentUser();
+        if (!user) return;
         const { error } = await supabase.from('profiles').update({ active_mode: modeId }).eq('id', user.id);
         if (error) throw error;
         showToast(`🧠 Switched to ${modeId.charAt(0).toUpperCase() + modeId.slice(1)} Memory`);
-        await loadDashboard(); // Refresh UI
-    } catch (err) {
-        showToast('❌ Failed to switch mode');
-    }
+        
+        // Only re-render the modes section, not the entire dashboard
+        if (_cachedProfile) {
+            _cachedProfile.active_mode = modeId;
+            loadMemoryModes(_cachedProfile);
+            if ($('summary-mode')) $('summary-mode').textContent = modeId.charAt(0).toUpperCase() + modeId.slice(1);
+        }
+    });
 };
 
 function checkUsageLimit(usage, profile) {
@@ -170,7 +261,6 @@ function checkUsageLimit(usage, profile) {
 
   if (isFree) {
     if (sidebarUpgrade) sidebarUpgrade.classList.remove('hidden');
-    
     if (promptsUsed >= limit) {
       if (banner) banner.classList.remove('hidden');
       if ($('generate-prompt-btn')) $('generate-prompt-btn').disabled = true;
@@ -221,7 +311,6 @@ async function handleUpgrade() {
                 "order_id": data.order_id,
                 "handler": async function (response) {
                     showToast('✅ Payment successful. Upgrading account...');
-                    // Ideally verify on server, but for now we redirect to a success state
                     setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
                 },
                 "prefill": { "email": user.email },
@@ -233,7 +322,7 @@ async function handleUpgrade() {
             throw new Error(data.error || 'Checkout initialization failed');
         }
     } catch (err) {
-        showToast('❌ Error: ' + err.message);
+        showToast(`❌ ${err.message}`);
     } finally {
         if (loader) loader.classList.add('hidden');
         if (btn) btn.disabled = false;
@@ -241,7 +330,10 @@ async function handleUpgrade() {
 }
 
 function navigateTo(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const screens = document.querySelectorAll('.screen');
+    if (screens.length === 0) return;
+
+    screens.forEach(s => s.classList.remove('active'));
     $(`screen-${screenId}`)?.classList.add('active');
 
     document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -257,24 +349,23 @@ function navigateTo(screenId) {
 
 async function handleGeneration(text) {
     if (!text) return;
-    const user = await getCurrentUser();
-    if (!user) return;
+    await safeRun('Generation', async () => {
+        const user = await getCurrentUser();
+        if (!user) return;
 
-    // Check limit again before generation
-    const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
-    const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
-    
-    if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
-        showUpgradeModal();
-        return;
-    }
+        const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
+        const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+        
+        if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
+            showUpgradeModal();
+            return;
+        }
 
-    const loader = $('generate-loader');
-    const btnText = $('generate-prompt-btn')?.querySelector('span');
-    if (loader) loader.classList.remove('hidden');
-    if (btnText) btnText.textContent = 'Thinking...';
+        const loader = $('generate-loader');
+        const btnText = $('generate-prompt-btn')?.querySelector('span');
+        if (loader) loader.classList.remove('hidden');
+        if (btnText) btnText.textContent = 'Thinking...';
 
-    try {
         const { data: p } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
         const activeMode = p?.active_mode || 'founder';
         
@@ -287,22 +378,26 @@ async function handleGeneration(text) {
         initOutputScreen();
         await saveToHistory(prompt, text, activeMode);
         
-        // Increment usage
-        await supabase.rpc('increment_prompts_used', { user_id_param: user.id });
-        await loadDashboard(); // Refresh usage count
-    } catch (err) {
-        showToast(`❌ Error: ${err.message}`);
-    } finally {
+        // NOTE: Removed client-side increment_prompts_used — backend handles this exclusively
+        // to prevent double-counting
+
+        // Refresh usage display
+        const { data: updatedUsage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+        if (updatedUsage && $('prompts-used')) {
+            $('prompts-used').textContent = updatedUsage.prompts_used || 0;
+        }
+
         if (loader) loader.classList.add('hidden');
         if (btnText) btnText.textContent = 'Generate Perfect Prompt';
-    }
+    });
 }
 
 function initOutputScreen() {
     const outputEl = $('final-prompt-display');
+    if (!outputEl) return;
+
     const toggle = $('inject-passport');
     const copyBtn = $('copy-final-btn');
-
     let basePrompt = window._mindwaveGeneratedPrompt || '';
     
     function getFinalPrompt() {
@@ -313,7 +408,7 @@ function initOutputScreen() {
         return basePrompt;
     }
 
-    if (outputEl) outputEl.textContent = getFinalPrompt();
+    outputEl.textContent = getFinalPrompt();
 
     if (toggle) {
         const newToggle = toggle.cloneNode(true);
@@ -352,15 +447,15 @@ async function renderHistory() {
     const user = await getCurrentUser();
     if (!user) return;
 
-    const { data: history } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
-    
+    const { data: history, error } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
+    if (error) throw error;
+
     if(!history || history.length === 0) {
         historyContainer.innerHTML = `
             <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span class="material-symbols-outlined text-gray-600 text-3xl">history</span>
             </div>
             <p class="text-gray-400 font-medium">No recent syncs.</p>
-            <p class="text-xs text-gray-600">Your memory will appear here after capture.</p>
         `;
         return;
     }
@@ -369,9 +464,91 @@ async function renderHistory() {
         <div class="w-full bg-black border border-[#222222] p-4 rounded-xl text-left space-y-2 hover:border-white/20 transition-colors">
             <div class="flex justify-between">
                 <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">${new Date(item.created_at).toLocaleDateString()}</span>
-                <span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold uppercase">${item.memory_mode}</span>
+                <span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold uppercase">${item.memory_mode || 'default'}</span>
             </div>
             <p class="text-xs text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 120)}...</p>
         </div>
     `).join('');
+}
+
+// ==========================================
+// SETTINGS SYSTEM
+// ==========================================
+async function loadSettings() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (!profile) return;
+
+    if ($('settings-name')) $('settings-name').value = profile.full_name || '';
+    if ($('settings-role')) $('settings-role').value = profile.role || '';
+    if ($('settings-goals')) $('settings-goals').value = profile.goals || '';
+    
+    const commStyle = profile.communication_style || '';
+    if ($('settings-comm-style')) {
+        if (commStyle.includes('|')) {
+            $('settings-comm-style').value = commStyle.split('|')[0] || 'Professional';
+        } else {
+            $('settings-comm-style').value = commStyle || 'Professional';
+        }
+    }
+
+    if ($('settings-active-mode')) $('settings-active-mode').value = profile.active_mode || 'founder';
+    if ($('settings-context')) $('settings-context').value = profile.active_context || '';
+    if ($('settings-target-ai')) $('settings-target-ai').value = profile.target_ai || 'All';
+    if ($('settings-plan')) $('settings-plan').textContent = (profile.subscription_plan || 'free').toUpperCase();
+    if ($('settings-email')) $('settings-email').textContent = user.email;
+}
+
+async function saveSettings() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const btn = $('save-settings-btn');
+    if (btn) {
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+    }
+
+    try {
+        const updateData = {
+            full_name: $('settings-name')?.value || '',
+            role: $('settings-role')?.value || '',
+            goals: $('settings-goals')?.value || '',
+            communication_style: $('settings-comm-style')?.value || 'Professional',
+            active_mode: $('settings-active-mode')?.value || 'founder',
+            active_context: $('settings-context')?.value || '',
+            target_ai: $('settings-target-ai')?.value || 'All'
+        };
+
+        const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
+        if (error) throw error;
+
+        // Update cached profile
+        _cachedProfile = { ..._cachedProfile, ...updateData };
+
+        // Reflect changes in dashboard UI
+        if ($('user-name')) $('user-name').textContent = updateData.full_name || 'User';
+        if ($('sidebar-name')) $('sidebar-name').textContent = updateData.full_name || 'User';
+        if ($('summary-role')) $('summary-role').textContent = updateData.role || 'Role';
+        if ($('summary-style')) $('summary-style').textContent = updateData.communication_style.includes('|') ? updateData.communication_style.split('|')[0] : updateData.communication_style;
+        if ($('summary-mode')) $('summary-mode').textContent = updateData.active_mode.charAt(0).toUpperCase() + updateData.active_mode.slice(1);
+        
+        const avatarChar = (updateData.full_name || 'U').charAt(0).toUpperCase();
+        if ($('user-avatar')) $('user-avatar').textContent = avatarChar;
+        if ($('sidebar-avatar')) $('sidebar-avatar').textContent = avatarChar;
+
+        // Re-render memory modes
+        loadMemoryModes({ ...(_cachedProfile || {}), active_mode: updateData.active_mode });
+
+        showToast('✅ Settings saved');
+    } catch (err) {
+        showToast(`❌ Save failed: ${err.message}`);
+    } finally {
+        if (btn) {
+            btn.textContent = 'Save Changes';
+            btn.disabled = false;
+        }
+    }
 }

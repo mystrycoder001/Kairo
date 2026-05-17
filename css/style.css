@@ -71,3 +71,26 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+/* Mobile Navigation Fixes */
+@media (max-width: 1024px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+  
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 80% !important;
+    background: black;
+    z-index: 100;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.9);
+  }
+
+  .sidebar-item span.hidden {
+    display: block !important;
+  }
+}

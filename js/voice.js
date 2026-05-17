@@ -1,8 +1,11 @@
-// js/voice.js — Complete Overhaul: Priority 1 (Local Browser) -> Priority 2 (Groq) -> Priority 3 (Text)
-import { $, showToast } from './app.js';
+// js/voice.js — Frontend Stabilization Pass
+import { $, showToast, logError } from './app.js';
 
 export function initVoice(onComplete) {
+    // 1. Element Discovery with Defensive Checks
     const micBtn = $('mic-btn');
+    if (!micBtn) return; // Exit early if not on a screen with mic
+
     const micIcon = $('mic-icon');
     const statusText = $('status-text');
     const transcriptDisplay = $('transcript-display');
@@ -18,24 +21,30 @@ export function initVoice(onComplete) {
     let timerInterval = null;
     let seconds = 0;
 
-    // STEP 1: Browser Support Check
+    // 2. Browser Support Check
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const hasVoiceSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!SpeechRecognition;
 
     if (!hasVoiceSupport) {
-        if (statusText) statusText.textContent = "Please use Chrome for voice recording";
-        if (micBtn) micBtn.disabled = true;
+        if (statusText) statusText.textContent = "Voice recording not supported in this browser.";
+        micBtn.disabled = true;
         if (micIcon) micIcon.style.opacity = '0.3';
     }
 
-    // Always ensure textarea is functional
+    // 3. UI Listeners
     transcriptDisplay?.addEventListener('input', () => {
         if (generateBtn) generateBtn.disabled = transcriptDisplay.value.trim().length === 0;
     });
 
-    micBtn?.addEventListener('click', async () => {
+    micBtn.addEventListener('click', async () => {
         if (isRecording) return;
-        startRecordingFlow();
+        try {
+            await startRecordingFlow();
+        } catch (err) {
+            logError('VoiceCapture', err);
+            showToast('❌ Could not start recording');
+            isRecording = false; // Ensure reset on error
+        }
     });
 
     stopBtn?.addEventListener('click', () => {
@@ -43,15 +52,24 @@ export function initVoice(onComplete) {
     });
 
     generateBtn?.addEventListener('click', () => {
-        const text = transcriptDisplay.value.trim();
+        const text = transcriptDisplay?.value.trim();
         if (text) onComplete(text);
     });
 
+    // 4. Recording Logic
     async function startRecordingFlow() {
         isRecording = true;
         resetUI();
 
-        // PRIORITY 1: webkitSpeechRecognition (Most reliable, near-zero latency)
+        // Check for mic permission first
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+            isRecording = false;
+            showToast('🎤 Microphone permission required');
+            return;
+        }
+
         if (SpeechRecognition) {
             try {
                 recognition = new SpeechRecognition();
@@ -59,39 +77,38 @@ export function initVoice(onComplete) {
                 recognition.interimResults = true;
                 recognition.lang = 'en-US';
 
-                recognition.onstart = () => {
-                    updateUIForRecording('Local Browser Recognition');
-                };
+                let fullTranscript = transcriptDisplay?.value || '';
 
+                recognition.onstart = () => updateUIForRecording('Listening...');
                 recognition.onresult = (event) => {
                     let finalTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        }
+                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
                     }
-                    if (finalTranscript) {
-                        transcriptDisplay.value = finalTranscript;
+                    if (finalTranscript && transcriptDisplay) {
+                        // FIXED: Append instead of overwrite
+                        fullTranscript = (fullTranscript ? fullTranscript + ' ' : '') + finalTranscript;
+                        transcriptDisplay.value = fullTranscript.trim();
                         if (generateBtn) generateBtn.disabled = false;
                     }
                 };
-
                 recognition.onerror = (err) => {
-                    console.error('Recognition error:', err);
-                    if (err.error === 'not-allowed') {
-                        showToast('❌ Mic permission denied');
-                        stopRecordingFlow();
-                    } else {
-                        // Fallback to MediaRecorder + Groq
-                        console.warn('SpeechRecognition failed, falling back to MediaRecorder + Groq');
+                    logError('SpeechRecognition', err);
+                    // Only fallback if it's a serious error, not end-of-speech
+                    if (err.error !== 'no-speech' && err.error !== 'aborted') {
                         tryMediaRecorderFallback();
                     }
                 };
-
+                recognition.onend = () => {
+                    // Auto-restart if still recording (handles Chrome's auto-stop)
+                    if (isRecording && recognition) {
+                        try { recognition.start(); } catch(e) { /* already started */ }
+                    }
+                };
                 recognition.start();
                 return;
             } catch (e) {
-                console.error('SpeechRecognition init failed:', e);
+                logError('SpeechRecognitionInit', e);
                 tryMediaRecorderFallback();
             }
         } else {
@@ -100,7 +117,6 @@ export function initVoice(onComplete) {
     }
 
     async function tryMediaRecorderFallback() {
-        // PRIORITY 2: MediaRecorder + Groq Whisper
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
@@ -117,37 +133,40 @@ export function initVoice(onComplete) {
             };
 
             mediaRecorder.start();
-            updateUIForRecording('Groq AI (Recording...)');
+            updateUIForRecording('Neural Sync (Recording...)');
         } catch (err) {
-            // PRIORITY 3: Text input fallback
-            console.error('MediaRecorder fallback failed:', err);
-            statusText.textContent = "Type your idea instead";
-            showToast('⚠️ Voice unavailable. Type below.');
-            stopRecordingFlow();
+            logError('MediaRecorderFallback', err);
+            if (statusText) statusText.textContent = "Type your idea instead";
+            showToast('⚠️ Voice unavailable');
+            isRecording = false;
+            resetMicUI();
         }
     }
 
     function stopRecordingFlow() {
         isRecording = false;
-        
         if (recognition) {
-            recognition.stop();
+            try { recognition.stop(); } catch(e) { /* ignore */ }
             recognition = null;
         }
-
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
+        resetMicUI();
+        stopTimer();
+        if (statusText) statusText.textContent = 'Recording complete';
+    }
 
-        micIcon.textContent = 'mic';
+    function resetMicUI() {
+        if (micIcon) micIcon.textContent = 'mic';
+        if (micIcon) micIcon.classList.remove('animate-spin');
         recordingDot?.classList.add('hidden');
         if (stopBtn) stopBtn.disabled = true;
-        stopTimer();
     }
 
     function updateUIForRecording(status) {
-        micIcon.textContent = 'graphic_eq';
-        statusText.textContent = status || 'Capture Active';
+        if (micIcon) micIcon.textContent = 'graphic_eq';
+        if (statusText) statusText.textContent = status || 'Capture Active';
         recordingDot?.classList.remove('hidden');
         if (stopBtn) stopBtn.disabled = false;
         startTimer();
@@ -155,12 +174,12 @@ export function initVoice(onComplete) {
 
     function resetUI() {
         seconds = 0;
-        timerDisplay.textContent = '00:00';
+        if (timerDisplay) timerDisplay.textContent = '00:00';
     }
 
     async function processAudioWithGroq(blob) {
-        statusText.textContent = 'Transcribing...';
-        micIcon.classList.add('animate-spin');
+        if (statusText) statusText.textContent = 'Transcribing...';
+        micIcon?.classList.add('animate-spin');
 
         const formData = new FormData();
         formData.append('audio', blob, 'recording.webm');
@@ -170,33 +189,33 @@ export function initVoice(onComplete) {
                 method: 'POST',
                 body: formData
             });
-            
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Transcription failed');
 
-            transcriptDisplay.value = data.text;
-            statusText.textContent = 'Transcription complete';
-            if (generateBtn) generateBtn.disabled = false;
+            if (transcriptDisplay) {
+                // Append transcription to existing text
+                const existing = transcriptDisplay.value.trim();
+                transcriptDisplay.value = existing ? existing + ' ' + data.text : data.text;
+                if (generateBtn) generateBtn.disabled = false;
+            }
+            if (statusText) statusText.textContent = 'Transcription complete';
         } catch (err) {
-            console.error('Groq Failed:', err);
-            statusText.textContent = "Retrying...";
-            showToast('🔄 Retrying transcription...');
-            // In a real retry loop we might attempt again, but here we've already hit two fallbacks.
-            statusText.textContent = "Type your idea instead";
+            logError('GroqTranscribe', err);
+            if (statusText) statusText.textContent = "Voice unavailable. Type below.";
+            showToast('❌ Transcription failed');
         } finally {
-            micIcon.classList.remove('animate-spin');
+            micIcon?.classList.remove('animate-spin');
         }
     }
 
     function startTimer() {
         clearInterval(timerInterval);
         seconds = 0;
-        timerDisplay.textContent = '00:00';
         timerInterval = setInterval(() => {
             seconds++;
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = (seconds % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${m}:${s}`;
+            if (timerDisplay) timerDisplay.textContent = `${m}:${s}`;
         }, 1000);
     }
 

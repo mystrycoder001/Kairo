@@ -1,6 +1,6 @@
 // js/passport.js — AI Passport Identity Manager with Supabase
 import { $, showToast, cleanPrompt } from './app.js';
-import { supabase, getCurrentUser } from './auth.js';
+import { supabase, getCurrentUser, getAccessToken } from './auth.js';
 import { checkPassportLimit, incrementPassportCount } from './usage.js';
 
 export async function initPassport() {
@@ -26,34 +26,36 @@ export async function initPassport() {
     // Load initial data from Supabase
     const user = await getCurrentUser();
     if (user) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, role, goals, communication_style, active_context, behavioral_memory, never_forget, target_ai, passport_text')
-            .eq('id', user.id)
-            .single();
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, role, goals, communication_style, active_context, behavioral_memory, never_forget, target_ai, passport_text')
+                .eq('id', user.id)
+                .single();
 
-        if (profile) {
-            if (nameInput) nameInput.value = profile.full_name || '';
-            if (roleInput) roleInput.value = profile.role || 'Founder';
-            if (focusInput) focusInput.value = profile.goals || ''; // Map goals to focus
-            
-            if (profile.communication_style) {
-                const parts = profile.communication_style.split('|');
-                if (commStyleInput) commStyleInput.value = parts[0] || 'Balanced';
-                if (commFormatInput) commFormatInput.value = parts[1] || 'Mixed';
-                if (commToneInput) commToneInput.value = parts[2] || 'Professional';
+            if (profile) {
+                if (nameInput) nameInput.value = profile.full_name || '';
+                if (roleInput) roleInput.value = profile.role || 'Founder';
+                if (focusInput) focusInput.value = profile.goals || '';
+                
+                if (profile.communication_style) {
+                    const parts = profile.communication_style.split('|');
+                    if (commStyleInput) commStyleInput.value = parts[0] || 'Balanced';
+                    if (commFormatInput) commFormatInput.value = parts[1] || 'Mixed';
+                    if (commToneInput) commToneInput.value = parts[2] || 'Professional';
+                }
+                
+                if (contextInput) contextInput.value = profile.active_context || '';
+                if (behaviorInput) behaviorInput.value = profile.behavioral_memory || '';
+                if (neverForgetInput) neverForgetInput.value = profile.never_forget || '';
+                if (targetAiInput) targetAiInput.value = profile.target_ai || 'All';
+                
+                if ($('passport-output-text')) {
+                    $('passport-output-text').textContent = profile.passport_text || 'Fill out the form and generate your passport block.';
+                }
             }
-            
-            if (contextInput) contextInput.value = profile.active_context || '';
-            if (behaviorInput) behaviorInput.value = profile.behavioral_memory || '';
-            if (neverForgetInput) neverForgetInput.value = profile.never_forget || '';
-            if (targetAiInput) targetAiInput.value = profile.target_ai || 'All';
-            
-            updateSummaryCard(profile);
-            
-            if ($('passport-output-text')) {
-                $('passport-output-text').textContent = profile.passport_text || 'Fill out the form and generate your passport block.';
-            }
+        } catch (err) {
+            console.error('[Passport] Load error:', err);
         }
     }
 
@@ -85,9 +87,7 @@ export async function initPassport() {
 
             if (updateError) throw updateError;
             
-            updateSummaryCard(data);
-            
-            // Generate passport
+            // Generate passport via API with auth token
             const generatedPrompt = await generatePassportAPI(data);
             const block = cleanPrompt(generatedPrompt);
             
@@ -104,6 +104,14 @@ export async function initPassport() {
             if ($('passport-output-text')) {
                 $('passport-output-text').textContent = block;
             }
+
+            // Update dashboard summary cards without full reload
+            if ($('user-name')) $('user-name').textContent = data.full_name || 'User';
+            if ($('sidebar-name')) $('sidebar-name').textContent = data.full_name || 'User';
+            if ($('summary-role')) $('summary-role').textContent = data.role || 'Role';
+            if ($('user-avatar')) $('user-avatar').textContent = (data.full_name || 'U').charAt(0).toUpperCase();
+            if ($('sidebar-avatar')) $('sidebar-avatar').textContent = (data.full_name || 'U').charAt(0).toUpperCase();
+
             showToast('🪪 Passport Updated & Generated');
         } catch (err) {
             showToast(`❌ ${err.message}`);
@@ -137,24 +145,22 @@ export async function initPassport() {
     });
 }
 
-function updateSummaryCard(data) {
-    if($('summary-name')) $('summary-name').textContent = data.full_name || 'User';
-    if($('summary-role')) $('summary-role').textContent = data.role || 'Role';
-    if($('summary-avatar') && data.full_name) $('summary-avatar').textContent = data.full_name.charAt(0).toUpperCase();
-}
-
 export function getPassportText() {
     const el = $('passport-output-text');
     return el ? el.textContent : '';
 }
 
 async function generatePassportAPI(data) {
+    const token = await getAccessToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/generate-passport', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data)
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to generate passport');
+    if (!response.ok) throw new Error(result.error || result.message || 'Failed to generate passport');
     return result.result || result.text;
 }
