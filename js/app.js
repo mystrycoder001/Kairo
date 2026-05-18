@@ -20,7 +20,7 @@ export function showToast(msg) {
 
 // Centralized Error Logging
 export function logError(component, error) {
-    console.error(`[MindWave Error] Component: ${component} | Message: ${error.message || error}`, error);
+    console.error(`[Cloasta Error] Component: ${component} | Message: ${error.message || error}`, error);
 }
 
 // Safe Async Wrapper
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('upgraded') === 'true') {
-            showToast('🎉 Welcome to MindWave Pro! Unlimited access unlocked.');
+            showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
@@ -311,8 +311,8 @@ async function handleUpgrade() {
                 "key": data.key_id,
                 "amount": data.amount,
                 "currency": data.currency,
-                "name": "MindWave",
-                "description": "MindWave Pro Subscription",
+                "name": "Cloasta",
+                "description": "Cloasta Pro Subscription",
                 "order_id": data.order_id,
                 "handler": async function (response) {
                     showToast('✅ Payment successful. Upgrading account...');
@@ -378,7 +378,7 @@ async function handleGeneration(text) {
         if (!prompt) throw new Error('AI failed to respond');
         prompt = cleanPrompt(prompt);
 
-        window._mindwaveGeneratedPrompt = prompt;
+        window._CloastaGeneratedPrompt = prompt;
         navigateTo('output');
         initOutputScreen();
         await saveToHistory(prompt, text, activeMode);
@@ -403,7 +403,7 @@ function initOutputScreen() {
 
     const toggle = $('inject-passport');
     const copyBtn = $('copy-final-btn');
-    let basePrompt = window._mindwaveGeneratedPrompt || '';
+    let basePrompt = window._CloastaGeneratedPrompt || '';
     
     function getFinalPrompt() {
         if (toggle?.checked) {

@@ -128,7 +128,7 @@ export async function initPassport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `mindwave-profile-${Date.now()}.txt`;
+        a.download = `Cloasta-profile-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
     });

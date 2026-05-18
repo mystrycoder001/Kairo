@@ -1,7 +1,7 @@
 {
-  "name": "mindwave",
+  "name": "Cloasta",
   "version": "1.0.0",
-  "description": "Mindwave AI - Personalized AI Prompts",
+  "description": "Cloasta AI - Personalized AI Prompts",
   "dependencies": {
     "@google/generative-ai": "^0.11.1",
     "@supabase/supabase-js": "^2.39.0",

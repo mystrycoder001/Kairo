@@ -6,7 +6,7 @@ Analyze this conversation and create a military-grade briefing that lets any AI 
 Output EXACTLY this format:
 
 ═══════════════════════════════
-MINDWAVE SESSION SYNC
+Cloasta SESSION SYNC
 Transferred: [datetime]
 ═══════════════════════════════
 
@@ -42,7 +42,7 @@ Already covered - skip these:
 Paste this after the block:
 "Full context received. Continue from exactly: {next action}"
 ═══════════════════════════════
-Powered by Mindwave
+Powered by Cloasta
 ═══════════════════════════════`;
 
 module.exports = async function handler(req, res) {

@@ -29,7 +29,7 @@ export function initSessionSync() {
         try {
             const rawBlock = await extractContextAPI(text);
             const cleanBlock = cleanPrompt(rawBlock);
-            const block = `${cleanBlock}\n\n[Mindwave Intelligence Continuity]`;
+            const block = `${cleanBlock}\n\n[Cloasta Intelligence Continuity]`;
             if (syncOutput) syncOutput.textContent = block;
 
             // Save to Supabase

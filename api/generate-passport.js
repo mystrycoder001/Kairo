@@ -6,7 +6,7 @@ Create a structured AI Passport that makes any AI instantly understand this user
 Output EXACTLY this format:
 
 ═══════════════════════════════
-MINDWAVE AI PASSPORT v2.0
+Cloasta AI PASSPORT v2.0
 Generated: [date]
 ═══════════════════════════════
 
@@ -51,7 +51,7 @@ Never ask repetitive questions.
 Continue naturally from this context.
 Adapt your tone to match user style.
 ═══════════════════════════════
-Powered by Mindwave
+Powered by Cloasta
 ═══════════════════════════════`;
 
 module.exports = async function handler(req, res) {

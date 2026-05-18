@@ -11,4 +11,4 @@ Allow: /pricing.html
 Allow: /privacy.html
 Allow: /terms.html
 
-Sitemap: https://mindwave-omega-three.vercel.app/sitemap.xml
+Sitemap: https://kairo-omega-three.vercel.app/sitemap.xml

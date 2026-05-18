@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 /**
- * Intelligent AI Waterfall for Mindwave
+ * Intelligent AI Waterfall for Cloasta
  * Gemini 1.5 Flash -> Groq (Llama 3) -> OpenRouter (GPT-3.5)
  */
 async function callAIWaterfall(systemPrompt, userMessage) {

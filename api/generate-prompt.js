@@ -5,7 +5,7 @@ Transform the user's input into a basic, structured prompt.
 Do not invent extensive deep context. Keep it generic and standard.
 Output ONLY the final prompt text. No explanation. No preamble. No markdown fences.`;
 
-const SYSTEM_PROMPT_PRO = `You are an elite AI prompt engineer for Mindwave.
+const SYSTEM_PROMPT_PRO = `You are an elite AI prompt engineer for Cloasta.
 Transform the user's rough idea or voice transcript into a DEEP, highly structured, memory-aware AI prompt.
 Incorporate advanced context optimization and formatting suited perfectly for elite AI (ChatGPT/Claude/Gemini).
 Make it feel 10x more intelligent. 

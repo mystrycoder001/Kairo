@@ -61,7 +61,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/dashboard.html',
+      redirectTo: window.location.origin + '/login.html',
       queryParams: {
         access_type: 'offline',
         prompt: 'consent'
@@ -186,6 +186,10 @@ async function handleAuthRedirect(user) {
   const isOnboardingPage = path.includes('onboarding.html');
   const isDashboardPage = path.includes('dashboard.html');
 
+  // Only auto-redirect from login/index pages, NOT from dashboard/onboarding
+  // Dashboard and onboarding have their own routing logic in their own scripts
+  if (!isLoginPage && !isIndexPage) return;
+
   try {
     const { data: profile } = await supabase.from('profiles')
       .select('onboarding_completed')
@@ -194,32 +198,17 @@ async function handleAuthRedirect(user) {
 
     const onboarded = profile?.onboarding_completed === true;
 
-    // Login/Index → route based on onboarding status
-    if (isLoginPage || isIndexPage) {
-      _authRedirecting = true;
-      window.location.href = onboarded ? '/dashboard.html' : '/onboarding.html';
-      return;
-    }
-
-    // Dashboard → if NOT onboarded, force onboarding
-    if (isDashboardPage && !onboarded) {
-      _authRedirecting = true;
-      window.location.href = '/onboarding.html';
-      return;
-    }
-
-    // Onboarding → if already onboarded, go to dashboard
-    if (isOnboardingPage && onboarded) {
-      _authRedirecting = true;
+    _authRedirecting = true;
+    if (onboarded) {
       window.location.href = '/dashboard.html';
-      return;
+    } else {
+      window.location.href = '/onboarding.html';
     }
   } catch (err) {
     console.error('[Auth] Redirect error:', err);
     // Fallback: send to onboarding (safer than dashboard)
-    if (isLoginPage || isIndexPage) {
-      window.location.href = '/onboarding.html';
-    }
+    _authRedirecting = true;
+    window.location.href = '/onboarding.html';
   }
 }
 
@@ -236,24 +225,22 @@ export async function saveOnboardingStep(data) {
 // AUTH STATE CHANGE HANDLER (Single source of truth)
 // ==========================================
 supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log('[Auth] State change:', event);
+
   if (session?.user) {
     currentUser = session.user;
     currentUserTimestamp = Date.now();
 
-    if (event === 'SIGNED_IN') {
-      await initUserProfile(session.user);
+    // Handle both SIGNED_IN (new login) and INITIAL_SESSION (page reload with existing session)
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      if (event === 'SIGNED_IN') {
+        await initUserProfile(session.user);
+      }
       await handleAuthRedirect(session.user);
     }
   } else {
     currentUser = null;
     currentUserTimestamp = 0;
-  }
-});
-
-// Clean URL hash from OAuth callback (runs once on load)
-window.addEventListener('load', () => {
-  if (window.location.hash.includes('access_token')) {
-    window.history.replaceState({}, document.title, window.location.pathname);
   }
 });
 

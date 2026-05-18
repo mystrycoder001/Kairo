@@ -1,6 +1,6 @@
-# 🌊 Mindwave — Your Personal AI Memory Layer
+# 🌊 Cloasta — Your Personal AI Memory Layer
 
-Mindwave is an intelligent architectural AI system that transforms rough thoughts, voice notes, and session histories into high-precision context blocks. It bridges the gap between major AI tools (ChatGPT, Claude, Gemini) while maintaining a persistent digital identity (AI Passport).
+Cloasta is an intelligent architectural AI system that transforms rough thoughts, voice notes, and session histories into high-precision context blocks. It bridges the gap between major AI tools (ChatGPT, Claude, Gemini) while maintaining a persistent digital identity (AI Passport).
 
 ## 🚀 Key Features
 - **🎙️ Voice-to-Prompt**: High-precision architectural instruction generation from speech with 3-tier fallback.
@@ -32,7 +32,7 @@ SUPABASE_ANON_KEY=
 4. **Deploy**: `vercel --prod`.
 
 ## 🎨 Design Philosophy
-Mindwave utilizes a high-contrast **"Intelligent Void"** aesthetic—a minimalist black-and-white system designed for maximum focus, architectural precision, and a premium feel.
+Cloasta utilizes a high-contrast **"Intelligent Void"** aesthetic—a minimalist black-and-white system designed for maximum focus, architectural precision, and a premium feel.
 
 ---
 *Built for architects of the future.*

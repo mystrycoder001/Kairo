@@ -1,4 +1,4 @@
-# MINDWAVE — FIX ALL ERRORS MASTER PROMPT
+# Cloasta — FIX ALL ERRORS MASTER PROMPT
 
 You have full permission to read and modify every file in this project.
 
@@ -254,7 +254,7 @@ Make sure package.json has node-fetch as a dependency:
 
 ```json
 {
-  "name": "mindwave",
+  "name": "Cloasta",
   "version": "1.0.0",
   "dependencies": {
     "node-fetch": "^2.6.9"
