@@ -150,12 +150,17 @@ function showLoadingSkeleton(show) {
 }
 
 async function loadDashboard() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-  const user = session.user;
+  const user = await getCurrentUser();
+  if (!user) return;
 
-  // 1. Get Profile — handle missing row gracefully
-  const { data: profile, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  // Fetch Profile, Usage, and History in parallel
+  const [profileResult, usageResult] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('usage_tracking').select('*').eq('user_id', user.id).single()
+  ]);
+
+  const profileErr = profileResult.error;
+  const profile = profileResult.data;
   
   // No profile row (PGRST116) or null → onboarding
   if (!profile || (profileErr && profileErr.code === 'PGRST116')) {
@@ -196,7 +201,7 @@ async function loadDashboard() {
   }
 
   // 4. Load Usage
-  const { data: usage } = await supabase.from('usage_tracking').select('*').eq('user_id', user.id).single();
+  const usage = usageResult.data;
   if (usage && $('prompts-used')) {
     $('prompts-used').textContent = usage.prompts_used || 0;
   }

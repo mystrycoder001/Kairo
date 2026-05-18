@@ -1,5 +1,14 @@
 User-agent: *
-Allow: /
 Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /api/
+
+Allow: /
+Allow: /features/
+Allow: /compare/
+Allow: /docs.html
+Allow: /pricing.html
+Allow: /privacy.html
+Allow: /terms.html
 
 Sitemap: https://mindwave-omega-three.vercel.app/sitemap.xml

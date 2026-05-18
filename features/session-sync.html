@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Sync — AI Context Continuity Across Chats | MindWave</title>
+    <link rel="canonical" href="https://mindwave-omega-three.vercel.app/features/session-sync.html">
+    <meta name="description" content="MindWave Session Sync compresses long AI conversations into continuity blocks. Resume where you left off in any AI tool — ChatGPT, Claude, or Gemini.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app/features/session-sync.html">
+    <meta property="og:title" content="Session Sync — AI Context Continuity | MindWave">
+    <meta property="og:description" content="Never lose conversation context again. Compress and carry AI sessions forward.">
+    <meta property="og:image" content="/logo/og-card.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Session Sync — AI Context Continuity">
+    <meta name="twitter:description" content="Never lose conversation context again.">
+    <meta name="twitter:image" content="/logo/og-card.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <script type="application/ld+json">
+    [{"@context":"https://schema.org","@type":"Article","headline":"Session Sync — AI Context Continuity Across Chats","description":"MindWave Session Sync compresses AI conversation history into portable continuity blocks for cross-tool session resumption.","author":{"@type":"Organization","name":"MindWave"},"datePublished":"2026-05-17"},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Session Sync?","acceptedAnswer":{"@type":"Answer","text":"Session Sync is a MindWave feature that compresses long AI conversation histories into condensed continuity blocks. You can paste these blocks into a new chat to resume exactly where you left off, even in a different AI tool."}},{"@type":"Question","name":"How do I continue an AI conversation in a new chat?","acceptedAnswer":{"@type":"Answer","text":"Copy your conversation history, paste it into MindWave's Session Sync, and it will generate a compressed context block. Paste that block into a fresh chat in any AI tool to resume your conversation with full context."}},{"@type":"Question","name":"Does Session Sync work across different AI tools?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can compress a ChatGPT conversation and resume it in Claude, or vice versa. Session Sync produces tool-agnostic continuity blocks that work anywhere."}},{"@type":"Question","name":"What happens when I hit the context window limit?","acceptedAnswer":{"@type":"Answer","text":"When an AI chat gets too long, it starts forgetting earlier context. Session Sync solves this by compressing the entire conversation into a small block that fits within any context window."}}]}]
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans selection:bg-white selection:text-black">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5"><div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between"><a href="/" class="flex items-center gap-3"><div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-black font-bold">waves</span></div><span class="text-xl font-bold tracking-tight text-gradient">MindWave</span></a><nav class="hidden md:flex items-center gap-8" aria-label="Main"><a href="/#features" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Features</a><a href="/pricing.html" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Pricing</a><a href="/login.html" class="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all">Start Free</a></nav></div></header>
+
+    <main class="flex-1">
+        <section class="page-hero max-w-4xl mx-auto px-6 text-center">
+            <span class="badge-pill mb-8 inline-block">Core Feature</span>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tighter mb-6 text-gradient leading-[1.1]">Session Sync</h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto font-light leading-relaxed">Never lose conversation context again. Compress long AI chats into portable continuity blocks and resume anywhere.</p>
+            <div class="pt-10"><a href="/login.html" class="bg-white text-black font-bold px-10 py-4 rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Try Session Sync</a></div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-4">The problem: context window limits</h2>
+            <p class="text-gray-400 text-lg leading-relaxed mb-4">Every AI tool has a context window limit. When conversations get long, the AI starts forgetting what you discussed earlier. You lose progress, decisions, and important context.</p>
+            <p class="text-gray-400 text-lg leading-relaxed">Starting a new chat means starting from zero — unless you have a way to carry your conversation context forward.</p>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-10">How Session Sync works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="premium-card p-8 rounded-2xl space-y-4"><div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">content_paste</span></div><h3 class="font-bold">1. Paste history</h3><p class="text-gray-500 text-sm leading-relaxed">Copy your entire conversation from ChatGPT, Claude, or any AI tool and paste it into Session Sync.</p></div>
+                <div class="premium-card p-8 rounded-2xl space-y-4"><div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">compress</span></div><h3 class="font-bold">2. Compress</h3><p class="text-gray-500 text-sm leading-relaxed">MindWave's AI extracts key decisions, context, and progress into a condensed continuity block.</p></div>
+                <div class="premium-card p-8 rounded-2xl space-y-4"><div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">sync_alt</span></div><h3 class="font-bold">3. Resume</h3><p class="text-gray-500 text-sm leading-relaxed">Paste the continuity block into a fresh chat in any AI tool. Pick up exactly where you left off.</p></div>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-6">Cross-tool continuity</h2>
+            <p class="text-gray-400 text-lg leading-relaxed mb-6">Session Sync isn't limited to one platform. Compress a ChatGPT conversation and resume it in Claude. Move a Gemini session to Perplexity. Your conversation context is portable.</p>
+            <div class="flex flex-wrap gap-3">
+                <span class="badge-pill">ChatGPT → Claude</span>
+                <span class="badge-pill">Claude → Gemini</span>
+                <span class="badge-pill">Gemini → Perplexity</span>
+                <span class="badge-pill">Any → Any</span>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-10">Frequently asked questions</h2>
+            <div class="space-y-0">
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>What is Session Sync?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Session Sync compresses long AI conversation histories into condensed continuity blocks. Paste these into a new chat to resume exactly where you left off, even in a different AI tool.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>How do I continue an AI conversation in a new chat?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Copy your conversation history, paste it into MindWave's Session Sync, and it generates a compressed context block. Paste that into a fresh chat to resume with full context.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>Does Session Sync work across different AI tools?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Yes. Compress a ChatGPT conversation and resume it in Claude, or vice versa. Session Sync produces tool-agnostic continuity blocks.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>What happens when I hit the context window limit?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>When an AI chat gets too long, it forgets earlier context. Session Sync compresses the entire conversation into a small block that fits within any context window.</p></div></div>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6 text-center pb-20">
+            <h2 class="text-4xl font-bold tracking-tight mb-6 text-gradient">Never lose AI context again</h2>
+            <p class="text-gray-400 text-lg mb-10">Carry your conversations forward. Free to start.</p>
+            <a href="/login.html" class="inline-block bg-white text-black font-bold px-10 py-4 rounded-full hover:scale-105 transition-all">Start Free</a>
+        </section>
+    </main>
+
+    <footer class="border-t border-white/5 bg-black py-16"><div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-white">waves</span><span class="font-bold tracking-tight">MindWave</span></div><nav class="flex items-center gap-10 text-[10px] font-bold uppercase tracking-widest text-gray-500"><a href="/features/ai-memory.html" class="hover:text-white transition-colors">Features</a><a href="/pricing.html" class="hover:text-white transition-colors">Pricing</a><a href="/docs.html" class="hover:text-white transition-colors">Docs</a><a href="/privacy.html" class="hover:text-white transition-colors">Privacy</a><a href="/terms.html" class="hover:text-white transition-colors">Terms</a></nav><p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">© 2026 MystryX.</p></div></footer>
+</body>
+</html>

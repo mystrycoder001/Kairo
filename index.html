@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mindwave — Your persistent memory across AI</title>
+    <title>MindWave — Persistent AI Memory Across ChatGPT, Claude & Gemini</title>
+    <link rel="canonical" href="https://mindwave-omega-three.vercel.app/">
     
     <!-- PWA & SEO -->
     <link rel="manifest" href="manifest.json">
@@ -11,14 +12,22 @@
     <meta name="vercel-toolbar" content="false">
 
     <!-- SEO & Open Graph -->
-    <meta name="title" content="MindWave — Your memory across every AI.">
-    <meta name="description" content="MindWave keeps your prompts, communication style, and context synced across AI platforms.">
-    <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
+    <meta name="title" content="MindWave — Persistent AI Memory Across Every AI Tool">
+    <meta name="description" content="MindWave keeps your identity, prompts, and communication style synced across ChatGPT, Claude, Gemini, and every AI tool. Persistent AI memory and identity.">
+    <meta name="keywords" content="AI memory, persistent AI memory, AI identity, AI passport, ChatGPT memory tool, Claude context sync, AI prompt manager, session sync">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mindwave-omega-three.vercel.app">
-    <meta property="og:title" content="MindWave — Your memory across every AI.">
-    <meta property="og:description" content="Your AI identity stays consistent everywhere.">
-    <meta property="og:image" content="/logo/mindwave-logo.png">
+    <meta property="og:title" content="MindWave — Persistent AI Memory Across Every Tool">
+    <meta property="og:description" content="Your identity, context, and communication style synced across ChatGPT, Claude, Gemini, and every AI.">
+    <meta property="og:image" content="/logo/og-card.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MindWave — One Memory. Every AI Tool.">
+    <meta name="twitter:description" content="Persistent AI memory and identity across ChatGPT, Claude, Gemini.">
+    <meta name="twitter:image" content="/logo/og-card.png">
+
+    <script type="application/ld+json">
+    [{"@context":"https://schema.org","@type":"Organization","name":"MindWave","url":"https://mindwave-omega-three.vercel.app","logo":"/logo/mindwave-logo.png","description":"Persistent AI memory and identity across every AI tool.","sameAs":[]},{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MindWave","applicationCategory":"ProductivityApplication","description":"MindWave keeps your identity, prompts, and communication style synced across ChatGPT, Claude, Gemini, and every AI tool.","url":"https://mindwave-omega-three.vercel.app","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free — 5 prompts/day"},{"@type":"Offer","price":"4.99","priceCurrency":"USD","description":"Pro — Unlimited prompts"}],"operatingSystem":"Web","featureList":["AI Passport identity profile","Voice-to-prompt capture","Session Sync continuity","Memory modes","Cross-tool context sync"]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is MindWave?","acceptedAnswer":{"@type":"Answer","text":"MindWave is a persistent AI memory and identity tool. It captures your communication style, role, and context into an AI Passport that works across ChatGPT, Claude, Gemini, and every AI platform."}},{"@type":"Question","name":"How does MindWave work?","acceptedAnswer":{"@type":"Answer","text":"You create an AI Passport with your identity and preferences. When you generate prompts through voice or text, MindWave attaches your identity context automatically. Copy the prompt into any AI tool."}},{"@type":"Question","name":"Does MindWave work with ChatGPT, Claude, and Gemini?","acceptedAnswer":{"@type":"Answer","text":"Yes. MindWave works with every AI tool. Your AI Passport and generated prompts can be used in ChatGPT, Claude, Gemini, Perplexity, Copilot, and any other AI platform."}},{"@type":"Question","name":"What is an AI Passport?","acceptedAnswer":{"@type":"Answer","text":"An AI Passport is a structured 6-layer identity profile that captures your name, role, communication style, active projects, behavioral preferences, and AI optimization targets."}},{"@type":"Question","name":"How is MindWave different from ChatGPT's built-in memory?","acceptedAnswer":{"@type":"Answer","text":"ChatGPT Memory only works within ChatGPT. MindWave provides cross-tool AI memory that works across ChatGPT, Claude, Gemini, and every AI platform."}},{"@type":"Question","name":"Is MindWave free?","acceptedAnswer":{"@type":"Answer","text":"Yes. MindWave offers a free tier with 5 prompts per day. The Pro plan at $4.99/month unlocks unlimited prompts and additional features."}}]}]
+    </script>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -131,6 +140,19 @@
                 <p class="text-gray-500 text-sm leading-relaxed">Your AI memory across every tool. No more repeating yourself to different models.</p>
             </div>
         </section>
+
+        <!-- FAQ Section -->
+        <section class="max-w-4xl mx-auto px-6 py-20">
+            <h2 class="text-3xl font-bold tracking-tight mb-10 text-center">Frequently asked questions</h2>
+            <div class="space-y-0">
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>What is MindWave?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>MindWave is a persistent AI memory and identity tool. It captures your communication style, role, and context into an AI Passport that works across ChatGPT, Claude, Gemini, and every AI platform. Stop re-explaining yourself to AI.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>How does MindWave work?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>You create an AI Passport with your identity and preferences. When you generate prompts through voice or text, MindWave attaches your identity context automatically. Copy the prompt into any AI tool — it already knows who you are.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>Does MindWave work with ChatGPT, Claude, and Gemini?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Yes. MindWave is designed to work with every AI tool. Your AI Passport and generated prompts can be used in ChatGPT, Claude, Gemini, Perplexity, Copilot, and any other AI platform.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>What is an AI Passport?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>An AI Passport is a structured 6-layer identity profile that captures your name, role, communication style, active projects, behavioral preferences, and AI optimization targets. It's designed to be attached to your prompts so any AI understands you instantly.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>How is MindWave different from ChatGPT's built-in memory?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>ChatGPT Memory only works within ChatGPT and stores basic facts. MindWave creates a comprehensive identity profile that works across every AI platform — ChatGPT, Claude, Gemini, and more. It also includes voice capture, session sync, and memory modes.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>Is MindWave free?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Yes. MindWave offers a free tier with 5 prompts per day, 1 AI Passport, and standard sync. The Pro plan at $4.99/month unlocks unlimited prompts, 5 passports, and priority sync.</p></div></div>
+            </div>
+        </section>
     </main>
 
     <!-- FOOTER -->
@@ -140,11 +162,14 @@
                 <span class="material-symbols-outlined text-white">waves</span>
                 <span class="font-bold tracking-tight">MindWave</span>
             </div>
-            <div class="flex items-center gap-10 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                <a href="#" class="hover:text-white transition-colors">Privacy</a>
-                <a href="#" class="hover:text-white transition-colors">Terms</a>
-                <a href="#" class="hover:text-white transition-colors">Twitter</a>
-            </div>
+            <nav class="flex items-center flex-wrap gap-x-10 gap-y-2 text-[10px] font-bold uppercase tracking-widest text-gray-500" aria-label="Footer navigation">
+                <a href="/features/ai-memory.html" class="hover:text-white transition-colors">Features</a>
+                <a href="/pricing.html" class="hover:text-white transition-colors">Pricing</a>
+                <a href="/docs.html" class="hover:text-white transition-colors">Docs</a>
+                <a href="/compare/mindwave-vs-chatgpt-memory.html" class="hover:text-white transition-colors">Compare</a>
+                <a href="/privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                <a href="/terms.html" class="hover:text-white transition-colors">Terms</a>
+            </nav>
             <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">© 2026 MystryX. All rights reserved.</p>
         </div>
     </footer>

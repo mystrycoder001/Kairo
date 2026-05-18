@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persistent AI Memory Tool — MindWave | Remember Context Across AI Tools</title>
+    <link rel="canonical" href="https://mindwave-omega-three.vercel.app/features/ai-memory.html">
+    <meta name="description" content="MindWave provides persistent AI memory across ChatGPT, Claude, and Gemini. Your identity, context, and communication style follow you across every AI tool.">
+    <meta name="keywords" content="persistent AI memory, AI context memory, AI memory tool, best AI memory tool, remember AI context">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app/features/ai-memory.html">
+    <meta property="og:title" content="Persistent AI Memory — MindWave">
+    <meta property="og:description" content="Your identity, context, and communication style follow you across every AI tool.">
+    <meta property="og:image" content="/logo/og-card.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Persistent AI Memory — MindWave">
+    <meta name="twitter:description" content="Stop re-explaining yourself to every AI. MindWave remembers.">
+    <meta name="twitter:image" content="/logo/og-card.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#000000">
+
+    <script type="application/ld+json">
+    [{
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "MindWave",
+      "applicationCategory": "ProductivityApplication",
+      "description": "Persistent AI memory and identity across ChatGPT, Claude, Gemini, and every AI tool.",
+      "url": "https://mindwave-omega-three.vercel.app",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier with 5 prompts per day" },
+      "operatingSystem": "Web",
+      "featureList": ["Persistent AI memory", "AI Passport identity", "Voice-to-prompt capture", "Session Sync", "Memory modes", "Cross-tool context sync"]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is persistent AI memory?", "acceptedAnswer": { "@type": "Answer", "text": "Persistent AI memory means your preferences, communication style, and project context are saved and carried across AI conversations — even across different AI tools like ChatGPT, Claude, and Gemini. MindWave provides this through its AI Passport system." }},
+        { "@type": "Question", "name": "How do I make AI remember my context?", "acceptedAnswer": { "@type": "Answer", "text": "With MindWave, you create an AI Passport that captures your identity, role, communication style, and active projects. This passport is then attached to your prompts automatically, giving any AI tool instant context about who you are and how you work." }},
+        { "@type": "Question", "name": "Does MindWave work with ChatGPT, Claude, and Gemini?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. MindWave is designed to work with every AI tool. Your AI Passport and generated prompts can be used in ChatGPT, Claude, Gemini, Perplexity, Copilot, and any other AI platform." }},
+        { "@type": "Question", "name": "Is MindWave free to use?", "acceptedAnswer": { "@type": "Answer", "text": "MindWave offers a free tier with 5 prompts per day, 1 AI Passport, and standard sync. The Pro plan at $4.99/month unlocks unlimited prompts, 5 passports, and priority sync." }}
+      ]
+    }]
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans selection:bg-white selection:text-black">
+
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-black font-bold">waves</span></div>
+                <span class="text-xl font-bold tracking-tight text-gradient">MindWave</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-8" aria-label="Main navigation">
+                <a href="/#features" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Features</a>
+                <a href="/pricing.html" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Pricing</a>
+                <a href="/login.html" class="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Start Free</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <section class="page-hero max-w-4xl mx-auto px-6 text-center">
+            <span class="badge-pill mb-8 inline-block">Core Feature</span>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tighter mb-6 text-gradient leading-[1.1]">Persistent AI Memory</h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto font-light leading-relaxed">AI tools forget everything between sessions. MindWave keeps your identity, context, and communication style persistent across every AI platform.</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-10">
+                <a href="/login.html" class="bg-white text-black font-bold px-10 py-4 rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Try MindWave Free</a>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <article class="space-y-6">
+                <h2 class="text-3xl font-bold tracking-tight">The problem: AI amnesia</h2>
+                <p class="text-gray-400 text-lg leading-relaxed">Every time you open a new AI chat, you start from scratch. The AI doesn't know your name, your role, your projects, or how you prefer to communicate. You waste time re-explaining context that the AI already knew five minutes ago in a different conversation.</p>
+                <p class="text-gray-400 text-lg leading-relaxed">This gets worse when you use multiple AI tools. ChatGPT doesn't know what you told Claude. Gemini doesn't know your ChatGPT history. Your AI workflow is fragmented.</p>
+            </article>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-10">How MindWave solves it</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="premium-card p-8 rounded-2xl space-y-4">
+                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">fingerprint</span></div>
+                    <h3 class="font-bold">Identity persistence</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Your name, role, goals, and communication preferences are captured in a structured AI Passport. This identity persists across every conversation and every tool.</p>
+                </div>
+                <div class="premium-card p-8 rounded-2xl space-y-4">
+                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">sync_alt</span></div>
+                    <h3 class="font-bold">Cross-tool sync</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Use the same identity context in ChatGPT, Claude, Gemini, Perplexity, or any AI. Your memory isn't locked to one platform.</p>
+                </div>
+                <div class="premium-card p-8 rounded-2xl space-y-4">
+                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-white">memory</span></div>
+                    <h3 class="font-bold">Context continuity</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Session Sync compresses long conversations into continuity blocks. Start fresh chats without losing progress.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-6">Memory modes</h2>
+            <p class="text-gray-400 mb-8">Switch between different contexts depending on what you're working on. Each mode adjusts how your AI Passport is presented to AI tools.</p>
+            <div class="flex flex-wrap gap-4">
+                <div class="premium-card px-6 py-4 rounded-2xl flex items-center gap-3"><span class="text-xl">🚀</span><span class="font-bold text-sm">Founder</span></div>
+                <div class="premium-card px-6 py-4 rounded-2xl flex items-center gap-3"><span class="text-xl">📚</span><span class="font-bold text-sm">Study</span></div>
+                <div class="premium-card px-6 py-4 rounded-2xl flex items-center gap-3"><span class="text-xl">💻</span><span class="font-bold text-sm">Coding</span></div>
+                <div class="premium-card px-6 py-4 rounded-2xl flex items-center gap-3"><span class="text-xl">🎨</span><span class="font-bold text-sm">Creator</span></div>
+                <div class="premium-card px-6 py-4 rounded-2xl flex items-center gap-3"><span class="text-xl">💼</span><span class="font-bold text-sm">Freelancer</span></div>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-bold tracking-tight mb-10">Frequently asked questions</h2>
+            <div class="space-y-0">
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>What is persistent AI memory?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Persistent AI memory means your preferences, communication style, and project context are saved and carried across AI conversations — even across different AI tools like ChatGPT, Claude, and Gemini. MindWave provides this through its AI Passport system.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>How do I make AI remember my context?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>With MindWave, you create an AI Passport that captures your identity, role, communication style, and active projects. This passport is then attached to your prompts automatically, giving any AI tool instant context about who you are and how you work.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>Does MindWave work with ChatGPT, Claude, and Gemini?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>Yes. MindWave is designed to work with every AI tool. Your AI Passport and generated prompts can be used in ChatGPT, Claude, Gemini, Perplexity, Copilot, and any other AI platform.</p></div></div>
+                <div class="faq-item"><button class="faq-question" onclick="this.parentElement.classList.toggle('open')"><span>Is MindWave free to use?</span><span class="icon material-symbols-outlined">add</span></button><div class="faq-answer"><p>MindWave offers a free tier with 5 prompts per day, 1 AI Passport, and standard sync. The Pro plan at $4.99/month unlocks unlimited prompts, 5 passports, and priority sync.</p></div></div>
+            </div>
+        </section>
+
+        <section class="page-section max-w-4xl mx-auto px-6 text-center pb-20">
+            <h2 class="text-4xl font-bold tracking-tight mb-6 text-gradient">Stop repeating yourself to AI</h2>
+            <p class="text-gray-400 text-lg mb-10 max-w-xl mx-auto">Create your AI Passport in 60 seconds. Free to start.</p>
+            <a href="/login.html" class="inline-block bg-white text-black font-bold px-10 py-4 rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Start Free</a>
+        </section>
+    </main>
+
+    <footer class="border-t border-white/5 bg-black py-16">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-3"><span class="material-symbols-outlined text-white">waves</span><span class="font-bold tracking-tight">MindWave</span></div>
+            <nav class="flex items-center gap-10 text-[10px] font-bold uppercase tracking-widest text-gray-500" aria-label="Footer navigation">
+                <a href="/features/ai-memory.html" class="hover:text-white transition-colors">Features</a>
+                <a href="/pricing.html" class="hover:text-white transition-colors">Pricing</a>
+                <a href="/docs.html" class="hover:text-white transition-colors">Docs</a>
+                <a href="/privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                <a href="/terms.html" class="hover:text-white transition-colors">Terms</a>
+            </nav>
+            <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">© 2026 MystryX. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

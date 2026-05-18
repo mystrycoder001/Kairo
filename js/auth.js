@@ -18,6 +18,40 @@ let currentUserTimestamp = 0;
 const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let _authRedirecting = false; // Guard against redirect loops
 
+// Global Loader Utility
+export function showGlobalLoader(text = "Syncing...") {
+    let loader = document.getElementById('global-cinematic-loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'global-cinematic-loader';
+        loader.className = 'global-loader-overlay';
+        loader.innerHTML = `
+            <div class="cinematic-ring"></div>
+            <div class="loader-text" id="global-loader-text"></div>
+        `;
+        document.body.appendChild(loader);
+    }
+    const textEl = document.getElementById('global-loader-text');
+    if (textEl) textEl.textContent = text;
+    
+    // Force reflow and show
+    void loader.offsetWidth;
+    loader.classList.add('active');
+    
+    // Safety timeout
+    if (window._loaderTimeout) clearTimeout(window._loaderTimeout);
+    window._loaderTimeout = setTimeout(() => {
+        hideGlobalLoader();
+    }, 10000);
+}
+
+export function hideGlobalLoader() {
+    const loader = document.getElementById('global-cinematic-loader');
+    if (loader) {
+        loader.classList.remove('active');
+    }
+}
+
 // ==========================================
 // AUTH METHODS
 // ==========================================
@@ -191,7 +225,7 @@ async function handleAuthRedirect(user) {
 
 // Onboarding data saving helper
 export async function saveOnboardingStep(data) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser();
   if (!user) return
   
   const { error } = await supabase.from('profiles').update(data).eq('id', user.id)
