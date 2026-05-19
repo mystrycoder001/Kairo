@@ -1,65 +1,57 @@
-/* css/style.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* css/style.css — Cloasta Production Styles */
+/* NOTE: @tailwind directives removed. Using CDN runtime. */
 
-@layer base {
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #000000;
-    color: #ffffff;
-    letter-spacing: -0.01em;
-  }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
-@layer components {
-  .glassmorphism {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  
-  .premium-card {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.3s ease;
-  }
-
-  .premium-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-  }
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+.premium-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
 
-  .text-gradient {
-    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.5) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+.premium-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.text-gradient {
+  background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.5) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 @keyframes fadeIn {
@@ -72,25 +64,27 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-
-/* Mobile Navigation Fixes */
-@media (max-width: 1024px) {
-  .hidden-mobile {
-    display: none !important;
-  }
-  
+/* Mobile Sidebar */
+@media (max-width: 1023px) {
   #sidebar {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 80% !important;
+    width: 280px !important;
     background: black;
     z-index: 100;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 20px 0 50px rgba(0, 0, 0, 0.9);
+    transition: transform 0.3s ease;
   }
 
+  #sidebar.sidebar-hidden {
+    transform: translateX(-100%);
+  }
+
+  /* Show all sidebar text labels on mobile when open */
+  #sidebar .hidden.lg\:block,
   .sidebar-item span.hidden {
     display: block !important;
   }

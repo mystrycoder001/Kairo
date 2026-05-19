@@ -60,9 +60,11 @@ export async function initPassport() {
     }
 
     saveBtn?.addEventListener('click', async () => {
-        if (!user) return showToast('Please sign in first');
+        // FIX: Re-fetch user on every save to avoid stale reference after session refresh
+        const currentUser = await getCurrentUser();
+        if (!currentUser) return showToast('Please sign in first');
         
-        if (!(await checkPassportLimit(user))) return;
+        if (!(await checkPassportLimit(currentUser))) return;
 
         const data = {
             full_name: nameInput ? nameInput.value : '',
@@ -83,7 +85,7 @@ export async function initPassport() {
             const { error: updateError } = await supabase
                 .from('profiles')
                 .update(data)
-                .eq('id', user.id);
+                .eq('id', currentUser.id);
 
             if (updateError) throw updateError;
             
@@ -95,11 +97,9 @@ export async function initPassport() {
             const { error: textError } = await supabase
                 .from('profiles')
                 .update({ passport_text: block })
-                .eq('id', user.id);
+                .eq('id', currentUser.id);
 
             if (textError) throw textError;
-            
-
             
             if ($('passport-output-text')) {
                 $('passport-output-text').textContent = block;

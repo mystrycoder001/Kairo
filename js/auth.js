@@ -60,16 +60,12 @@ export function hideGlobalLoader() {
 // AUTH METHODS
 // ==========================================
 
-// Google Sign In
+// Google Sign In — FIX: removed prompt:'consent' to not force re-consent for returning users
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/login.html',
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent'
-      }
+      redirectTo: window.location.origin + '/login.html'
     }
   })
   if (error) throw error
@@ -77,11 +73,13 @@ export async function signInWithGoogle() {
 }
 
 // Email OTP — Send code (Magic Link)
+// FIX: Added proper emailRedirectTo for magic link callback
 export async function signInWithOTP(email) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email: email,
     options: {
-      shouldCreateUser: true
+      shouldCreateUser: true,
+      emailRedirectTo: window.location.origin + '/login.html'
     }
   })
   if (error) throw error
@@ -132,7 +130,10 @@ export async function getCurrentUser() {
   }
 }
 
-// Ensure user profile exists in Supabase (upsert on login)
+// Ensure user profile exists in Supabase
+// FIX: CRITICAL — Only set fields that won't overwrite existing data.
+// Uses upsert with ignoreDuplicates=false BUT only updates non-destructive fields.
+// Never overwrites: onboarding_completed, subscription_plan, subscription_status, etc.
 export async function initUserProfile(user) {
   if (!user) return;
   const displayName = user?.user_metadata?.full_name 
@@ -143,23 +144,43 @@ export async function initUserProfile(user) {
   const avatarUrl = user?.user_metadata?.avatar_url || '';
 
   try {
-    await supabase.from('profiles')
-        .upsert({ 
-            id: user.id,
-            full_name: displayName, 
-            avatar_url: avatarUrl,
-            email: user.email,
-            last_login: new Date().toISOString()
-        }, { onConflict: 'id' });
+    // First check if profile exists
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id, onboarding_completed, subscription_plan')
+      .eq('id', user.id)
+      .single();
+    
+    if (existing) {
+      // RETURNING USER — only update login metadata, NEVER touch critical fields
+      await supabase.from('profiles')
+        .update({ 
+          avatar_url: avatarUrl,
+          last_login: new Date().toISOString()
+        })
+        .eq('id', user.id);
+    } else {
+      // NEW USER — insert with safe defaults
+      await supabase.from('profiles')
+        .insert({ 
+          id: user.id,
+          full_name: displayName, 
+          avatar_url: avatarUrl,
+          email: user.email,
+          last_login: new Date().toISOString(),
+          onboarding_completed: false,
+          subscription_plan: 'free'
+        });
+    }
     
     // Ensure usage_tracking row exists for free tier limits
-    const { data: existing } = await supabase
+    const { data: usageExists } = await supabase
       .from('usage_tracking')
       .select('user_id')
       .eq('user_id', user.id)
       .single();
     
-    if (!existing) {
+    if (!usageExists) {
       await supabase.from('usage_tracking').insert({
         user_id: user.id,
         prompts_used: 0,

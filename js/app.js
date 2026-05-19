@@ -50,24 +50,20 @@ const PLAN_CONFIG = {
   ultra: { label: 'ULTRA', promptLimit: Infinity, syncLimit: Infinity, passportLimit: Infinity }
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ==========================================
+// DOM READY — Wire up UI immediately (no auth dependency)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
   window.onerror = (msg, url, lineNo, columnNo, error) => { logError('Runtime', error || msg); return false; };
   window.onunhandledrejection = (event) => { logError('UnhandledPromise', event.reason); };
 
-  const isDashboard = window.location.pathname.includes('dashboard');
-  if (isDashboard) {
-    safeRun('VoiceInit', () => initVoice(handleGeneration));
-    safeRun('PassportInit', initPassport);
-    safeRun('SessionSyncInit', initSessionSync);
-    safeRun('TourInit', initTour);
-  }
-
+  // Wire static button listeners immediately
   $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
   $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
   $('mobile-menu-toggle')?.addEventListener('click', () => {
     const sidebar = $('sidebar');
     const overlay = $('sidebar-overlay');
-    if (sidebar) { sidebar.classList.remove('hidden-mobile'); if (overlay) overlay.classList.remove('hidden'); }
+    if (sidebar) { sidebar.classList.remove('sidebar-hidden'); if (overlay) overlay.classList.remove('hidden'); }
   });
   $('sidebar-overlay')?.addEventListener('click', closeMobileSidebar);
   $('close-upgrade-btn')?.addEventListener('click', hideUpgradeModal);
@@ -76,12 +72,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('upgrade-pro-btn')?.addEventListener('click', () => safeRun('UpgradePro', () => handleUpgrade('pro')));
   $('upgrade-ultra-btn')?.addEventListener('click', () => safeRun('UpgradeUltra', () => handleUpgrade('ultra')));
   $('save-settings-btn')?.addEventListener('click', () => safeRun('SettingsSave', saveSettings));
+
+  // FIX: Initialize navigation IMMEDIATELY on DOMContentLoaded
+  // Navigation is purely DOM-based and has ZERO auth dependency.
+  // This prevents "dead clicks" on sidebar items during dashboard load.
+  const isDashboard = window.location.pathname.includes('dashboard');
+  if (isDashboard) {
+    initNavigation();
+  }
 });
 
 function closeMobileSidebar() {
   const sidebar = $('sidebar');
   const overlay = $('sidebar-overlay');
-  if (sidebar) sidebar.classList.add('hidden-mobile');
+  if (sidebar) sidebar.classList.add('sidebar-hidden');
   if (overlay) overlay.classList.add('hidden');
 }
 
@@ -162,6 +166,14 @@ async function loadDashboard(existingSession) {
     safeRun('MemoryModesLoad', () => loadMemoryModes(profile));
     if (usage) safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile));
     safeRun('HistoryLoad', renderHistory);
+
+    // FIX: Initialize feature modules AFTER dashboard data is loaded
+    // This ensures getCurrentUser() returns a valid user inside each init
+    safeRun('VoiceInit', () => initVoice(handleGeneration));
+    safeRun('PassportInit', initPassport);
+    safeRun('SessionSyncInit', initSessionSync);
+    safeRun('TourInit', initTour);
+
     console.log('Dashboard load complete');
   } catch (err) {
     console.error('loadDashboard crashed:', err.message, err.stack);
@@ -269,18 +281,40 @@ async function handleUpgrade(planTier = 'pro') {
 }
 
 export function showScreen(screenId) {
+  // Hide ALL screens
   document.querySelectorAll('.screen').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+  
+  // Normalize the ID
   const cleanId = screenId.replace('screen-', '');
   const target = document.getElementById('screen-' + cleanId) || document.getElementById(screenId);
-  if (target) { target.style.display = 'block'; target.classList.add('active'); }
-  document.querySelectorAll('[data-nav], [data-screen], .sidebar-item').forEach(item => {
-    const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
-    if (navTarget === cleanId) { item.classList.add('active', 'text-white'); item.classList.remove('text-gray-400'); }
-    else { item.classList.remove('active', 'text-white'); item.classList.add('text-gray-400'); }
+  
+  if (target) { 
+    target.style.display = 'block'; 
+    target.classList.add('active'); 
+  } else {
+    console.warn('[Nav] Screen not found:', screenId, '→ falling back to overview');
+    const fallback = document.getElementById('screen-overview');
+    if (fallback) { fallback.style.display = 'block'; fallback.classList.add('active'); }
+  }
+  
+  // Update sidebar active states
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    const navTarget = item.getAttribute('data-nav');
+    if (navTarget === cleanId) { 
+      item.classList.add('active', 'text-white'); 
+      item.classList.remove('text-gray-400'); 
+    } else { 
+      item.classList.remove('active', 'text-white'); 
+      item.classList.add('text-gray-400'); 
+    }
   });
 }
 
-export function navigateTo(screenId) { showScreen(screenId); }
+export function navigateTo(screenId) { 
+  showScreen(screenId); 
+  // Auto-load settings data when navigating to settings
+  if (screenId === 'settings') safeRun('SettingsLoad', loadSettings);
+}
 window.navigateTo = navigateTo;
 window.showScreen = showScreen;
 window.loadDashboard = loadDashboard;
@@ -295,15 +329,30 @@ function updateProfileCard(profile) {
 }
 
 function initNavigation() {
-  const navElements = document.querySelectorAll('[data-screen], [data-nav], .nav-item, nav a, aside a, .sidebar a, .sidebar-item');
-  navElements.forEach(item => {
+  // Bind sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(item => {
     if (item.dataset.navBound) return;
     item.dataset.navBound = 'true';
     item.addEventListener('click', (e) => {
-      const target = item.getAttribute('data-screen') || item.getAttribute('data-nav') || item.getAttribute('href')?.replace('.html', '').replace('#', '').replace('/', '');
+      e.preventDefault();
+      const target = item.getAttribute('data-nav');
       if (!target) return;
-      if (target === 'upgrade') { e.preventDefault(); showUpgradeModal(); }
-      else { e.preventDefault(); navigateTo(target); if (target === 'settings') safeRun('SettingsLoad', loadSettings); }
+      if (target === 'upgrade') { showUpgradeModal(); }
+      else { navigateTo(target); }
+      closeMobileSidebar();
+    });
+  });
+  
+  // Bind ALL data-nav elements (including in-content buttons like "Capture", "Manage Passport")
+  document.querySelectorAll('[data-nav]').forEach(item => {
+    if (item.dataset.navBound) return;
+    item.dataset.navBound = 'true';
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = item.getAttribute('data-nav');
+      if (!target) return;
+      if (target === 'upgrade') { showUpgradeModal(); }
+      else { navigateTo(target); }
       closeMobileSidebar();
     });
   });
@@ -437,11 +486,12 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       const skeleton = $('loading-skeleton');
       const content = $('dashboard-content');
       if (skeleton) skeleton.classList.remove('hidden');
-      if (content) content.classList.add('hidden');
+      if (content) content.classList.add('opacity-0');
       await loadDashboard(session);
+      // Re-bind navigation after dynamic content has been injected
       initNavigation();
       if (skeleton) skeleton.classList.add('hidden');
-      if (content) content.classList.remove('hidden');
+      if (content) content.classList.remove('opacity-0');
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('upgraded') === 'true') {
         showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
