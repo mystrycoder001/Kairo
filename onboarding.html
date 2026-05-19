@@ -511,39 +511,40 @@
             
             try {
                 const user = await getCurrentUser();
-                const minWait = new Promise(resolve => setTimeout(resolve, 100));
                 
                 if (user) {
                     const finalProfile = { ...(identityData || {}), onboarding_completed: true };
                     
-                    const promises = [
-                        supabase.from('profiles').update(finalProfile).eq('id', user.id)
-                    ];
-                    
-                    if (modesData && modesData.length > 0) {
-                        promises.push(
-                            supabase.from('memory_modes').delete().eq('user_id', user.id).then(() => {
-                                return supabase.from('memory_modes').insert(
-                                    modesData.map(m => ({ user_id: user.id, mode_name: m }))
-                                );
-                            })
-                        );
+                    console.log("[Onboarding] Saving profile...");
+                    const profileRes = await supabase.from('profiles').update(finalProfile).eq('id', user.id);
+                    if (profileRes.error) {
+                        console.error("[Onboarding] Profile update error:", profileRes.error);
                     }
                     
-                    console.log("[Onboarding] Saving profile and modes...");
-                    await Promise.all([ ...promises, minWait ]);
+                    if (modesData && modesData.length > 0) {
+                        console.log("[Onboarding] Saving modes...");
+                        await supabase.from('memory_modes').delete().eq('user_id', user.id);
+                        const modesRes = await supabase.from('memory_modes').insert(
+                            modesData.map(m => ({ user_id: user.id, mode_name: m }))
+                        );
+                        if (modesRes.error) {
+                            console.error("[Onboarding] Modes insert error:", modesRes.error);
+                        }
+                    }
                     console.log("[Onboarding] Profile updated successfully");
                 } else {
                     console.warn("[Onboarding] No current user found!");
-                    await minWait;
                 }
                 
+                // Small delay for UI smoothness
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
                 console.log("[Onboarding] Redirecting to dashboard...");
-                window.location.replace('/dashboard.html');
+                window.location.href = '/dashboard.html';
             } catch (err) {
                 console.error("[Onboarding] Error finishing flow:", err);
                 // Failsafe
-                window.location.replace('/dashboard.html');
+                window.location.href = '/dashboard.html';
             }
         });
     </script>
