@@ -137,22 +137,51 @@ async function loadDashboard(existingSession) {
     console.log('User email:', session.user.email)
     console.log('User metadata:', session.user.user_metadata)
     
-    const { data: profile, error: profileError } = 
-      await supabase
+    // Get name IMMEDIATELY from session before any DB query
+    const quickName = 
+      session.user.user_metadata?.full_name ||
+      session.user.user_metadata?.name ||
+      session.user.email?.split('@')[0] ||
+      'User'
+    
+    console.log('Quick name from session:', quickName)
+    
+    // Update name RIGHT NOW without waiting for DB
+    document.querySelectorAll(
+      '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name], #display-name, .display-name, h4, .font-semibold'
+    ).forEach(el => {
+      if (el.textContent === '' || 
+          el.textContent === '...' || 
+          el.id === 'user-name' ||
+          el.classList.contains('user-name')) {
+        el.textContent = quickName
+      }
+    })
+    
+    document.querySelectorAll(
+      '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
+    ).forEach(el => {
+      el.textContent = quickName[0].toUpperCase()
+    })
+    
+    // Now try DB query separately
+    let profile = null
+    let profileError = null
+    try {
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single()
+      
+      console.log('Profile query result:', data)
+      console.log('Profile query error:', error)
+      profile = data
+      profileError = error
+    } catch(dbErr) {
+      console.error('DB query failed:', dbErr)
+    }
     
-    console.log('Profile:', profile)
-    console.log('Profile error:', profileError)
-    
-    const usageResult = await supabase
-      .from('usage_tracking')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single()
-
     // No profile row (PGRST116) or null → onboarding
     if (!profile || (profileError && profileError.code === 'PGRST116')) {
       console.log('Redirecting to onboarding due to missing profile or PGRST116')
@@ -171,40 +200,26 @@ async function loadDashboard(existingSession) {
 
     _cachedProfile = profile
 
-    // Get name from every possible source
-    const { data: { user: authUser } } = 
-      await supabase.auth.getUser()
+    // If DB gave us a better name, update
+    const finalName = profile?.full_name || quickName
+    console.log('Resolved final name:', finalName)
     
-    const displayName = 
-      profile?.full_name ||
-      profile?.name ||
-      authUser?.user_metadata?.full_name ||
-      authUser?.user_metadata?.name ||
-      session.user.user_metadata?.full_name ||
-      session.user.user_metadata?.name ||
-      session.user.email?.split('@')[0] ||
-      'User'
-    
-    console.log('Display name:', displayName)
-    
-    // Update name in ALL elements
     document.querySelectorAll(
       '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name], #display-name, .display-name, h4, .font-semibold'
     ).forEach(el => {
       if (el.textContent === '' || 
           el.textContent === '...' || 
           el.id === 'user-name' ||
-          el.classList.contains('user-name')) {
-        el.textContent = displayName
-        console.log('Updated:', el.id || el.className)
+          el.classList.contains('user-name') ||
+          el.textContent === quickName) {
+        el.textContent = finalName
       }
     })
     
-    // Update avatars
     document.querySelectorAll(
       '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
     ).forEach(el => {
-      el.textContent = displayName[0].toUpperCase()
+      el.textContent = finalName[0].toUpperCase()
     })
     
     if ($('user-email')) $('user-email').textContent = session.user.email
@@ -212,35 +227,51 @@ async function loadDashboard(existingSession) {
     if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER'
 
     // Sync name to profiles if missing
-    if (!profile?.full_name && displayName !== 'User') {
-      await supabase.from('profiles')
-        .update({ full_name: displayName })
-        .eq('id', session.user.id)
-      console.log('Synced name to profiles table')
+    if (!profile?.full_name && finalName !== 'User') {
+      try {
+        await supabase.from('profiles')
+          .update({ full_name: finalName })
+          .eq('id', session.user.id)
+        console.log('Synced name to profiles table')
+      } catch(syncErr) {
+        console.error('Name sync failed:', syncErr)
+      }
     }
     
     // 3. Profile Card Details
-    updateProfileCard(profile)
+    safeRun('ProfileCardUpdate', () => updateProfileCard(profile))
 
     // 4. Load Usage
-    const usage = usageResult.data
-    if (usage && $('prompts-used')) {
-      $('prompts-used').textContent = usage.prompts_used || 0
+    let usage = null
+    try {
+      const { data: usageData } = await supabase
+        .from('usage_tracking')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single()
+      usage = usageData
+      if (usage && $('prompts-used')) {
+        $('prompts-used').textContent = usage.prompts_used || 0
+      }
+    } catch(uErr) {
+      console.error('Usage query failed:', uErr)
     }
 
     // 5. Memory Modes
-    loadMemoryModes(profile)
+    safeRun('MemoryModesLoad', () => loadMemoryModes(profile))
 
     // 6. Check Usage Limits
-    checkUsageLimit(usage, profile)
+    if (usage) {
+      safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile))
+    }
     
     // 7. Render History
     safeRun('HistoryLoad', renderHistory)
 
-    console.log('Dashboard loaded successfully')
+    console.log('Dashboard load complete')
     
   } catch (err) {
-    console.error('loadDashboard error:', err)
+    console.error('loadDashboard crashed:', err.message)
     console.error('Stack:', err.stack)
   }
 }
