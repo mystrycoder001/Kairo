@@ -398,6 +398,8 @@ export function navigateTo(screenId) {
 }
 window.navigateTo = navigateTo;
 window.showScreen = navigateTo;
+window.loadDashboard = loadDashboard;
+window.initNavigation = initNavigation;
 
 function updateProfileCard(profile) {
   if (!profile) return;
@@ -664,4 +666,17 @@ async function saveSettings() {
             btn.disabled = false;
         }
     }
+}
+
+// Run on page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM ready - initializing app')
+    initNavigation()
+    loadDashboard()
+  })
+} else {
+  console.log('DOM already ready - initializing app')
+  initNavigation()
+  loadDashboard()
 }
