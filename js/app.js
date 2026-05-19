@@ -135,113 +135,133 @@ function showLoadingSkeleton(show) {
 }
 
 async function loadDashboard() {
-  const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
-  if (sessionErr) console.error('Session error:', sessionErr);
-  if (!session) {
-    console.warn('No active session found.');
-    window.location.href = '/login.html';
-    return;
-  }
-
-  // After getting session, log everything:
-  console.log('User ID:', session.user.id);
-  console.log('User metadata:', session.user.user_metadata);
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', session.user.id)
-    .single();
-
-  console.log('Profile data:', profile);
-  console.log('Profile error:', profileError);
-
-  const usageResult = await supabase
-    .from('usage_tracking')
-    .select('*')
-    .eq('user_id', session.user.id)
-    .single();
-
-  // No profile row (PGRST116) or null → onboarding
-  if (!profile || (profileError && profileError.code === 'PGRST116')) {
-    console.log('Redirecting to onboarding due to missing profile or PGRST116');
-    window.location.href = '/onboarding.html';
-    return;
-  }
-  if (profileError) {
-    console.error('Profile error occurred:', profileError);
-  }
+  console.log('loadDashboard() called')
   
-  if (!profile.onboarding_completed) {
-    console.log('Redirecting to onboarding because onboarding_completed is false');
-    window.location.href = '/onboarding.html';
-    return;
+  try {
+    const { data: sessionData, error: sessionError } = 
+      await supabase.auth.getSession()
+    
+    console.log('Session data:', sessionData)
+    console.log('Session error:', sessionError)
+    
+    const session = sessionData?.session
+    
+    if (!session) {
+      console.log('No session found - redirecting to login')
+      window.location.replace('/login.html')
+      return
+    }
+    
+    console.log('User ID:', session.user.id)
+    console.log('User email:', session.user.email)
+    console.log('User metadata:', session.user.user_metadata)
+    
+    const { data: profile, error: profileError } = 
+      await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+    
+    console.log('Profile:', profile)
+    console.log('Profile error:', profileError)
+    
+    const usageResult = await supabase
+      .from('usage_tracking')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single()
+
+    // No profile row (PGRST116) or null → onboarding
+    if (!profile || (profileError && profileError.code === 'PGRST116')) {
+      console.log('Redirecting to onboarding due to missing profile or PGRST116')
+      window.location.replace('/onboarding.html')
+      return
+    }
+    if (profileError) {
+      console.error('Profile error occurred:', profileError)
+    }
+
+    if (!profile.onboarding_completed) {
+      console.log('Redirecting to onboarding because onboarding_completed is false')
+      window.location.replace('/onboarding.html')
+      return
+    }
+
+    _cachedProfile = profile
+
+    // Get name from every possible source
+    const { data: { user: authUser } } = 
+      await supabase.auth.getUser()
+    
+    const displayName = 
+      profile?.full_name ||
+      profile?.name ||
+      authUser?.user_metadata?.full_name ||
+      authUser?.user_metadata?.name ||
+      session.user.user_metadata?.full_name ||
+      session.user.user_metadata?.name ||
+      session.user.email?.split('@')[0] ||
+      'User'
+    
+    console.log('Display name:', displayName)
+    
+    // Update name in ALL elements
+    document.querySelectorAll(
+      '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name], #display-name, .display-name, h4, .font-semibold'
+    ).forEach(el => {
+      if (el.textContent === '' || 
+          el.textContent === '...' || 
+          el.id === 'user-name' ||
+          el.classList.contains('user-name')) {
+        el.textContent = displayName
+        console.log('Updated:', el.id || el.className)
+      }
+    })
+    
+    // Update avatars
+    document.querySelectorAll(
+      '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
+    ).forEach(el => {
+      el.textContent = displayName[0].toUpperCase()
+    })
+    
+    if ($('user-email')) $('user-email').textContent = session.user.email
+    if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase()
+    if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER'
+
+    // Sync name to profiles if missing
+    if (!profile?.full_name && displayName !== 'User') {
+      await supabase.from('profiles')
+        .update({ full_name: displayName })
+        .eq('id', session.user.id)
+      console.log('Synced name to profiles table')
+    }
+    
+    // 3. Profile Card Details
+    updateProfileCard(profile)
+
+    // 4. Load Usage
+    const usage = usageResult.data
+    if (usage && $('prompts-used')) {
+      $('prompts-used').textContent = usage.prompts_used || 0
+    }
+
+    // 5. Memory Modes
+    loadMemoryModes(profile)
+
+    // 6. Check Usage Limits
+    checkUsageLimit(usage, profile)
+    
+    // 7. Render History
+    safeRun('HistoryLoad', renderHistory)
+
+    console.log('Dashboard loaded successfully')
+    
+  } catch (err) {
+    console.error('loadDashboard error:', err)
+    console.error('Stack:', err.stack)
   }
-
-  _cachedProfile = profile;
-
-  // Get name from multiple sources
-  const { data: { user: authUser } } = await supabase.auth.getUser();
-  console.log('Auth user metadata:', authUser?.user_metadata);
-
-  const displayName = 
-    profile?.full_name ||
-    profile?.name ||
-    authUser?.user_metadata?.full_name ||
-    authUser?.user_metadata?.name ||
-    session.user.user_metadata?.full_name ||
-    session.user.user_metadata?.name ||
-    session.user.email?.split('@')[0] ||
-    'User';
-
-  console.log('Display name resolved:', displayName);
-
-  // Force update every possible element
-  ['#user-name', '.user-name', '#sidebar-name', 
-   '.sidebar-name', '[data-user-name]', 
-   '#display-name', '.display-name'].forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.textContent = displayName;
-      console.log('Updated element:', sel);
-    });
-  });
-  
-  if ($('user-email')) $('user-email').textContent = session.user.email;
-  if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
-  if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
-  
-  // Update avatar
-  ['#user-avatar', '.user-avatar', '#sidebar-avatar',
-   '.avatar-initial', '.avatar'].forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.textContent = displayName[0].toUpperCase();
-    });
-  });
-
-  // Update profiles table with display name if missing
-  if (!profile?.full_name && displayName !== 'User') {
-    await supabase.from('profiles')
-      .update({ full_name: displayName })
-      .eq('id', session.user.id);
-  }
-
-  // 3. Profile Card Details
-  updateProfileCard(profile);
-
-  // 4. Load Usage
-  const usage = usageResult.data;
-  if (usage && $('prompts-used')) {
-    $('prompts-used').textContent = usage.prompts_used || 0;
-  }
-
-  // 5. Memory Modes
-  loadMemoryModes(profile);
-
-  // 6. Check Usage Limits
-  checkUsageLimit(usage, profile);
-  
-  // 7. Render History
-  safeRun('HistoryLoad', renderHistory);
 }
 
 function loadMemoryModes(profile) {
@@ -362,42 +382,48 @@ async function handleUpgrade() {
     }
 }
 
-export function navigateTo(screenId) {
-    console.log(`[Navigation] Navigating to: ${screenId}`);
-    const screens = document.querySelectorAll('.screen');
-    if (screens.length === 0) return;
+export function showScreen(screenId) {
+  console.log('showScreen called:', screenId)
+  
+  // Hide ALL screens
+  document.querySelectorAll('.screen').forEach(s => {
+    s.style.display = 'none'
+    s.classList.remove('active')
+  })
+  
+  // Try to find target screen
+  const target = 
+    document.getElementById('screen-' + screenId) ||
+    document.getElementById(screenId)
+  
+  console.log('Target element:', target)
+  
+  if (target) {
+    target.style.display = 'block'
+    target.classList.add('active')
+  }
 
-    // Support both 'screen-overview' and 'overview'
-    const cleanId = screenId.replace('screen-', '');
-    const targetId = `screen-${cleanId}`;
-
-    screens.forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none'; // Ensure fully hidden
-    });
-
-    const targetScreen = $(targetId) || $(screenId) || $(cleanId);
-    if (targetScreen) {
-        targetScreen.classList.add('active');
-        targetScreen.style.display = 'block';
-    } else {
-        console.warn(`[Navigation] Screen not found: ${screenId}`);
-    }
-
-    // Update active class on nav elements
-    document.querySelectorAll('[data-nav], [data-screen], .sidebar-item').forEach(item => {
-        const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
-        if (navTarget === cleanId || navTarget === targetId || `screen-${navTarget}` === targetId) {
-            item.classList.add('active', 'text-white');
-            item.classList.remove('text-gray-400');
-        } else {
-            item.classList.remove('active', 'text-white');
-            item.classList.add('text-gray-400');
-        }
-    });
+  // Update active class on nav elements
+  const cleanId = screenId.replace('screen-', '')
+  const targetId = `screen-${cleanId}`
+  document.querySelectorAll('[data-nav], [data-screen], .sidebar-item').forEach(item => {
+      const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
+      if (navTarget === cleanId || navTarget === targetId || `screen-${navTarget}` === targetId) {
+          item.classList.add('active', 'text-white');
+          item.classList.remove('text-gray-400');
+      } else {
+          item.classList.remove('active', 'text-white');
+          item.classList.add('text-gray-400');
+      }
+  });
 }
+
+export function navigateTo(screenId) {
+  showScreen(screenId);
+}
+
 window.navigateTo = navigateTo;
-window.showScreen = navigateTo;
+window.showScreen = showScreen;
 window.loadDashboard = loadDashboard;
 window.initNavigation = initNavigation;
 
