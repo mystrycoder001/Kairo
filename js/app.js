@@ -162,19 +162,35 @@ async function loadDashboard() {
   _cachedProfile = profile;
 
   // 2. Update UI with real data
-  const displayName = profile.full_name || user.email.split('@')[0];
-  document.querySelectorAll('#user-name, .user-name, #sidebar-name, #sidebar-user').forEach(el => {
-      el.textContent = displayName;
-  });
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const displayName = 
+    profile?.full_name ||
+    profile?.name ||
+    authUser?.user_metadata?.full_name ||
+    authUser?.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split('@')[0] ||
+    'User';
+
+  document.querySelectorAll(
+    '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name]'
+  ).forEach(el => el.textContent = displayName);
   
   if ($('user-email')) $('user-email').textContent = user.email;
   if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
   if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
   
-  const avatarChar = displayName[0]?.toUpperCase() || 'U';
-  document.querySelectorAll('#user-avatar, #sidebar-avatar').forEach(el => {
-      el.textContent = avatarChar;
-  });
+  document.querySelectorAll(
+    '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
+  ).forEach(el => el.textContent = displayName[0].toUpperCase());
+
+  // Update profiles table with display name if missing
+  if (!profile?.full_name && displayName !== 'User') {
+    await supabase.from('profiles')
+      .update({ full_name: displayName })
+      .eq('id', user.id);
+  }
 
   // 3. Profile Card Details
   updateProfileCard(profile);
