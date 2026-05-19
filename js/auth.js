@@ -183,11 +183,8 @@ async function handleAuthRedirect(user) {
   const path = window.location.pathname;
   const isLoginPage = path.includes('login.html') || path.includes('signup.html');
   const isIndexPage = path === '/' || path === '' || path.endsWith('/index.html');
-  const isOnboardingPage = path.includes('onboarding.html');
-  const isDashboardPage = path.includes('dashboard.html');
 
   // Only auto-redirect from login/index pages, NOT from dashboard/onboarding
-  // Dashboard and onboarding have their own routing logic in their own scripts
   if (!isLoginPage && !isIndexPage) return;
 
   try {
@@ -200,15 +197,15 @@ async function handleAuthRedirect(user) {
 
     _authRedirecting = true;
     if (onboarded) {
-      window.location.href = '/dashboard.html';
+      window.location.replace('/dashboard.html');
     } else {
-      window.location.href = '/onboarding.html';
+      window.location.replace('/onboarding.html');
     }
   } catch (err) {
     console.error('[Auth] Redirect error:', err);
-    // Fallback: send to onboarding (safer than dashboard)
+    // On error, fallback to dashboard to prevent loops!
     _authRedirecting = true;
-    window.location.href = '/onboarding.html';
+    window.location.replace('/dashboard.html');
   }
 }
 
@@ -234,9 +231,49 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     // Handle both SIGNED_IN (new login) and INITIAL_SESSION (page reload with existing session)
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
       if (event === 'SIGNED_IN') {
-        await initUserProfile(session.user);
+        try {
+          await initUserProfile(session.user);
+        } catch (err) {
+          console.error('[Auth] initUserProfile failed:', err);
+        }
       }
-      await handleAuthRedirect(session.user);
+      
+      const currentPage = window.location.pathname
+      
+      // If already on dashboard, do nothing
+      if (currentPage.includes('dashboard')) return
+      
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed, full_name')
+          .eq('id', session.user.id)
+          .single()
+        
+        console.log('Auth check profile:', profile, error)
+        
+        // If profile exists and onboarding done
+        if (profile && profile.onboarding_completed === true) {
+          console.log('Returning user - going to dashboard')
+          if (!currentPage.includes('dashboard')) {
+            window.location.replace('/dashboard.html')
+          }
+          return
+        }
+        
+        // If no profile or onboarding not done
+        if (!currentPage.includes('onboarding')) {
+          console.log('New user - going to onboarding')
+          window.location.replace('/onboarding.html')
+        }
+        
+      } catch(err) {
+        console.error('Auth check error:', err)
+        // On error, go to dashboard anyway
+        if (!currentPage.includes('dashboard')) {
+          window.location.replace('/dashboard.html')
+        }
+      }
     }
   } else {
     currentUser = null;
