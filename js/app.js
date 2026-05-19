@@ -148,15 +148,17 @@ async function loadDashboard(existingSession) {
     
     // Update name RIGHT NOW without waiting for DB
     document.querySelectorAll(
-      '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name], #display-name, .display-name, h4, .font-semibold'
-    ).forEach(el => {
-      if (el.textContent === '' || 
-          el.textContent === '...' || 
-          el.id === 'user-name' ||
-          el.classList.contains('user-name')) {
-        el.textContent = quickName
-      }
-    })
+      '#user-name, .user-name, #sidebar-name, .sidebar-name, #sidebar-user-name, .sidebar-user-name, [data-user-name], #display-name'
+    ).forEach(el => el.textContent = quickName)
+    
+    const bottomUser = document.querySelector(
+      '.sidebar footer, aside footer, .sidebar-bottom, #sidebar-bottom, [class*="bottom"] [class*="user"], [class*="user"][class*="bottom"]'
+    )
+    if (bottomUser) {
+      const nameEl = bottomUser.querySelector('p, span, h4, h3, div')
+      if (nameEl) nameEl.textContent = quickName
+      console.log('Bottom user element:', bottomUser.innerHTML)
+    }
     
     document.querySelectorAll(
       '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
@@ -205,16 +207,13 @@ async function loadDashboard(existingSession) {
     console.log('Resolved final name:', finalName)
     
     document.querySelectorAll(
-      '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name], #display-name, .display-name, h4, .font-semibold'
-    ).forEach(el => {
-      if (el.textContent === '' || 
-          el.textContent === '...' || 
-          el.id === 'user-name' ||
-          el.classList.contains('user-name') ||
-          el.textContent === quickName) {
-        el.textContent = finalName
-      }
-    })
+      '#user-name, .user-name, #sidebar-name, .sidebar-name, #sidebar-user-name, .sidebar-user-name, [data-user-name], #display-name'
+    ).forEach(el => el.textContent = finalName)
+    
+    if (bottomUser) {
+      const nameEl = bottomUser.querySelector('p, span, h4, h3, div')
+      if (nameEl) nameEl.textContent = finalName
+    }
     
     document.querySelectorAll(
       '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
