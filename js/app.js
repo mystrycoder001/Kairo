@@ -54,35 +54,6 @@ const memoryModes = [
 let _cachedProfile = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Initial Auth Check
-    const user = await safeRun('AuthInit', getCurrentUser);
-    const isDashboard = window.location.pathname.includes('dashboard');
-
-    if (!user && isDashboard) {
-        window.location.href = '/login.html';
-        return;
-    }
-
-    // 2. Initialize Core Modules Safely
-    if (isDashboard) {
-        // Show loading state
-        showLoadingSkeleton(true);
-        await safeRun('DashboardLoad', loadDashboard);
-        showLoadingSkeleton(false);
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('upgraded') === 'true') {
-            showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    }
-
-    // 3. Initialize Secondary Modules
-    safeRun('VoiceInit', () => initVoice(handleGeneration));
-    safeRun('PassportInit', initPassport);
-    safeRun('SessionSyncInit', initSessionSync);
-    safeRun('TourInit', initTour);
-    
     // Global Runtime Error Capture
     window.onerror = (msg, url, lineNo, columnNo, error) => {
         logError('Runtime', error || msg);
@@ -93,11 +64,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         logError('UnhandledPromise', event.reason);
     };
 
-    // 4. Attach Global Listeners Defensively
+    const isDashboard = window.location.pathname.includes('dashboard');
+
+    // Initialize Secondary Modules
+    if (isDashboard) {
+        safeRun('VoiceInit', () => initVoice(handleGeneration));
+        safeRun('PassportInit', initPassport);
+        safeRun('SessionSyncInit', initSessionSync);
+        safeRun('TourInit', initTour);
+    }
+    
+    // Attach Global Listeners Defensively
     $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
     $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
-    
-    safeRun('NavigationInit', initNavigation);
 
     $('mobile-menu-toggle')?.addEventListener('click', () => {
         const sidebar = $('sidebar');
@@ -134,17 +113,19 @@ function showLoadingSkeleton(show) {
     if (content) content.classList.toggle('hidden', show);
 }
 
-async function loadDashboard() {
+async function loadDashboard(existingSession) {
   console.log('loadDashboard() called')
   
   try {
-    const { data: sessionData, error: sessionError } = 
-      await supabase.auth.getSession()
+    let session = existingSession
     
-    console.log('Session data:', sessionData)
-    console.log('Session error:', sessionError)
-    
-    const session = sessionData?.session
+    if (!session) {
+      const { data: sessionData, error: sessionError } = 
+        await supabase.auth.getSession()
+      console.log('Session data:', sessionData)
+      console.log('Session error:', sessionError)
+      session = sessionData?.session
+    }
     
     if (!session) {
       console.log('No session found - redirecting to login')
@@ -694,15 +675,32 @@ async function saveSettings() {
     }
 }
 
-// Run on page load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM ready - initializing app')
-    initNavigation()
-    loadDashboard()
-  })
-} else {
-  console.log('DOM already ready - initializing app')
-  initNavigation()
-  loadDashboard()
-}
+supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log('Auth event:', event, 'Session:', !!session)
+  
+  if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+    if (session && window.location.pathname.includes('dashboard')) {
+      console.log('Auth ready - loading dashboard')
+      const skeleton = $('loading-skeleton');
+      const content = $('dashboard-content');
+      if (skeleton) skeleton.classList.remove('hidden');
+      if (content) content.classList.add('hidden');
+      
+      await loadDashboard(session)
+      initNavigation()
+      
+      if (skeleton) skeleton.classList.add('hidden');
+      if (content) content.classList.remove('hidden');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('upgraded') === 'true') {
+          showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
+          window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }
+  
+  if (event === 'SIGNED_OUT') {
+    window.location.replace('/login.html')
+  }
+})
