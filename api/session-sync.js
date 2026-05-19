@@ -56,19 +56,22 @@ module.exports = async function handler(req, res) {
   try {
     await verifyAndLimit(req, 'sync');
   } catch (authErr) {
-    return res.status(authErr.status || 401).json({ error: authErr.error || 'auth_error', message: authErr.message });
+    return res.status(authErr.status || 401).json({ 
+      error: authErr.error || 'auth_error', 
+      message: authErr.message || 'Authentication failed.'
+    });
   }
 
   const history = req.body?.history || req.body?.data || '';
   if (!history || history.length < 10) {
-    return res.status(400).json({ error: 'Provide valid session history' });
+    return res.status(400).json({ error: 'Provide valid session history (at least 10 characters)' });
   }
 
   try {
     const result = await callAIWaterfall(SYSTEM_PROMPT, history);
-    return res.status(200).json({ result, text: result });
+    return res.status(200).json({ result, text: result, contextBlock: result });
   } catch (err) {
     console.error('session-sync error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'AI service error. Please try again.' });
   }
 };

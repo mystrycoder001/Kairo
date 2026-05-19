@@ -3,6 +3,11 @@ const fs = require('fs');
 
 module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed', text: '' });
@@ -10,7 +15,7 @@ module.exports = async function handler(req, res) {
 
     if (!process.env.GROQ_API_KEY) {
         console.error('GROQ_API_KEY is missing');
-        return res.status(500).json({ error: 'Transcription service unavailable', text: '' });
+        return res.status(500).json({ error: 'Transcription service unavailable. Please try again later.', text: '' });
     }
 
     try {
@@ -48,14 +53,14 @@ module.exports = async function handler(req, res) {
 
         if (!groqRes.ok) {
             console.error('Groq API Error:', groqData);
-            return res.status(500).json({ error: 'Transcription failed', text: '' });
+            return res.status(500).json({ error: 'Transcription failed. Please try again.', text: '' });
         }
 
         return res.status(200).json({ text: groqData.text });
 
     } catch (e) {
         console.error('Internal Server Error:', e);
-        return res.status(500).json({ error: 'Transcription failed', text: '' });
+        return res.status(500).json({ error: 'Transcription failed. Please try again.', text: '' });
     }
 };
 

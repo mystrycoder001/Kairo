@@ -63,9 +63,12 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    await verifyAndLimit(req, 'prompt'); // passport uses prompt limit or its own? Let's just pass auth
+    await verifyAndLimit(req, 'passport');
   } catch (authErr) {
-    return res.status(authErr.status || 401).json({ error: authErr.error || 'auth_error', message: authErr.message });
+    return res.status(authErr.status || 401).json({ 
+      error: authErr.error || 'auth_error', 
+      message: authErr.message || 'Authentication failed.' 
+    });
   }
 
   const { name, role, goals, communication_style, active_context, behavioral_memory, never_forget, target_ai } = req.body || {};
@@ -85,6 +88,6 @@ Synthesize this into the final AI Passport instruction block using exactly the f
     return res.status(200).json({ result, text: result });
   } catch (err) {
     console.error('generate-passport error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'AI service error. Please try again.' });
   }
 };

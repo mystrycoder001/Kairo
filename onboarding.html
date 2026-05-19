@@ -13,7 +13,7 @@
     <meta name="description" content="Cloasta keeps your prompts, communication style, and context synced across AI platforms.">
     <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kairo-omega-three.vercel.app">
+    <meta property="og:url" content="https://cloasta.com/onboarding">
     <meta property="og:title" content="Cloasta — Think once. Use everywhere.">
     <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/Cloasta-logo.png">
@@ -512,11 +512,11 @@
             console.log("[Onboarding] Finishing flow...");
             showGlobalLoader('Preparing Workspace...');
             
-            // Set hard timeout - redirect no matter what after 3 seconds
+            // Set hard safety timeout - redirect no matter what after 15 seconds as a last resort
             const redirectTimer = setTimeout(() => {
-                console.log('[Onboarding] Hard timeout - forcing redirect');
+                console.warn('[Onboarding] Hard timeout reached - forcing redirect to dashboard');
                 window.location.replace('/dashboard.html');
-            }, 3000);
+            }, 15000);
             
             try {
                 const user = await getCurrentUser();
@@ -524,26 +524,54 @@
                 if (user) {
                     const finalProfile = { ...(identityData || {}), onboarding_completed: true };
                     
-                    // Run database updates in parallel or sequentially inside a single promise that races with a 2-second timeout
-                    const saveOperations = (async () => {
-                        console.log("[Onboarding] Saving profile...");
-                        await supabase.from('profiles').update(finalProfile).eq('id', user.id).select();
-                        
-                        if (modesData && modesData.length > 0) {
-                            console.log("[Onboarding] Saving modes...");
-                            await supabase.from('memory_modes').delete().eq('user_id', user.id);
-                            await supabase.from('memory_modes').insert(
-                                modesData.map(m => ({ user_id: user.id, mode_name: m }))
-                            );
-                        }
-                    })();
+                    console.log("[Onboarding] Saving profile and modes in parallel...");
                     
-                    await Promise.race([
-                        saveOperations,
-                        new Promise(resolve => setTimeout(resolve, 2000))
-                    ]);
+                    // 1. Profile update promise
+                    const profilePromise = supabase
+                        .from('profiles')
+                        .update(finalProfile)
+                        .eq('id', user.id)
+                        .then(({ error }) => {
+                            if (error) {
+                                console.error("[Onboarding] Profile update failed:", error);
+                                throw error;
+                            }
+                            console.log("[Onboarding] Profile saved successfully.");
+                        });
                     
-                    console.log("[Onboarding] Save done or timed out - redirecting");
+                    // 2. Memory modes update promise
+                    let modesPromise = Promise.resolve();
+                    if (modesData && modesData.length > 0) {
+                        modesPromise = (async () => {
+                            console.log("[Onboarding] Deleting existing memory modes...");
+                            const { error: delErr } = await supabase
+                                .from('memory_modes')
+                                .delete()
+                                .eq('user_id', user.id);
+                            
+                            if (delErr) {
+                                console.error("[Onboarding] Deleting modes failed:", delErr);
+                                throw delErr;
+                            }
+
+                            console.log("[Onboarding] Inserting new memory modes...", modesData);
+                            const { error: insErr } = await supabase
+                                .from('memory_modes')
+                                .insert(
+                                    modesData.map(m => ({ user_id: user.id, mode_name: m }))
+                                );
+                            
+                            if (insErr) {
+                                console.error("[Onboarding] Inserting modes failed:", insErr);
+                                throw insErr;
+                            }
+                            console.log("[Onboarding] Memory modes saved successfully.");
+                        })();
+                    }
+                    
+                    // Run both in parallel and await completion
+                    await Promise.all([profilePromise, modesPromise]);
+                    console.log("[Onboarding] All database updates completed successfully.");
                 } else {
                     console.warn("[Onboarding] No current user found!");
                 }
@@ -551,8 +579,9 @@
                 clearTimeout(redirectTimer);
                 window.location.replace('/dashboard.html');
             } catch (err) {
-                console.error("[Onboarding] Error finishing flow:", err);
+                console.error("[Onboarding] Error during save flow:", err);
                 clearTimeout(redirectTimer);
+                // Proceed to dashboard anyway as a fallback
                 window.location.replace('/dashboard.html');
             }
         });

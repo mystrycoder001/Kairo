@@ -16,13 +16,19 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Missing plan_tier or user_id' });
   }
 
+  // Final pricing: PRO $7.99/mo, ULTRA $15.99/mo (amounts in cents)
   const amounts = {
-      'pro': 499, // $4.99
-      'ultra': 999 // $9.99
+      'pro': 799,
+      'ultra': 1599
   };
 
   const amount = amounts[plan_tier];
-  if (!amount) return res.status(400).json({ error: 'Invalid plan tier' });
+  if (!amount) return res.status(400).json({ error: 'Invalid plan tier. Use "pro" or "ultra".' });
+
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET) {
+      console.error('Missing RAZORPAY_KEY_ID or RAZORPAY_SECRET');
+      return res.status(500).json({ error: 'Payment service unavailable. Please try again later.' });
+  }
 
   try {
       const razorpay = new Razorpay({
@@ -46,10 +52,11 @@ module.exports = async function handler(req, res) {
           order_id: order.id, 
           amount: order.amount,
           currency: order.currency,
-          key_id: process.env.RAZORPAY_KEY_ID 
+          key_id: process.env.RAZORPAY_KEY_ID,
+          plan_tier: plan_tier
       });
   } catch (err) {
       console.error('create-order error:', err);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Payment initialization failed. Please try again.' });
   }
 };

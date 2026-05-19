@@ -12,6 +12,15 @@ Make it feel 10x more intelligent.
 Output ONLY the final prompt text. No explanation. No preamble. No markdown fences. 
 Just the prompt, ready to copy-paste.`;
 
+const AI_MODE_INSTRUCTIONS = {
+  'chatgpt': 'Optimize for ChatGPT: use structured, balanced formatting with clear sections.',
+  'claude': 'Optimize for Claude: use detailed, contextual formatting with nuanced instructions.',
+  'gemini': 'Optimize for Gemini: use concise, organized formatting with clear structure.',
+  'grok': 'Optimize for Grok: use conversational, witty formatting with direct instructions.',
+  'cursor': 'Optimize for Cursor: use code-focused, technical formatting with precise specifications.',
+  'common': 'Optimize for general AI: use universal formatting that works across all AI platforms.',
+};
+
 module.exports = async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,6 +32,7 @@ module.exports = async function handler(req, res) {
 
   const text = req.body?.text || req.body?.transcript || req.body?.input || '';
   const mode = req.body?.mode || 'Default';
+  const targetAi = (req.body?.target_ai || 'common').toLowerCase();
 
   if (!text || text.trim().length < 3) {
     return res.status(400).json({ error: 'Provide at least 3 characters of input' });
@@ -33,17 +43,25 @@ module.exports = async function handler(req, res) {
     try {
       profile = await verifyAndLimit(req, 'prompt');
     } catch (authErr) {
-      return res.status(authErr.status || 401).json({ error: authErr.error || 'auth_error', message: authErr.message });
+      return res.status(authErr.status || 401).json({ 
+        error: authErr.error || 'auth_error', 
+        message: authErr.message || 'Authentication failed.' 
+      });
     }
 
-    const isFree = profile.plan_tier === 'free';
+    // FIX: Use subscription_plan (not plan_tier which doesn't exist)
+    const plan = (profile.subscription_plan || 'free').toLowerCase();
+    const isFree = plan === 'free';
     const basePrompt = isFree ? SYSTEM_PROMPT_FREE : SYSTEM_PROMPT_PRO;
     
-    const finalSystemPrompt = `${basePrompt}\nActive Mode Context: ${mode}`;
+    // Add AI mode optimization
+    const aiModeHint = AI_MODE_INSTRUCTIONS[targetAi] || AI_MODE_INSTRUCTIONS['common'];
+    const finalSystemPrompt = `${basePrompt}\nActive Mode Context: ${mode}\n${aiModeHint}`;
+    
     const result = await callAIWaterfall(finalSystemPrompt, text.trim());
     return res.status(200).json({ result, text: result });
   } catch (err) {
     console.error('generate-prompt error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'AI service error. Please try again.' });
   }
 };

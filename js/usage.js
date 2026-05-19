@@ -1,6 +1,13 @@
 import { supabase, getCurrentUser } from './auth.js';
 import { $ } from './app.js';
 
+// Plan hierarchy: free < pro < ultra
+const PLAN_HIERARCHY = { free: 0, pro: 1, ultra: 2 };
+
+export function isPaidPlan(plan) {
+    return PLAN_HIERARCHY[(plan || 'free').toLowerCase()] >= 1;
+}
+
 export async function isPro(user) {
     if (!user) return false;
     const { data } = await supabase
@@ -9,7 +16,7 @@ export async function isPro(user) {
         .eq('id', user.id)
         .single();
     
-    return data?.subscription_plan === 'pro';
+    return isPaidPlan(data?.subscription_plan);
 }
 
 export async function checkPromptLimit(user) {
@@ -17,16 +24,15 @@ export async function checkPromptLimit(user) {
     
     const { data } = await supabase
         .from('profiles')
-        .select('subscription_plan') // Removed prompts_used tracking from frontend for strictness
+        .select('subscription_plan')
         .eq('id', user.id)
         .single();
         
     if (!data) return false;
-    if (data.subscription_plan === 'pro' || data.subscription_plan === 'ultra') return true;
+    if (isPaidPlan(data.subscription_plan)) return true;
     
-    // We rely on backend verification now for the prompt limits to be fully secure and synchronized.
-    // The backend verifyAndLimit handles the 5 prompts limit.
-    // So we just return true here to let it hit the backend and fail with a proper message if needed.
+    // Free users: backend verifyAndLimit enforces 5/day limit
+    // Return true here to let the request flow through to the backend
     return true;
 }
 
@@ -40,25 +46,24 @@ export async function checkPassportLimit(user) {
         .single();
         
     if (!profile) return false;
-    if (profile.subscription_plan === 'ultra') return true;
+    
+    const plan = (profile.subscription_plan || 'free').toLowerCase();
+    if (plan === 'ultra') return true; // Unlimited passports
     
     const { count } = await supabase
         .from('memory_modes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
     
-    const limit = profile.subscription_plan === 'pro' ? 3 : 1;
+    // Free: 1 passport, Pro: 5 passports, Ultra: unlimited
+    const limit = plan === 'pro' ? 5 : 1;
     
-    if (count >= limit) {
+    if ((count || 0) >= limit) {
         showUpgradePrompt(`You've reached your limit of ${limit} AI Passport(s). Upgrade for more.`);
         return false;
     }
     
     return true;
-}
-
-export async function incrementPassportCount(user) {
-    // Deprecated
 }
 
 export async function checkSessionAccess(user) {
@@ -69,10 +74,10 @@ export async function checkSessionAccess(user) {
         .select('subscription_plan')
         .eq('id', user.id)
         .single();
-        
-    if (data?.subscription_plan === 'pro' || data?.subscription_plan === 'ultra') return true;
     
-    // Relying on backend verification for session limits.
+    if (isPaidPlan(data?.subscription_plan)) return true;
+    
+    // Free users: backend verifyAndLimit enforces 2/day sync limit
     return true;
 }
 

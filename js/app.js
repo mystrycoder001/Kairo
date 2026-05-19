@@ -5,7 +5,6 @@ import { initSessionSync } from './session-sync.js';
 import { getCurrentUser, logout, supabase, getAccessToken } from './auth.js';
 import { initTour } from './tour.js';
 
-// DOM Utilities
 export const $ = (id) => document.getElementById(id);
 
 export function showToast(msg) {
@@ -13,33 +12,23 @@ export function showToast(msg) {
   if (!toast) return;
   toast.textContent = msg;
   toast.classList.remove('opacity-0', 'translate-y-20');
-  setTimeout(() => {
-    toast.classList.add('opacity-0', 'translate-y-20');
-  }, 3000);
+  setTimeout(() => toast.classList.add('opacity-0', 'translate-y-20'), 3000);
 }
 
-// Centralized Error Logging
 export function logError(component, error) {
-    console.error(`[Cloasta Error] Component: ${component} | Message: ${error.message || error}`, error);
+  console.error(`[Cloasta] ${component}:`, error?.message || error);
 }
 
-// Safe Async Wrapper
 async function safeRun(component, fn) {
-    try {
-        const result = await fn();
-        return result;
-    } catch (err) {
-        logError(component, err);
-        showToast(`⚠️ ${component} failed. Please refresh.`);
-    }
+  try { return await fn(); } catch (err) {
+    logError(component, err);
+    showToast(`⚠️ ${component} failed. Please refresh.`);
+  }
 }
 
 export function cleanPrompt(text) {
-    if (!text) return '';
-    return text
-      .replace(/\*\*/g, '').replace(/\*/g, '')
-      .replace(/#{1,6}\s/g, '').replace(/`{1,3}/g, '')
-      .replace(/^\s*[-•]\s/gm, '').trim();
+  if (!text) return '';
+  return text.replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,6}\s/g,'').replace(/`{1,3}/g,'').replace(/^\s*[-•]\s/gm,'').trim();
 }
 
 const memoryModes = [
@@ -50,399 +39,248 @@ const memoryModes = [
   { id: 'freelancer', label: 'Freelancer', icon: '💼' }
 ];
 
-// Cache profile data to avoid redundant fetches
 let _cachedProfile = null;
 
+// ==========================================
+// PLAN CONFIG
+// ==========================================
+const PLAN_CONFIG = {
+  free: { label: 'FREE', promptLimit: 5, syncLimit: 2, passportLimit: 1 },
+  pro: { label: 'PRO', promptLimit: Infinity, syncLimit: Infinity, passportLimit: 5 },
+  ultra: { label: 'ULTRA', promptLimit: Infinity, syncLimit: Infinity, passportLimit: Infinity }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Global Runtime Error Capture
-    window.onerror = (msg, url, lineNo, columnNo, error) => {
-        logError('Runtime', error || msg);
-        return false;
-    };
+  window.onerror = (msg, url, lineNo, columnNo, error) => { logError('Runtime', error || msg); return false; };
+  window.onunhandledrejection = (event) => { logError('UnhandledPromise', event.reason); };
 
-    window.onunhandledrejection = (event) => {
-        logError('UnhandledPromise', event.reason);
-    };
+  const isDashboard = window.location.pathname.includes('dashboard');
+  if (isDashboard) {
+    safeRun('VoiceInit', () => initVoice(handleGeneration));
+    safeRun('PassportInit', initPassport);
+    safeRun('SessionSyncInit', initSessionSync);
+    safeRun('TourInit', initTour);
+  }
 
-    const isDashboard = window.location.pathname.includes('dashboard');
-
-    // Initialize Secondary Modules
-    if (isDashboard) {
-        safeRun('VoiceInit', () => initVoice(handleGeneration));
-        safeRun('PassportInit', initPassport);
-        safeRun('SessionSyncInit', initSessionSync);
-        safeRun('TourInit', initTour);
-    }
-    
-    // Attach Global Listeners Defensively
-    $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
-    $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
-
-    $('mobile-menu-toggle')?.addEventListener('click', () => {
-        const sidebar = $('sidebar');
-        const overlay = $('sidebar-overlay');
-        if (sidebar) {
-            sidebar.classList.remove('hidden-mobile');
-            if (overlay) overlay.classList.remove('hidden');
-        }
-    });
-
-    // Mobile sidebar overlay close
-    $('sidebar-overlay')?.addEventListener('click', closeMobileSidebar);
-
-    $('close-upgrade-btn')?.addEventListener('click', hideUpgradeModal);
-    $('banner-upgrade-btn')?.addEventListener('click', showUpgradeModal);
-    $('sidebar-upgrade-btn')?.addEventListener('click', showUpgradeModal);
-    $('checkout-btn')?.addEventListener('click', () => safeRun('Upgrade', handleUpgrade));
-
-    // Settings save button
-    $('save-settings-btn')?.addEventListener('click', () => safeRun('SettingsSave', saveSettings));
+  $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
+  $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
+  $('mobile-menu-toggle')?.addEventListener('click', () => {
+    const sidebar = $('sidebar');
+    const overlay = $('sidebar-overlay');
+    if (sidebar) { sidebar.classList.remove('hidden-mobile'); if (overlay) overlay.classList.remove('hidden'); }
+  });
+  $('sidebar-overlay')?.addEventListener('click', closeMobileSidebar);
+  $('close-upgrade-btn')?.addEventListener('click', hideUpgradeModal);
+  $('banner-upgrade-btn')?.addEventListener('click', showUpgradeModal);
+  $('sidebar-upgrade-btn')?.addEventListener('click', showUpgradeModal);
+  $('upgrade-pro-btn')?.addEventListener('click', () => safeRun('UpgradePro', () => handleUpgrade('pro')));
+  $('upgrade-ultra-btn')?.addEventListener('click', () => safeRun('UpgradeUltra', () => handleUpgrade('ultra')));
+  $('save-settings-btn')?.addEventListener('click', () => safeRun('SettingsSave', saveSettings));
 });
 
 function closeMobileSidebar() {
-    const sidebar = $('sidebar');
-    const overlay = $('sidebar-overlay');
-    if (sidebar) sidebar.classList.add('hidden-mobile');
-    if (overlay) overlay.classList.add('hidden');
-}
-
-function showLoadingSkeleton(show) {
-    const skeleton = $('loading-skeleton');
-    const content = $('dashboard-content');
-    if (skeleton) skeleton.classList.toggle('hidden', !show);
-    if (content) content.classList.toggle('hidden', show);
+  const sidebar = $('sidebar');
+  const overlay = $('sidebar-overlay');
+  if (sidebar) sidebar.classList.add('hidden-mobile');
+  if (overlay) overlay.classList.add('hidden');
 }
 
 async function loadDashboard(existingSession) {
-  console.log('loadDashboard() called')
-  
+  console.log('loadDashboard() called');
   try {
-    let session = existingSession
-    
+    let session = existingSession;
     if (!session) {
-      const { data: sessionData, error: sessionError } = 
-        await supabase.auth.getSession()
-      console.log('Session data:', sessionData)
-      console.log('Session error:', sessionError)
-      session = sessionData?.session
+      const { data: sessionData } = await supabase.auth.getSession();
+      session = sessionData?.session;
     }
+    if (!session) { window.location.replace('/login.html'); return; }
+
+    const quickName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User';
     
-    if (!session) {
-      console.log('No session found - redirecting to login')
-      window.location.replace('/login.html')
-      return
-    }
-    
-    console.log('User ID:', session.user.id)
-    console.log('User email:', session.user.email)
-    console.log('User metadata:', session.user.user_metadata)
-    
-    // Get name IMMEDIATELY from session before any DB query
-    const quickName = 
-      session.user.user_metadata?.full_name ||
-      session.user.user_metadata?.name ||
-      session.user.email?.split('@')[0] ||
-      'User'
-    
-    console.log('Quick name from session:', quickName)
-    
-    // Update name RIGHT NOW without waiting for DB
-    document.querySelectorAll(
-      '#user-name, .user-name, #sidebar-name, .sidebar-name, #sidebar-user-name, .sidebar-user-name, [data-user-name], #display-name'
-    ).forEach(el => el.textContent = quickName)
-    
-    const bottomUser = document.querySelector(
-      '.sidebar footer, aside footer, .sidebar-bottom, #sidebar-bottom, [class*="bottom"] [class*="user"], [class*="user"][class*="bottom"]'
-    )
-    if (bottomUser) {
-      const nameEl = bottomUser.querySelector('p, span, h4, h3, div')
-      if (nameEl) nameEl.textContent = quickName
-      console.log('Bottom user element:', bottomUser.innerHTML)
-    }
-    
-    document.querySelectorAll(
-      '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
-    ).forEach(el => {
-      el.textContent = quickName[0].toUpperCase()
-    })
-    
-    // Now try DB query separately
-    let profile = null
-    let profileError = null
+    // Instant UI update from session
+    updateNameUI(quickName);
+    updateAvatarUI(quickName);
+    if ($('user-email')) $('user-email').textContent = session.user.email;
+
+    // DB profile query
+    let profile = null;
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!data || (error && error.code === 'PGRST116')) { window.location.replace('/onboarding.html'); return; }
+      if (error) console.error('Profile error:', error);
+      profile = data;
+    } catch(dbErr) { console.error('DB query failed:', dbErr); }
+
+    if (!profile) { window.location.replace('/onboarding.html'); return; }
+    if (!profile.onboarding_completed) { window.location.replace('/onboarding.html'); return; }
+
+    _cachedProfile = profile;
+    const finalName = profile.full_name || quickName;
+    updateNameUI(finalName);
+    updateAvatarUI(finalName);
+
+    const plan = (profile.subscription_plan || 'free').toLowerCase();
+    const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
+    
+    if ($('user-plan')) $('user-plan').textContent = planConfig.label;
+    if ($('sidebar-tier')) $('sidebar-tier').textContent = planConfig.label + ' TIER';
+
+    // Sync name if missing
+    if (!profile.full_name && finalName !== 'User') {
+      supabase.from('profiles').update({ full_name: finalName }).eq('id', session.user.id).catch(() => {});
+    }
+
+    safeRun('ProfileCardUpdate', () => updateProfileCard(profile));
+
+    // Load usage
+    let usage = null;
+    try {
+      const { data: usageData } = await supabase.from('usage_tracking').select('*').eq('user_id', session.user.id).single();
+      usage = usageData;
       
-      console.log('Profile query result:', data)
-      console.log('Profile query error:', error)
-      profile = data
-      profileError = error
-    } catch(dbErr) {
-      console.error('DB query failed:', dbErr)
-    }
-    
-    // No profile row (PGRST116) or null → onboarding
-    if (!profile || (profileError && profileError.code === 'PGRST116')) {
-      console.log('Redirecting to onboarding due to missing profile or PGRST116')
-      window.location.replace('/onboarding.html')
-      return
-    }
-    if (profileError) {
-      console.error('Profile error occurred:', profileError)
-    }
-
-    if (!profile.onboarding_completed) {
-      console.log('Redirecting to onboarding because onboarding_completed is false')
-      window.location.replace('/onboarding.html')
-      return
-    }
-
-    _cachedProfile = profile
-
-    // If DB gave us a better name, update
-    const finalName = profile?.full_name || quickName
-    console.log('Resolved final name:', finalName)
-    
-    document.querySelectorAll(
-      '#user-name, .user-name, #sidebar-name, .sidebar-name, #sidebar-user-name, .sidebar-user-name, [data-user-name], #display-name'
-    ).forEach(el => el.textContent = finalName)
-    
-    if (bottomUser) {
-      const nameEl = bottomUser.querySelector('p, span, h4, h3, div')
-      if (nameEl) nameEl.textContent = finalName
-    }
-    
-    document.querySelectorAll(
-      '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
-    ).forEach(el => {
-      el.textContent = finalName[0].toUpperCase()
-    })
-    
-    if ($('user-email')) $('user-email').textContent = session.user.email
-    if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase()
-    if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER'
-
-    // Sync name to profiles if missing
-    if (!profile?.full_name && finalName !== 'User') {
-      try {
-        await supabase.from('profiles')
-          .update({ full_name: finalName })
-          .eq('id', session.user.id)
-        console.log('Synced name to profiles table')
-      } catch(syncErr) {
-        console.error('Name sync failed:', syncErr)
+      // Reset if new day
+      if (usage && usage.reset_date) {
+        const today = new Date().toDateString();
+        const resetDate = new Date(usage.reset_date).toDateString();
+        if (resetDate !== today) {
+          usage.prompts_used = 0;
+          await supabase.from('usage_tracking').update({ prompts_used: 0, reset_date: new Date().toISOString() }).eq('user_id', session.user.id);
+        }
       }
-    }
-    
-    // 3. Profile Card Details
-    safeRun('ProfileCardUpdate', () => updateProfileCard(profile))
 
-    // 4. Load Usage
-    let usage = null
-    try {
-      const { data: usageData } = await supabase
-        .from('usage_tracking')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single()
-      usage = usageData
-      if (usage && $('prompts-used')) {
-        $('prompts-used').textContent = usage.prompts_used || 0
+      const promptsUsed = usage?.prompts_used || 0;
+      if ($('prompts-used')) $('prompts-used').textContent = promptsUsed;
+      if ($('prompts-remaining')) {
+        $('prompts-remaining').textContent = plan === 'free' ? Math.max(0, 5 - promptsUsed) : '∞';
       }
-    } catch(uErr) {
-      console.error('Usage query failed:', uErr)
-    }
+      if ($('sync-usage')) {
+        const syncsToday = usage?.quota_usage?.syncs_today || 0;
+        $('sync-usage').textContent = plan === 'free' ? `${syncsToday}/2` : '∞';
+      }
+    } catch(uErr) { console.error('Usage query failed:', uErr); }
 
-    // 5. Memory Modes
-    safeRun('MemoryModesLoad', () => loadMemoryModes(profile))
-
-    // 6. Check Usage Limits
-    if (usage) {
-      safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile))
-    }
-    
-    // 7. Render History
-    safeRun('HistoryLoad', renderHistory)
-
-    // Wire up the logout button
-    const logoutBtn = $('logout-btn')
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', async (e) => {
-        e.preventDefault()
-        console.log('Logout clicked')
-        await logout()
-      })
-    }
-
-    console.log('Dashboard load complete')
-    
+    safeRun('MemoryModesLoad', () => loadMemoryModes(profile));
+    if (usage) safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile));
+    safeRun('HistoryLoad', renderHistory);
+    console.log('Dashboard load complete');
   } catch (err) {
-    console.error('loadDashboard crashed:', err.message)
-    console.error('Stack:', err.stack)
+    console.error('loadDashboard crashed:', err.message, err.stack);
   }
+}
+
+function updateNameUI(name) {
+  document.querySelectorAll('#user-name, .user-name, #sidebar-name, .sidebar-name, #sidebar-user-name, [data-user-name], #display-name').forEach(el => el.textContent = name);
+}
+
+function updateAvatarUI(name) {
+  const char = (name || 'U')[0].toUpperCase();
+  document.querySelectorAll('#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial').forEach(el => el.textContent = char);
 }
 
 function loadMemoryModes(profile) {
   const container = $('modes-container');
   if (!container) return;
-
   const activeMode = profile.active_mode || 'founder';
-
   container.innerHTML = memoryModes.map(mode => `
-    <button class="mode-card flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all cursor-pointer ${activeMode === mode.id ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}" 
-            data-mode-id="${mode.id}">
+    <button class="mode-card flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all cursor-pointer ${activeMode === mode.id ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}" data-mode-id="${mode.id}">
       <span class="text-xl">${mode.icon}</span>
       <span class="font-bold text-sm tracking-tight">${mode.label}</span>
     </button>
   `).join('');
-
-  // Attach listeners via delegation (no onclick in HTML)
   container.querySelectorAll('.mode-card').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const modeId = btn.getAttribute('data-mode-id');
-      if (modeId) window.setActiveMode(modeId);
-    });
+    btn.addEventListener('click', () => { const modeId = btn.getAttribute('data-mode-id'); if (modeId) window.setActiveMode(modeId); });
   });
 }
 
 window.setActiveMode = async (modeId) => {
-    await safeRun('SetMode', async () => {
-        const user = await getCurrentUser();
-        if (!user) return;
-        const { error } = await supabase.from('profiles').update({ active_mode: modeId }).eq('id', user.id);
-        if (error) throw error;
-        showToast(`🧠 Switched to ${modeId.charAt(0).toUpperCase() + modeId.slice(1)} Memory`);
-        
-        // Only re-render the modes section, not the entire dashboard
-        if (_cachedProfile) {
-            _cachedProfile.active_mode = modeId;
-            loadMemoryModes(_cachedProfile);
-            if ($('summary-mode')) $('summary-mode').textContent = modeId.charAt(0).toUpperCase() + modeId.slice(1);
-        }
-    });
+  await safeRun('SetMode', async () => {
+    const user = await getCurrentUser();
+    if (!user) return;
+    await supabase.from('profiles').update({ active_mode: modeId }).eq('id', user.id);
+    showToast(`🧠 Switched to ${modeId.charAt(0).toUpperCase() + modeId.slice(1)} Memory`);
+    if (_cachedProfile) { _cachedProfile.active_mode = modeId; loadMemoryModes(_cachedProfile); if ($('summary-mode')) $('summary-mode').textContent = modeId.charAt(0).toUpperCase() + modeId.slice(1); }
+  });
 };
 
 function checkUsageLimit(usage, profile) {
-  const limit = 5;
   const promptsUsed = usage?.prompts_used || 0;
-  const isFree = (profile.subscription_plan || 'free').toLowerCase() === 'free';
-  
+  const plan = (profile.subscription_plan || 'free').toLowerCase();
+  const isFree = plan === 'free';
   const banner = $('upgrade-banner');
   const sidebarUpgrade = $('sidebar-upgrade-container');
-
   if (isFree) {
     if (sidebarUpgrade) sidebarUpgrade.classList.remove('hidden');
-    if (promptsUsed >= limit) {
+    if (promptsUsed >= 5) {
       if (banner) banner.classList.remove('hidden');
       if ($('generate-prompt-btn')) $('generate-prompt-btn').disabled = true;
     }
+  } else {
+    if (sidebarUpgrade) sidebarUpgrade.classList.add('hidden');
+    if (banner) banner.classList.add('hidden');
   }
 }
 
 function showUpgradeModal() {
-    const modal = $('upgrade-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
+  const modal = $('upgrade-modal');
+  if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
 }
 
 function hideUpgradeModal() {
-    const modal = $('upgrade-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+  const modal = $('upgrade-modal');
+  if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
-async function handleUpgrade() {
-    const user = await getCurrentUser();
-    if (!user) return;
-    
-    const loader = $('checkout-loader');
-    const btn = $('checkout-btn');
-    if (loader) loader.classList.remove('hidden');
-    if (btn) btn.disabled = true;
+async function handleUpgrade(planTier = 'pro') {
+  const user = await getCurrentUser();
+  if (!user) return;
+  const btn = planTier === 'ultra' ? $('upgrade-ultra-btn') : $('upgrade-pro-btn');
+  if (btn) btn.disabled = true;
 
-    try {
-        const response = await fetch('/api/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: user.id, plan_tier: 'pro' })
-        });
-        const data = await response.json();
-        
-        if (data.order_id) {
-            const options = {
-                "key": data.key_id,
-                "amount": data.amount,
-                "currency": data.currency,
-                "name": "Cloasta",
-                "description": "Cloasta Pro Subscription",
-                "order_id": data.order_id,
-                "handler": async function (response) {
-                    showToast('✅ Payment successful. Upgrading account...');
-                    setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
-                },
-                "prefill": { "email": user.email },
-                "theme": { "color": "#000000" }
-            };
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-        } else {
-            throw new Error(data.error || 'Checkout initialization failed');
-        }
-    } catch (err) {
-        showToast(`❌ ${err.message}`);
-    } finally {
-        if (loader) loader.classList.add('hidden');
-        if (btn) btn.disabled = false;
+  try {
+    const response = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id, plan_tier: planTier })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || data.message || 'Payment initialization failed');
+    
+    if (data.order_id) {
+      const priceLabel = planTier === 'ultra' ? '$15.99/mo' : '$7.99/mo';
+      const options = {
+        key: data.key_id, amount: data.amount, currency: data.currency,
+        name: "Cloasta", description: `Cloasta ${planTier.charAt(0).toUpperCase() + planTier.slice(1)} — ${priceLabel}`,
+        order_id: data.order_id,
+        handler: async function () {
+          showToast('✅ Payment successful. Upgrading account...');
+          setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
+        },
+        prefill: { email: user.email },
+        theme: { color: "#000000" }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     }
+  } catch (err) {
+    showToast(`❌ ${err.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 export function showScreen(screenId) {
-  console.log('showScreen called:', screenId)
-  
-  // Hide ALL screens
-  document.querySelectorAll('.screen').forEach(s => {
-    s.style.display = 'none'
-    s.classList.remove('active')
-  })
-  
-  // Try to find target screen
-  const target = 
-    document.getElementById('screen-' + screenId) ||
-    document.getElementById(screenId)
-  
-  console.log('Target element:', target)
-  
-  if (target) {
-    target.style.display = 'block'
-    target.classList.add('active')
-  }
-
-  // Update active class on nav elements
-  const cleanId = screenId.replace('screen-', '')
-  const targetId = `screen-${cleanId}`
+  document.querySelectorAll('.screen').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+  const cleanId = screenId.replace('screen-', '');
+  const target = document.getElementById('screen-' + cleanId) || document.getElementById(screenId);
+  if (target) { target.style.display = 'block'; target.classList.add('active'); }
   document.querySelectorAll('[data-nav], [data-screen], .sidebar-item').forEach(item => {
-      const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
-      if (navTarget === cleanId || navTarget === targetId || `screen-${navTarget}` === targetId) {
-          item.classList.add('active', 'text-white');
-          item.classList.remove('text-gray-400');
-      } else {
-          item.classList.remove('active', 'text-white');
-          item.classList.add('text-gray-400');
-      }
+    const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
+    if (navTarget === cleanId) { item.classList.add('active', 'text-white'); item.classList.remove('text-gray-400'); }
+    else { item.classList.remove('active', 'text-white'); item.classList.add('text-gray-400'); }
   });
 }
 
-export function navigateTo(screenId) {
-  showScreen(screenId);
-}
-
+export function navigateTo(screenId) { showScreen(screenId); }
 window.navigateTo = navigateTo;
 window.showScreen = showScreen;
 window.loadDashboard = loadDashboard;
@@ -450,301 +288,168 @@ window.initNavigation = initNavigation;
 
 function updateProfileCard(profile) {
   if (!profile) return;
-  
   if ($('summary-role')) $('summary-role').textContent = profile.role || 'AI Architect';
-  
-  if ($('summary-style')) {
-    const style = profile.communication_style || 'Balanced';
-    $('summary-style').textContent = style.includes('|') ? style.split('|')[0] : style;
-  }
-  
-  if ($('summary-mode')) {
-    const mode = profile.active_mode || 'founder';
-    $('summary-mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-  }
-  
-  if ($('summary-tools')) {
-    const toolCount = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0;
-    $('summary-tools').textContent = `${toolCount} Tool${toolCount === 1 ? '' : 's'} Connected`;
-  }
+  if ($('summary-style')) { const s = profile.communication_style || 'Balanced'; $('summary-style').textContent = s.includes('|') ? s.split('|')[0] : s; }
+  if ($('summary-mode')) { const m = profile.active_mode || 'founder'; $('summary-mode').textContent = m.charAt(0).toUpperCase() + m.slice(1); }
+  if ($('summary-tools')) { const c = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0; $('summary-tools').textContent = `${c} Tool${c === 1 ? '' : 's'} Connected`; }
 }
 
 function initNavigation() {
-    // Open dashboard.html and find ALL screen sections. Log their exact IDs to console:
-    document.querySelectorAll('[id]').forEach(el => {
-      if (el.id.includes('screen') || 
-          el.classList.contains('screen')) {
-        console.log('Found screen:', el.id, el.className);
-      }
+  const navElements = document.querySelectorAll('[data-screen], [data-nav], .nav-item, nav a, aside a, .sidebar a, .sidebar-item');
+  navElements.forEach(item => {
+    if (item.dataset.navBound) return;
+    item.dataset.navBound = 'true';
+    item.addEventListener('click', (e) => {
+      const target = item.getAttribute('data-screen') || item.getAttribute('data-nav') || item.getAttribute('href')?.replace('.html', '').replace('#', '').replace('/', '');
+      if (!target) return;
+      if (target === 'upgrade') { e.preventDefault(); showUpgradeModal(); }
+      else { e.preventDefault(); navigateTo(target); if (target === 'settings') safeRun('SettingsLoad', loadSettings); }
+      closeMobileSidebar();
     });
-
-    const navElements = document.querySelectorAll('[data-screen], [data-nav], .nav-item, nav a, aside a, .sidebar a, .sidebar-item');
-    navElements.forEach(item => {
-        if (item.dataset.navBound) return;
-        item.dataset.navBound = 'true';
-
-        item.addEventListener('click', (e) => {
-            const target = item.getAttribute('data-screen') || 
-                           item.getAttribute('data-nav') || 
-                           item.getAttribute('href')?.replace('.html', '').replace('#', '').replace('/', '');
-            
-            if (!target) return;
-            
-            console.log('Nav click - target screen:', target);
-            console.log('Looking for element:', 'screen-' + target);
-            console.log('Found element:', document.getElementById('screen-' + target));
-
-            if (target === 'upgrade') {
-                e.preventDefault();
-                showUpgradeModal();
-            } else {
-                e.preventDefault();
-                navigateTo(target);
-                if (target === 'settings') {
-                    safeRun('SettingsLoad', loadSettings);
-                }
-            }
-            closeMobileSidebar();
-        });
-    });
+  });
 }
 
 async function handleGeneration(text) {
-    if (!text) return;
-    await safeRun('Generation', async () => {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
-        const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
-        
-        if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
-            showUpgradeModal();
-            return;
-        }
-
-        const loader = $('generate-loader');
-        const btnText = $('generate-prompt-btn')?.querySelector('span');
-        if (loader) loader.classList.remove('hidden');
-        if (btnText) btnText.textContent = 'Thinking...';
-
-        const { data: p } = await supabase.from('profiles').select('active_mode').eq('id', user.id).single();
-        const activeMode = p?.active_mode || 'founder';
-        
-        let prompt = await generatePrompt(text, activeMode);
-        if (!prompt) throw new Error('AI failed to respond');
-        prompt = cleanPrompt(prompt);
-
-        window._CloastaGeneratedPrompt = prompt;
-        navigateTo('output');
-        initOutputScreen();
-        await saveToHistory(prompt, text, activeMode);
-        
-        // NOTE: Removed client-side increment_prompts_used — backend handles this exclusively
-        // to prevent double-counting
-
-        // Refresh usage display
-        const { data: updatedUsage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
-        if (updatedUsage && $('prompts-used')) {
-            $('prompts-used').textContent = updatedUsage.prompts_used || 0;
-        }
-
-        if (loader) loader.classList.add('hidden');
-        if (btnText) btnText.textContent = 'Generate Perfect Prompt';
-    });
+  if (!text) return;
+  await safeRun('Generation', async () => {
+    const user = await getCurrentUser();
+    if (!user) return;
+    const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
+    const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+    if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
+      showUpgradeModal();
+      return;
+    }
+    const loader = $('generate-loader');
+    const btnText = $('generate-prompt-btn')?.querySelector('span');
+    if (loader) loader.classList.remove('hidden');
+    if (btnText) btnText.textContent = 'Thinking...';
+    const { data: p } = await supabase.from('profiles').select('active_mode, target_ai').eq('id', user.id).single();
+    let prompt = await generatePrompt(text, p?.active_mode || 'founder');
+    if (!prompt) throw new Error('AI failed to respond');
+    prompt = cleanPrompt(prompt);
+    window._CloastaGeneratedPrompt = prompt;
+    navigateTo('output');
+    initOutputScreen();
+    await saveToHistory(prompt, text, p?.active_mode || 'founder');
+    const { data: updatedUsage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+    if (updatedUsage && $('prompts-used')) $('prompts-used').textContent = updatedUsage.prompts_used || 0;
+    if (updatedUsage && $('prompts-remaining')) {
+      const plan = (profile?.subscription_plan || 'free').toLowerCase();
+      $('prompts-remaining').textContent = plan === 'free' ? Math.max(0, 5 - (updatedUsage.prompts_used || 0)) : '∞';
+    }
+    if (loader) loader.classList.add('hidden');
+    if (btnText) btnText.textContent = 'Generate Perfect Prompt';
+  });
 }
 
 function initOutputScreen() {
-    const outputEl = $('final-prompt-display');
-    if (!outputEl) return;
-
-    const toggle = $('inject-passport');
-    const copyBtn = $('copy-final-btn');
-    let basePrompt = window._CloastaGeneratedPrompt || '';
-    
-    function getFinalPrompt() {
-        if (toggle?.checked) {
-            const passport = getPassportText();
-            return passport ? `${passport}\n\n---\n\n${basePrompt}` : basePrompt;
-        }
-        return basePrompt;
-    }
-
-    outputEl.textContent = getFinalPrompt();
-
-    if (toggle) {
-        const newToggle = toggle.cloneNode(true);
-        toggle.parentNode.replaceChild(newToggle, toggle);
-        newToggle.addEventListener('change', () => {
-            if (outputEl) outputEl.textContent = getFinalPrompt();
-            showToast(newToggle.checked ? '🪪 Identity Attached' : '🪪 Identity Removed');
-        });
-    }
-
-    if (copyBtn) {
-        const newCopyBtn = copyBtn.cloneNode(true);
-        copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
-        newCopyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(getFinalPrompt());
-            showToast('📋 Prompt Copied');
-        });
-    }
+  const outputEl = $('final-prompt-display');
+  if (!outputEl) return;
+  const toggle = $('inject-passport');
+  const copyBtn = $('copy-final-btn');
+  let basePrompt = window._CloastaGeneratedPrompt || '';
+  function getFinalPrompt() {
+    if (toggle?.checked) { const passport = getPassportText(); return passport ? `${passport}\n\n---\n\n${basePrompt}` : basePrompt; }
+    return basePrompt;
+  }
+  outputEl.textContent = getFinalPrompt();
+  if (toggle) { const nt = toggle.cloneNode(true); toggle.parentNode.replaceChild(nt, toggle); nt.addEventListener('change', () => { outputEl.textContent = getFinalPrompt(); showToast(nt.checked ? '🪪 Identity Attached' : '🪪 Identity Removed'); }); }
+  if (copyBtn) { const nc = copyBtn.cloneNode(true); copyBtn.parentNode.replaceChild(nc, copyBtn); nc.addEventListener('click', () => { navigator.clipboard.writeText(getFinalPrompt()); showToast('📋 Prompt Copied'); }); }
 }
 
 async function saveToHistory(promptText, inputText, mode) {
-    const user = await getCurrentUser();
-    if (!user) return;
-    await supabase.from('prompts').insert({
-        user_id: user.id,
-        input_text: inputText,
-        generated_prompt: promptText,
-        memory_mode: mode
-    });
+  const user = await getCurrentUser();
+  if (!user) return;
+  await supabase.from('prompts').insert({ user_id: user.id, input_text: inputText, generated_prompt: promptText, memory_mode: mode });
 }
 
 async function renderHistory() {
-    const historyContainer = $('recent-history-container');
-    if(!historyContainer) return;
-
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    const { data: history, error } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
-    if (error) throw error;
-
-    if(!history || history.length === 0) {
-        historyContainer.innerHTML = `
-            <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="material-symbols-outlined text-gray-600 text-3xl">history</span>
-            </div>
-            <p class="text-gray-400 font-medium">No recent syncs.</p>
-        `;
-        return;
-    }
-
-    historyContainer.innerHTML = history.map(item => `
-        <div class="w-full bg-black border border-[#222222] p-4 rounded-xl text-left space-y-2 hover:border-white/20 transition-colors">
-            <div class="flex justify-between">
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">${new Date(item.created_at).toLocaleDateString()}</span>
-                <span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold uppercase">${item.memory_mode || 'default'}</span>
-            </div>
-            <p class="text-xs text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 120)}...</p>
-        </div>
-    `).join('');
+  const c = $('recent-history-container');
+  if (!c) return;
+  const user = await getCurrentUser();
+  if (!user) return;
+  const { data: history, error } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
+  if (error) throw error;
+  if (!history || history.length === 0) {
+    c.innerHTML = `<div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-gray-600 text-3xl">history</span></div><p class="text-gray-400 font-medium">No recent syncs.</p>`;
+    return;
+  }
+  c.innerHTML = history.map(item => `<div class="w-full bg-black border border-[#222222] p-4 rounded-xl text-left space-y-2 hover:border-white/20 transition-colors"><div class="flex justify-between"><span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">${new Date(item.created_at).toLocaleDateString()}</span><span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold uppercase">${item.memory_mode || 'default'}</span></div><p class="text-xs text-gray-300 font-mono line-clamp-2">${cleanPrompt(item.generated_prompt).substring(0, 120)}...</p></div>`).join('');
 }
 
 // ==========================================
-// SETTINGS SYSTEM
+// SETTINGS
 // ==========================================
 async function loadSettings() {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (!profile) return;
-
-    if ($('settings-name')) $('settings-name').value = profile.full_name || '';
-    if ($('settings-role')) $('settings-role').value = profile.role || '';
-    if ($('settings-goals')) $('settings-goals').value = profile.goals || '';
-    
-    const commStyle = profile.communication_style || '';
-    if ($('settings-comm-style')) {
-        if (commStyle.includes('|')) {
-            $('settings-comm-style').value = commStyle.split('|')[0] || 'Professional';
-        } else {
-            $('settings-comm-style').value = commStyle || 'Professional';
-        }
-    }
-
-    if ($('settings-active-mode')) $('settings-active-mode').value = profile.active_mode || 'founder';
-    if ($('settings-context')) $('settings-context').value = profile.active_context || '';
-    if ($('settings-target-ai')) $('settings-target-ai').value = profile.target_ai || 'All';
-    if ($('settings-plan')) $('settings-plan').textContent = (profile.subscription_plan || 'free').toUpperCase();
-    if ($('settings-email')) $('settings-email').textContent = user.email;
+  const user = await getCurrentUser();
+  if (!user) return;
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile) return;
+  if ($('settings-name')) $('settings-name').value = profile.full_name || '';
+  if ($('settings-role')) $('settings-role').value = profile.role || '';
+  if ($('settings-goals')) $('settings-goals').value = profile.goals || '';
+  const cs = profile.communication_style || '';
+  if ($('settings-comm-style')) $('settings-comm-style').value = cs.includes('|') ? cs.split('|')[0] : cs || 'Professional';
+  if ($('settings-active-mode')) $('settings-active-mode').value = profile.active_mode || 'founder';
+  if ($('settings-context')) $('settings-context').value = profile.active_context || '';
+  if ($('settings-target-ai')) $('settings-target-ai').value = profile.target_ai || 'Common AI';
+  if ($('settings-plan')) $('settings-plan').textContent = (profile.subscription_plan || 'free').toUpperCase();
+  if ($('settings-email')) $('settings-email').textContent = user.email;
 }
 
 async function saveSettings() {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    const btn = $('save-settings-btn');
-    if (btn) {
-        btn.textContent = 'Saving...';
-        btn.disabled = true;
-    }
-
-    try {
-        const updateData = {
-            full_name: $('settings-name')?.value || '',
-            role: $('settings-role')?.value || '',
-            goals: $('settings-goals')?.value || '',
-            communication_style: $('settings-comm-style')?.value || 'Professional',
-            active_mode: $('settings-active-mode')?.value || 'founder',
-            active_context: $('settings-context')?.value || '',
-            target_ai: $('settings-target-ai')?.value || 'All'
-        };
-
-        const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
-        if (error) throw error;
-
-        // Update cached profile
-        _cachedProfile = { ..._cachedProfile, ...updateData };
-
-        // Reflect changes in dashboard UI
-        if ($('user-name')) $('user-name').textContent = updateData.full_name || 'User';
-        if ($('sidebar-name')) $('sidebar-name').textContent = updateData.full_name || 'User';
-        if ($('summary-role')) $('summary-role').textContent = updateData.role || 'Role';
-        if ($('summary-style')) $('summary-style').textContent = updateData.communication_style.includes('|') ? updateData.communication_style.split('|')[0] : updateData.communication_style;
-        if ($('summary-mode')) $('summary-mode').textContent = updateData.active_mode.charAt(0).toUpperCase() + updateData.active_mode.slice(1);
-        
-        const avatarChar = (updateData.full_name || 'U').charAt(0).toUpperCase();
-        if ($('user-avatar')) $('user-avatar').textContent = avatarChar;
-        if ($('sidebar-avatar')) $('sidebar-avatar').textContent = avatarChar;
-
-        // Re-render memory modes
-        loadMemoryModes({ ...(_cachedProfile || {}), active_mode: updateData.active_mode });
-
-        showToast('✅ Settings saved');
-    } catch (err) {
-        showToast(`❌ Save failed: ${err.message}`);
-    } finally {
-        if (btn) {
-            btn.textContent = 'Save Changes';
-            btn.disabled = false;
-        }
-    }
+  const user = await getCurrentUser();
+  if (!user) return;
+  const btn = $('save-settings-btn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  try {
+    const updateData = {
+      full_name: $('settings-name')?.value || '',
+      role: $('settings-role')?.value || '',
+      goals: $('settings-goals')?.value || '',
+      communication_style: $('settings-comm-style')?.value || 'Professional',
+      active_mode: $('settings-active-mode')?.value || 'founder',
+      active_context: $('settings-context')?.value || '',
+      target_ai: $('settings-target-ai')?.value || 'Common AI'
+    };
+    const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
+    if (error) throw error;
+    _cachedProfile = { ..._cachedProfile, ...updateData };
+    updateNameUI(updateData.full_name || 'User');
+    updateAvatarUI(updateData.full_name || 'User');
+    if ($('summary-role')) $('summary-role').textContent = updateData.role || 'Role';
+    if ($('summary-style')) $('summary-style').textContent = updateData.communication_style;
+    if ($('summary-mode')) $('summary-mode').textContent = updateData.active_mode.charAt(0).toUpperCase() + updateData.active_mode.slice(1);
+    loadMemoryModes({ ...(_cachedProfile || {}), active_mode: updateData.active_mode });
+    showToast('✅ Settings saved');
+  } catch (err) { showToast(`❌ Save failed: ${err.message}`); }
+  finally { if (btn) { btn.textContent = 'Save Changes'; btn.disabled = false; } }
 }
 
+// ==========================================
+// AUTH STATE → DASHBOARD LOADER
+// ==========================================
 supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log('Auth event:', event, 'Session:', !!session)
-  
   if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-    const isDashboard = window.location.pathname.includes('dashboard')
+    const isDashboard = window.location.pathname.includes('dashboard');
     if (session && isDashboard) {
-      console.log('Auth ready - loading dashboard')
       const skeleton = $('loading-skeleton');
       const content = $('dashboard-content');
       if (skeleton) skeleton.classList.remove('hidden');
       if (content) content.classList.add('hidden');
-      
-      await loadDashboard(session)
-      initNavigation()
-      
+      await loadDashboard(session);
+      initNavigation();
       if (skeleton) skeleton.classList.add('hidden');
       if (content) content.classList.remove('hidden');
-
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('upgraded') === 'true') {
-          showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
-          window.history.replaceState({}, document.title, window.location.pathname);
+        showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     } else if (!session && isDashboard) {
-      console.log('No active session on dashboard - redirecting to login')
-      window.location.replace('/login.html')
+      window.location.replace('/login.html');
     }
   }
-  
-  if (event === 'SIGNED_OUT') {
-    window.location.replace('/login.html')
-  }
-})
+  if (event === 'SIGNED_OUT') { window.location.replace('/login.html'); }
+});

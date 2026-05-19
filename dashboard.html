@@ -13,7 +13,7 @@
     <meta name="description" content="Convert your voice or text into perfect AI prompts instantly. Save your AI Passport and continue any session across ChatGPT, Gemini, Claude — everywhere.">
     <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kairo-omega-three.vercel.app">
+    <meta property="og:url" content="https://cloasta.com/dashboard">
     <meta property="og:title" content="Cloasta — Think once. Use everywhere.">
     <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/Cloasta-logo.png">
@@ -85,6 +85,10 @@
                     <span class="material-symbols-outlined">sync_alt</span>
                     <span class="hidden lg:block font-medium text-sm">Sync Status</span>
                 </button>
+                <button data-nav="settings" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 text-gray-400 hover:text-white">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="hidden lg:block font-medium text-sm">Settings</span>
+                </button>
             </nav>
 
             <div class="p-6">
@@ -130,6 +134,9 @@
             </div>
         </aside>
 
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
+
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 bg-black overflow-y-auto relative custom-scrollbar">
             
@@ -172,7 +179,7 @@
                             <p class="text-xs text-gray-400">Upgrade to Pro for unlimited prompts and memory modes.</p>
                         </div>
                     </div>
-                    <button id="banner-upgrade-btn" class="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 transition-all">Upgrade Now ($4.99/mo)</button>
+                    <button id="banner-upgrade-btn" class="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 transition-all">Upgrade Now ($7.99/mo)</button>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -207,6 +214,10 @@
                             <div>
                                 <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Prompts Used</p>
                                 <p class="text-sm font-bold text-white" id="prompts-used">0</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Remaining</p>
+                                <p class="text-sm font-bold text-white" id="prompts-remaining">5</p>
                             </div>
                             <div>
                                 <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Role</p>
@@ -463,6 +474,95 @@
                 </div>
             </section>
 
+            <!-- SETTINGS SCREEN -->
+            <section id="screen-settings" class="screen p-8 lg:p-12 max-w-4xl mx-auto space-y-8">
+                <div class="space-y-2">
+                    <h1 class="text-3xl font-bold tracking-tight">Settings</h1>
+                    <p class="text-gray-400 text-sm font-light">Manage your profile and preferences.</p>
+                </div>
+
+                <div class="bg-[#111111] border border-[#222222] rounded-2xl p-8 glassmorphism space-y-6">
+                    <!-- Account Info -->
+                    <div class="flex items-center justify-between pb-4 border-b border-white/5">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Account</p>
+                            <p class="text-sm text-gray-300 mt-1" id="settings-email">...</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Plan</p>
+                            <p class="text-sm font-bold text-white uppercase mt-1" id="settings-plan">FREE</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Display Name</label>
+                            <input type="text" id="settings-name" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Role</label>
+                            <select id="settings-role" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm">
+                                <option value="Student">Student</option>
+                                <option value="Founder">Founder</option>
+                                <option value="Developer">Developer</option>
+                                <option value="Creator">Creator</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Primary Goals</label>
+                        <input type="text" id="settings-goals" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm" placeholder="e.g. Building SaaS, Learning ML">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Communication Style</label>
+                            <select id="settings-comm-style" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm">
+                                <option value="Direct">Direct</option>
+                                <option value="Detailed">Detailed</option>
+                                <option value="Creative">Creative</option>
+                                <option value="Professional">Professional</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Default Memory Mode</label>
+                            <select id="settings-active-mode" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm">
+                                <option value="founder">Founder</option>
+                                <option value="study">Study</option>
+                                <option value="coding">Coding</option>
+                                <option value="creator">Creator</option>
+                                <option value="freelancer">Freelancer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Active Context</label>
+                        <textarea id="settings-context" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm h-20 resize-none" placeholder="What are you working on right now?"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Target AI Platform</label>
+                        <select id="settings-target-ai" class="w-full bg-black border border-[#222222] rounded-lg px-4 py-3 outline-none focus:border-white text-sm">
+                            <option value="Common AI">All / Universal</option>
+                            <option value="ChatGPT">ChatGPT</option>
+                            <option value="Claude">Claude</option>
+                            <option value="Gemini">Gemini</option>
+                            <option value="Grok">Grok</option>
+                            <option value="Cursor">Cursor</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button id="save-settings-btn" class="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform text-sm">Save Changes</button>
+                        <button id="settings-logout-btn" class="bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-8 py-4 rounded-xl hover:bg-red-500/30 transition-colors text-sm">Logout</button>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -480,7 +580,7 @@
                     <span class="material-symbols-outlined text-black text-3xl font-bold">star</span>
                 </div>
                 <h3 class="text-2xl font-bold">Upgrade to Cloasta Pro</h3>
-                <p id="upgrade-message" class="text-gray-400">You've used all 5 free prompts today. Upgrade to Pro for unlimited access. $4.99/month. Cancel anytime.</p>
+                <p id="upgrade-message" class="text-gray-400">You've reached your free limit. Upgrade for unlimited access.</p>
                 
                 <div class="bg-black border border-[#222222] rounded-xl p-4 text-left space-y-3 mt-6">
                     <div class="flex items-center gap-3">
@@ -497,26 +597,18 @@
                     </div>
                 </div>
 
-                <button id="checkout-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform flex justify-center items-center gap-2 mt-6">
-                    <span>Upgrade Now ($4.99/mo)</span>
-                    <div id="checkout-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                </button>
+                <div class="space-y-3 mt-6">
+                    <button id="upgrade-pro-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform flex justify-center items-center gap-2">
+                        <span>Upgrade to Pro — $7.99/mo</span>
+                        <div id="checkout-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    </button>
+                    <button id="upgrade-ultra-btn" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform flex justify-center items-center gap-2">
+                        <span>Upgrade to Ultra — $15.99/mo</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     <script type="module" src="/js/app.js"></script>
-    <script>
-      window.addEventListener('load', function() {
-        console.log('Window loaded - calling loadDashboard')
-        if (typeof loadDashboard === 'function') {
-          loadDashboard()
-        } else {
-          console.error('loadDashboard not found - check app.js is loaded')
-        }
-        if (typeof initNavigation === 'function') {
-          initNavigation()
-        }
-      })
-    </script>
 </body>
 </html>

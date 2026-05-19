@@ -1,7 +1,7 @@
 // js/passport.js — AI Passport Identity Manager with Supabase
 import { $, showToast, cleanPrompt } from './app.js';
 import { supabase, getCurrentUser, getAccessToken } from './auth.js';
-import { checkPassportLimit, incrementPassportCount } from './usage.js';
+import { checkPassportLimit } from './usage.js';
 
 export async function initPassport() {
     const editForm = $('passport-edit-form');
@@ -99,7 +99,7 @@ export async function initPassport() {
 
             if (textError) throw textError;
             
-            await incrementPassportCount(user);
+
             
             if ($('passport-output-text')) {
                 $('passport-output-text').textContent = block;

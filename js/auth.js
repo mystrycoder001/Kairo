@@ -38,7 +38,7 @@ export function showGlobalLoader(text = "Syncing...") {
     void loader.offsetWidth;
     loader.classList.add('active');
     
-    // Safety timeout
+    // Safety timeout — never block UI longer than 10s
     if (window._loaderTimeout) clearTimeout(window._loaderTimeout);
     window._loaderTimeout = setTimeout(() => {
         hideGlobalLoader();
@@ -49,6 +49,10 @@ export function hideGlobalLoader() {
     const loader = document.getElementById('global-cinematic-loader');
     if (loader) {
         loader.classList.remove('active');
+    }
+    if (window._loaderTimeout) {
+        clearTimeout(window._loaderTimeout);
+        window._loaderTimeout = null;
     }
 }
 
@@ -72,7 +76,7 @@ export async function signInWithGoogle() {
   return data
 }
 
-// Email OTP — Send code
+// Email OTP — Send code (Magic Link)
 export async function signInWithOTP(email) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email: email,
@@ -128,7 +132,7 @@ export async function getCurrentUser() {
   }
 }
 
-// Get user profile from Supabase
+// Ensure user profile exists in Supabase (upsert on login)
 export async function initUserProfile(user) {
   if (!user) return;
   const displayName = user?.user_metadata?.full_name 
@@ -147,6 +151,24 @@ export async function initUserProfile(user) {
             email: user.email,
             last_login: new Date().toISOString()
         }, { onConflict: 'id' });
+    
+    // Ensure usage_tracking row exists for free tier limits
+    const { data: existing } = await supabase
+      .from('usage_tracking')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!existing) {
+      await supabase.from('usage_tracking').insert({
+        user_id: user.id,
+        prompts_used: 0,
+        ai_generations: 0,
+        uploads: 0,
+        reset_date: new Date().toISOString(),
+        quota_usage: {}
+      });
+    }
   } catch (err) {
       console.error("[Auth] Profile sync error:", err);
   }
@@ -160,6 +182,7 @@ export async function initUserProfile(user) {
 export async function logout() {
     currentUser = null;
     currentUserTimestamp = 0;
+    _authRedirecting = false;
     await supabase.auth.signOut()
     window.location.href = '/login.html';
 }
@@ -176,39 +199,6 @@ export async function checkAuth() {
   return user;
 }
 
-// Check onboarding status and redirect accordingly
-async function handleAuthRedirect(user) {
-  if (_authRedirecting || !user) return;
-  
-  const path = window.location.pathname;
-  const isLoginPage = path.includes('login.html') || path.includes('signup.html');
-  const isIndexPage = path === '/' || path === '' || path.endsWith('/index.html');
-
-  // Only auto-redirect from login/index pages, NOT from dashboard/onboarding
-  if (!isLoginPage && !isIndexPage) return;
-
-  try {
-    const { data: profile } = await supabase.from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single();
-
-    const onboarded = profile?.onboarding_completed === true;
-
-    _authRedirecting = true;
-    if (onboarded) {
-      window.location.replace('/dashboard.html');
-    } else {
-      window.location.replace('/onboarding.html');
-    }
-  } catch (err) {
-    console.error('[Auth] Redirect error:', err);
-    // On error, fallback to dashboard to prevent loops!
-    _authRedirecting = true;
-    window.location.replace('/dashboard.html');
-  }
-}
-
 // Onboarding data saving helper
 export async function saveOnboardingStep(data) {
   const user = await getCurrentUser();
@@ -220,6 +210,8 @@ export async function saveOnboardingStep(data) {
 
 // ==========================================
 // AUTH STATE CHANGE HANDLER (Single source of truth)
+// Only handles redirects from login/signup/index pages.
+// Dashboard page handles its own loading via app.js.
 // ==========================================
 supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('[Auth] State change:', event);
@@ -228,8 +220,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     currentUser = session.user;
     currentUserTimestamp = Date.now();
 
-    // Handle both SIGNED_IN (new login) and INITIAL_SESSION (page reload with existing session)
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      // Sync profile on sign-in
       if (event === 'SIGNED_IN') {
         try {
           await initUserProfile(session.user);
@@ -238,41 +230,36 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         }
       }
       
-      const currentPage = window.location.pathname
+      const currentPage = window.location.pathname;
       
-      // If already on dashboard, do nothing
-      if (currentPage.includes('dashboard')) return
+      // ONLY redirect from login/signup/index pages
+      // Dashboard and onboarding manage their own state
+      const isLoginPage = currentPage.includes('login.html') || currentPage.includes('signup.html');
+      const isIndexPage = currentPage === '/' || currentPage === '' || currentPage.endsWith('/index.html');
+      
+      if (!isLoginPage && !isIndexPage) return;
+      if (_authRedirecting) return;
       
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('onboarding_completed, full_name')
+          .select('onboarding_completed')
           .eq('id', session.user.id)
-          .single()
+          .single();
         
-        console.log('Auth check profile:', profile, error)
+        _authRedirecting = true;
         
-        // If profile exists and onboarding done
         if (profile && profile.onboarding_completed === true) {
-          console.log('Returning user - going to dashboard')
-          if (!currentPage.includes('dashboard')) {
-            window.location.replace('/dashboard.html')
-          }
-          return
+          console.log('[Auth] Returning user → dashboard');
+          window.location.replace('/dashboard.html');
+        } else {
+          console.log('[Auth] New user → onboarding');
+          window.location.replace('/onboarding.html');
         }
-        
-        // If no profile or onboarding not done
-        if (!currentPage.includes('onboarding')) {
-          console.log('New user - going to onboarding')
-          window.location.replace('/onboarding.html')
-        }
-        
       } catch(err) {
-        console.error('Auth check error:', err)
-        // On error, go to dashboard anyway
-        if (!currentPage.includes('dashboard')) {
-          window.location.replace('/dashboard.html')
-        }
+        console.error('[Auth] Redirect error:', err);
+        _authRedirecting = true;
+        window.location.replace('/dashboard.html');
       }
     }
   } else {
