@@ -242,9 +242,11 @@
                 </div>
 
                 <div id="ob-demo-output" class="hidden space-y-6 animate-fade-in">
-                    <div class="p-8 bg-black/50 border border-white/10 rounded-2xl text-sm font-light italic text-gray-500 h-28 overflow-hidden relative">
-                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 pointer-events-none"></div>
-                        <span id="ob-transcribed-text"></span>
+                    <div class="space-y-2 text-left">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Transcribed Vision</label>
+                        <textarea id="ob-transcribed-text" rows="3"
+                            class="w-full bg-[#111111] border border-white/10 rounded-2xl px-5 py-4 focus:border-white/40 outline-none transition-all placeholder:text-gray-700 text-white font-light text-sm resize-none"
+                            placeholder="No speech captured. Speak into the microphone or type your vision directly here..."></textarea>
                     </div>
                     <button onclick="nextStep(5)" class="w-full bg-white text-black font-bold py-5 rounded-2xl hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Verify Capture</button>
                 </div>
@@ -463,7 +465,7 @@
             }
         }
 
-        // Fake Voice Demo for Onboarding
+        // Real Voice & Transcription System for Onboarding Step 4
         const micBtn = $('ob-mic-btn');
         const micIcon = $('ob-mic-icon');
         const micRings = $('ob-mic-rings');
@@ -472,22 +474,162 @@
         const transcribedText = $('ob-transcribed-text');
 
         let isRecording = false;
+        let recognition = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
 
-        micBtn?.addEventListener('click', () => {
-            if(isRecording) return;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        micBtn?.addEventListener('click', async () => {
+            if (isRecording) {
+                stopRecordingFlow();
+                return;
+            }
+            try {
+                await startRecordingFlow();
+            } catch (err) {
+                console.error('[Onboarding Voice]', err);
+                isRecording = false;
+                resetMicUI();
+            }
+        });
+
+        async function startRecordingFlow() {
             isRecording = true;
+            if (demoOutput) demoOutput.classList.add('hidden');
+            if (transcribedText) transcribedText.value = '';
+            
+            // Check mic permissions
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                console.warn('Microphone permission denied', err);
+                isRecording = false;
+                if (micStatus) micStatus.textContent = 'Mic Permission Required';
+                return;
+            }
+
             if (micIcon) micIcon.textContent = 'graphic_eq';
             if (micRings) micRings.classList.remove('hidden');
             if (micStatus) micStatus.textContent = 'Listening...';
-            
-            setTimeout(() => {
-                if (micIcon) micIcon.textContent = 'mic';
-                if (micRings) micRings.classList.add('hidden');
+
+            if (SpeechRecognition) {
+                try {
+                    recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+
+                    let fullTranscript = '';
+
+                    recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                        }
+                        if (finalTranscript) {
+                            fullTranscript = (fullTranscript ? fullTranscript + ' ' : '') + finalTranscript;
+                            if (transcribedText) transcribedText.value = fullTranscript.trim();
+                            if (demoOutput) demoOutput.classList.remove('hidden');
+                        }
+                    };
+
+                    recognition.onerror = (err) => {
+                        console.warn('SpeechRecognition error in onboarding:', err);
+                        if (err.error !== 'no-speech' && err.error !== 'aborted') {
+                            tryMediaRecorderFallback();
+                        }
+                    };
+
+                    recognition.onend = () => {
+                        if (isRecording && recognition) {
+                            try { recognition.start(); } catch(e) { }
+                        }
+                    };
+
+                    recognition.start();
+                } catch (e) {
+                    console.warn('SpeechRecognition start failed in onboarding:', e);
+                    tryMediaRecorderFallback();
+                }
+            } else {
+                tryMediaRecorderFallback();
+            }
+        }
+
+        async function tryMediaRecorderFallback() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    stream.getTracks().forEach(track => track.stop());
+                    await processAudioWithGroq(audioBlob);
+                };
+
+                mediaRecorder.start();
+                if (micStatus) micStatus.textContent = 'Recording Audio...';
+            } catch (err) {
+                console.error('MediaRecorder fallback failed in onboarding:', err);
+                isRecording = false;
+                resetMicUI();
+                if (micStatus) micStatus.textContent = 'Voice Sync Failed';
+            }
+        }
+
+        function stopRecordingFlow() {
+            isRecording = false;
+            if (recognition) {
+                try { recognition.stop(); } catch(e) { }
+                recognition = null;
+            }
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            resetMicUI();
+            if (micStatus) micStatus.textContent = 'Capture Complete';
+            if (demoOutput) demoOutput.classList.remove('hidden');
+        }
+
+        function resetMicUI() {
+            if (micIcon) micIcon.textContent = 'mic';
+            if (micRings) micRings.classList.add('hidden');
+            isRecording = false;
+        }
+
+        async function processAudioWithGroq(blob) {
+            if (micStatus) micStatus.textContent = 'Transcribing...';
+            if (micIcon) micIcon.classList.add('animate-spin');
+
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+
+            try {
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Transcription failed');
+
+                if (transcribedText) {
+                    transcribedText.value = data.text;
+                    if (demoOutput) demoOutput.classList.remove('hidden');
+                }
                 if (micStatus) micStatus.textContent = 'Capture Complete';
-                if (demoOutput) demoOutput.classList.remove('hidden');
-                if (transcribedText) transcribedText.textContent = "I need a boilerplate for a NextJS app with Tailwind and Supabase auth... make sure it uses the new app router.";
-            }, 3000);
-        });
+            } catch (err) {
+                console.error('[Onboarding Audio Process]', err);
+                if (micStatus) micStatus.textContent = 'Transcription failed';
+            } finally {
+                if (micIcon) micIcon.classList.remove('animate-spin');
+            }
+        }
 
         function triggerConfetti() {
             if (window.confetti) {

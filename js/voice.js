@@ -37,7 +37,10 @@ export function initVoice(onComplete) {
     });
 
     micBtn.addEventListener('click', async () => {
-        if (isRecording) return;
+        if (isRecording) {
+            stopRecordingFlow();
+            return;
+        }
         try {
             await startRecordingFlow();
         } catch (err) {

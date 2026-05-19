@@ -13,9 +13,18 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed', text: '' });
     }
 
-    if (!process.env.GROQ_API_KEY) {
-        console.error('GROQ_API_KEY is missing');
-        return res.status(500).json({ error: 'Transcription service unavailable. Please try again later.', text: '' });
+    function isPlaceholderKey(key) {
+        if (!key) return true;
+        const k = key.trim().toLowerCase();
+        return k === '' || k.includes('your_') || k.includes('placeholder') || k === 'your_groq_key';
+    }
+
+    const groqKey = process.env.GROQ_API_KEY;
+    const isPlaceholder = isPlaceholderKey(groqKey);
+
+    if (!groqKey || isPlaceholder) {
+        console.error('GROQ_API_KEY is missing or placeholder in production.');
+        return res.status(400).json({ error: 'Groq API Key is not configured on this server.', text: '' });
     }
 
     try {
@@ -44,7 +53,7 @@ module.exports = async function handler(req, res) {
         const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+                'Authorization': `Bearer ${groqKey}`
             },
             body: formData
         });
@@ -52,15 +61,18 @@ module.exports = async function handler(req, res) {
         const groqData = await groqRes.json();
 
         if (!groqRes.ok) {
-            console.error('Groq API Error:', groqData);
-            return res.status(500).json({ error: 'Transcription failed. Please try again.', text: '' });
+            console.error('Groq API Transcription call failed:', groqData);
+            return res.status(groqRes.status).json({ 
+                error: groqData.error?.message || 'Groq Transcription failed', 
+                text: '' 
+            });
         }
 
         return res.status(200).json({ text: groqData.text });
 
     } catch (e) {
-        console.error('Internal Server Error:', e);
-        return res.status(500).json({ error: 'Transcription failed. Please try again.', text: '' });
+        console.error('Internal Server Error in transcription:', e);
+        return res.status(500).json({ error: 'Internal Server Error during transcription', text: '' });
     }
 };
 
