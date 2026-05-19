@@ -516,7 +516,7 @@
                     const finalProfile = { ...(identityData || {}), onboarding_completed: true };
                     
                     console.log("[Onboarding] Saving profile...");
-                    const profileRes = await supabase.from('profiles').update(finalProfile).eq('id', user.id);
+                    const profileRes = await supabase.from('profiles').update(finalProfile).eq('id', user.id).select();
                     if (profileRes.error) {
                         console.error("[Onboarding] Profile update error:", profileRes.error);
                     }
