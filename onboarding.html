@@ -503,11 +503,20 @@
         $('finish-onboarding-btn')?.addEventListener('click', async (e) => {
             e.preventDefault();
             const btn = e.currentTarget;
-            btn.disabled = true;
-            btn.style.pointerEvents = 'none';
+            if (btn) {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+                btn.textContent = 'Preparing Workspace...';
+            }
 
             console.log("[Onboarding] Finishing flow...");
             showGlobalLoader('Preparing Workspace...');
+            
+            // Set hard timeout - redirect no matter what after 3 seconds
+            const redirectTimer = setTimeout(() => {
+                console.log('[Onboarding] Hard timeout - forcing redirect');
+                window.location.replace('/dashboard.html');
+            }, 3000);
             
             try {
                 const user = await getCurrentUser();
@@ -515,36 +524,36 @@
                 if (user) {
                     const finalProfile = { ...(identityData || {}), onboarding_completed: true };
                     
-                    console.log("[Onboarding] Saving profile...");
-                    const profileRes = await supabase.from('profiles').update(finalProfile).eq('id', user.id).select();
-                    if (profileRes.error) {
-                        console.error("[Onboarding] Profile update error:", profileRes.error);
-                    }
-                    
-                    if (modesData && modesData.length > 0) {
-                        console.log("[Onboarding] Saving modes...");
-                        await supabase.from('memory_modes').delete().eq('user_id', user.id);
-                        const modesRes = await supabase.from('memory_modes').insert(
-                            modesData.map(m => ({ user_id: user.id, mode_name: m }))
-                        );
-                        if (modesRes.error) {
-                            console.error("[Onboarding] Modes insert error:", modesRes.error);
+                    // Run database updates in parallel or sequentially inside a single promise that races with a 2-second timeout
+                    const saveOperations = (async () => {
+                        console.log("[Onboarding] Saving profile...");
+                        await supabase.from('profiles').update(finalProfile).eq('id', user.id).select();
+                        
+                        if (modesData && modesData.length > 0) {
+                            console.log("[Onboarding] Saving modes...");
+                            await supabase.from('memory_modes').delete().eq('user_id', user.id);
+                            await supabase.from('memory_modes').insert(
+                                modesData.map(m => ({ user_id: user.id, mode_name: m }))
+                            );
                         }
-                    }
-                    console.log("[Onboarding] Profile updated successfully");
+                    })();
+                    
+                    await Promise.race([
+                        saveOperations,
+                        new Promise(resolve => setTimeout(resolve, 2000))
+                    ]);
+                    
+                    console.log("[Onboarding] Save done or timed out - redirecting");
                 } else {
                     console.warn("[Onboarding] No current user found!");
                 }
                 
-                // Small delay for UI smoothness
-                await new Promise(resolve => setTimeout(resolve, 300));
-                
-                console.log("[Onboarding] Redirecting to dashboard...");
-                window.location.href = '/dashboard.html';
+                clearTimeout(redirectTimer);
+                window.location.replace('/dashboard.html');
             } catch (err) {
                 console.error("[Onboarding] Error finishing flow:", err);
-                // Failsafe
-                window.location.href = '/dashboard.html';
+                clearTimeout(redirectTimer);
+                window.location.replace('/dashboard.html');
             }
         });
     </script>
