@@ -56,7 +56,7 @@ let _cachedProfile = null;
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initial Auth Check
     const user = await safeRun('AuthInit', getCurrentUser);
-    const isDashboard = window.location.pathname.includes('dashboard.html');
+    const isDashboard = window.location.pathname.includes('dashboard');
 
     if (!user && isDashboard) {
         window.location.href = '/login.html';
@@ -97,22 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
     $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
     
-    document.querySelectorAll('[data-nav]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-nav');
-            if (target === 'upgrade') {
-                showUpgradeModal();
-            } else {
-                navigateTo(target);
-                // Load settings data when navigating to settings
-                if (target === 'settings') {
-                    safeRun('SettingsLoad', loadSettings);
-                }
-            }
-            // Close mobile menu if open
-            closeMobileSidebar();
-        });
-    });
+    safeRun('NavigationInit', initNavigation);
 
     $('mobile-menu-toggle')?.addEventListener('click', () => {
         const sidebar = $('sidebar');
@@ -178,27 +163,21 @@ async function loadDashboard() {
 
   // 2. Update UI with real data
   const displayName = profile.full_name || user.email.split('@')[0];
-  if ($('user-name')) $('user-name').textContent = displayName;
-  if ($('sidebar-name')) $('sidebar-name').textContent = displayName;
+  document.querySelectorAll('#user-name, .user-name, #sidebar-name, #sidebar-user').forEach(el => {
+      el.textContent = displayName;
+  });
+  
   if ($('user-email')) $('user-email').textContent = user.email;
   if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
   if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
   
   const avatarChar = displayName[0]?.toUpperCase() || 'U';
-  if ($('user-avatar')) $('user-avatar').textContent = avatarChar;
-  if ($('sidebar-avatar')) $('sidebar-avatar').textContent = avatarChar;
+  document.querySelectorAll('#user-avatar, #sidebar-avatar').forEach(el => {
+      el.textContent = avatarChar;
+  });
 
-  // 3. Profile Card Details — fixed field name: communication_style (not comm_style)
-  if ($('summary-role')) $('summary-role').textContent = profile.role || 'AI Architect';
-  if ($('summary-style')) {
-    const style = profile.communication_style || 'Balanced';
-    $('summary-style').textContent = style.includes('|') ? style.split('|')[0] : style;
-  }
-  if ($('summary-mode')) $('summary-mode').textContent = (profile.active_mode || 'founder').charAt(0).toUpperCase() + (profile.active_mode || 'founder').slice(1);
-  if ($('summary-tools')) {
-      const toolCount = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0;
-      $('summary-tools').textContent = `${toolCount} Tool${toolCount === 1 ? '' : 's'} Connected`;
-  }
+  // 3. Profile Card Details
+  updateProfileCard(profile);
 
   // 4. Load Usage
   const usage = usageResult.data;
@@ -334,21 +313,89 @@ async function handleUpgrade() {
     }
 }
 
-function navigateTo(screenId) {
+export function navigateTo(screenId) {
+    console.log(`[Navigation] Navigating to: ${screenId}`);
     const screens = document.querySelectorAll('.screen');
     if (screens.length === 0) return;
 
-    screens.forEach(s => s.classList.remove('active'));
-    $(`screen-${screenId}`)?.classList.add('active');
+    // Support both 'screen-overview' and 'overview'
+    const cleanId = screenId.replace('screen-', '');
+    const targetId = `screen-${cleanId}`;
 
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-        if(item.getAttribute('data-nav') === screenId) {
+    screens.forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none'; // Ensure fully hidden
+    });
+
+    const targetScreen = $(targetId) || $(screenId) || $(cleanId);
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        targetScreen.style.display = 'block';
+    } else {
+        console.warn(`[Navigation] Screen not found: ${screenId}`);
+    }
+
+    // Update active class on nav elements
+    document.querySelectorAll('[data-nav], [data-screen], .sidebar-item').forEach(item => {
+        const navTarget = item.getAttribute('data-nav') || item.getAttribute('data-screen') || item.getAttribute('href')?.replace('#', '');
+        if (navTarget === cleanId || navTarget === targetId || `screen-${navTarget}` === targetId) {
             item.classList.add('active', 'text-white');
             item.classList.remove('text-gray-400');
         } else {
             item.classList.remove('active', 'text-white');
             item.classList.add('text-gray-400');
         }
+    });
+}
+window.navigateTo = navigateTo;
+window.showScreen = navigateTo;
+
+function updateProfileCard(profile) {
+  if (!profile) return;
+  
+  if ($('summary-role')) $('summary-role').textContent = profile.role || 'AI Architect';
+  
+  if ($('summary-style')) {
+    const style = profile.communication_style || 'Balanced';
+    $('summary-style').textContent = style.includes('|') ? style.split('|')[0] : style;
+  }
+  
+  if ($('summary-mode')) {
+    const mode = profile.active_mode || 'founder';
+    $('summary-mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+  }
+  
+  if ($('summary-tools')) {
+    const toolCount = profile.favourite_tools ? profile.favourite_tools.split(',').length : 0;
+    $('summary-tools').textContent = `${toolCount} Tool${toolCount === 1 ? '' : 's'} Connected`;
+  }
+}
+
+function initNavigation() {
+    const navElements = document.querySelectorAll('[data-screen], [data-nav], .nav-item, nav a, aside a, .sidebar a, .sidebar-item');
+    navElements.forEach(item => {
+        if (item.dataset.navBound) return;
+        item.dataset.navBound = 'true';
+
+        item.addEventListener('click', (e) => {
+            const target = item.getAttribute('data-screen') || 
+                           item.getAttribute('data-nav') || 
+                           item.getAttribute('href')?.replace('.html', '').replace('#', '').replace('/', '');
+            
+            if (!target) return;
+            
+            if (target === 'upgrade') {
+                e.preventDefault();
+                showUpgradeModal();
+            } else {
+                e.preventDefault();
+                navigateTo(target);
+                if (target === 'settings') {
+                    safeRun('SettingsLoad', loadSettings);
+                }
+            }
+            closeMobileSidebar();
+        });
     });
 }
 
