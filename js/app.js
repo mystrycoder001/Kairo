@@ -267,6 +267,16 @@ async function loadDashboard(existingSession) {
     // 7. Render History
     safeRun('HistoryLoad', renderHistory)
 
+    // Wire up the logout button
+    const logoutBtn = $('logout-btn')
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault()
+        console.log('Logout clicked')
+        await logout()
+      })
+    }
+
     console.log('Dashboard load complete')
     
   } catch (err) {
@@ -709,7 +719,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('Auth event:', event, 'Session:', !!session)
   
   if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-    if (session && window.location.pathname.includes('dashboard')) {
+    const isDashboard = window.location.pathname.includes('dashboard')
+    if (session && isDashboard) {
       console.log('Auth ready - loading dashboard')
       const skeleton = $('loading-skeleton');
       const content = $('dashboard-content');
@@ -727,6 +738,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
           showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
           window.history.replaceState({}, document.title, window.location.pathname);
       }
+    } else if (!session && isDashboard) {
+      console.log('No active session on dashboard - redirecting to login')
+      window.location.replace('/login.html')
     }
   }
   

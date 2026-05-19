@@ -75,7 +75,7 @@
                         <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Priority Neural Sync</li>
                         <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> 30-Day History Access</li>
                     </ul>
-                    <a href="#" class="block text-center bg-white text-black font-bold py-4 rounded-xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Upgrade to Pro</a>
+                    <a href="#" id="upgrade-pro-btn" class="block text-center bg-white text-black font-bold py-4 rounded-xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">Upgrade to Pro</a>
                 </div>
 
                 <!-- Ultra -->
@@ -91,7 +91,7 @@
                         <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Full API Connectivity</li>
                         <li class="flex items-center gap-3"><span class="material-symbols-outlined text-white text-lg">check_circle</span> Unlimited History</li>
                     </ul>
-                    <a href="#" class="block text-center bg-white/5 border border-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all">Contact Us</a>
+                    <a href="#" id="contact-enterprise-btn" class="block text-center bg-white/5 border border-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all">Contact Us</a>
                 </div>
 
             </div>
@@ -105,11 +105,91 @@
                 <span class="text-white">Cloasta</span>
             </div>
             <div class="flex items-center gap-10">
-                <a href="#" class="hover:text-white transition-colors">Privacy</a>
-                <a href="#" class="hover:text-white transition-colors">Terms</a>
+                <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
             </div>
             <p class="text-gray-600">© 2025 Mystryx. All rights reserved.</p>
         </div>
     </footer>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script type="module">
+        import { getCurrentUser } from './js/auth.js';
+
+        function showToast(msg) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 translate-y-20 transition-all duration-300 z-[100] text-sm';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-20');
+            setTimeout(() => toast.classList.add('opacity-0', 'translate-y-20'), 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const upgradeBtn = document.getElementById('upgrade-pro-btn');
+            const contactBtn = document.getElementById('contact-enterprise-btn');
+
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    upgradeBtn.textContent = 'Processing...';
+                    upgradeBtn.style.pointerEvents = 'none';
+
+                    try {
+                        const user = await getCurrentUser();
+                        if (!user) {
+                            showToast('🔑 Please log in first to upgrade.');
+                            setTimeout(() => window.location.href = '/login.html', 1500);
+                            return;
+                        }
+
+                        const response = await fetch('/api/create-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: user.id, plan_tier: 'pro' })
+                        });
+                        const data = await response.json();
+                        
+                        if (data.order_id) {
+                            const options = {
+                                "key": data.key_id,
+                                "amount": data.amount,
+                                "currency": data.currency,
+                                "name": "Cloasta",
+                                "description": "Cloasta Pro Subscription",
+                                "order_id": data.order_id,
+                                "handler": async function (response) {
+                                    showToast('✅ Payment successful! Upgrading account...');
+                                    setTimeout(() => window.location.href = '/dashboard.html?upgraded=true', 1500);
+                                },
+                                "prefill": { "email": user.email },
+                                "theme": { "color": "#000000" }
+                            };
+                            const rzp = new window.Razorpay(options);
+                            rzp.open();
+                        } else {
+                            throw new Error(data.error || 'Checkout initialization failed');
+                        }
+                    } catch (err) {
+                        showToast(`❌ ${err.message}`);
+                    } finally {
+                        upgradeBtn.textContent = 'Upgrade to Pro';
+                        upgradeBtn.style.pointerEvents = 'auto';
+                    }
+                });
+            }
+
+            if (contactBtn) {
+                contactBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'mailto:support@cloasta.com?subject=Cloasta Enterprise Inquiry';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
