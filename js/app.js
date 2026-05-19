@@ -160,13 +160,11 @@ async function loadDashboard(existingSession) {
     if (usage) safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile));
     safeRun('HistoryLoad', renderHistory);
 
-    // FIX: Lazy load feature modules (no await) to prevent UI blocking
-    setTimeout(() => {
-      safeRun('VoiceInit', () => initVoice(handleGeneration));
-      safeRun('PassportInit', initPassport);
-      safeRun('SessionSyncInit', initSessionSync);
-      safeRun('TourInit', initTour);
-    }, 100);
+    // Initialize feature modules directly — no lazy loading delay
+    safeRun('VoiceInit', () => initVoice(handleGeneration));
+    safeRun('PassportInit', initPassport);
+    safeRun('SessionSyncInit', initSessionSync);
+    safeRun('TourInit', initTour);
 
     console.log('Dashboard load complete');
   } catch (err) {
@@ -486,21 +484,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
     const isDashboard = window.location.pathname.includes('dashboard');
     if (session && isDashboard) {
-      if (_dashboardLoaded) return; // Prevent duplicate loads
+      if (_dashboardLoaded) return;
       _dashboardLoaded = true;
-      
       await loadDashboard(session);
-      
-      // Instant reveal — no transition delay
-      requestAnimationFrame(() => {
-        const skeleton = $('loading-skeleton');
-        const content = $('dashboard-content');
-        if (skeleton) skeleton.style.display = 'none';
-        if (content) { content.style.opacity = '1'; content.style.visibility = 'visible'; }
-        // Re-bind navigation after dynamic content has been injected
-        initNavigation();
-      });
-      
+      initNavigation();
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('upgraded') === 'true') {
         showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');
