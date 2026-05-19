@@ -76,7 +76,10 @@ body {
     z-index: 100;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 20px 0 50px rgba(0, 0, 0, 0.9);
-    transition: transform 0.3s ease;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
   }
 
   #sidebar.sidebar-hidden {
@@ -87,6 +90,11 @@ body {
   #sidebar .hidden.lg\:block,
   .sidebar-item span.hidden {
     display: block !important;
+  }
+  
+  /* Eliminate 300ms tap delay on mobile */
+  .sidebar-item, button, a, [data-nav] {
+    touch-action: manipulation;
   }
 }
 
@@ -129,7 +137,7 @@ body {
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.05s ease;
 }
 
 .global-loader-overlay.active {
@@ -168,3 +176,16 @@ body {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
+
+/* SCREEN SWITCHING CSS */
+.screen {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+}
+.screen.active {
+    display: block;
+    opacity: 1;
+    animation: none;
+}
+

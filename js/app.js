@@ -58,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.onunhandledrejection = (event) => { logError('UnhandledPromise', event.reason); };
 
   // Wire static button listeners immediately
-  $('logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
-  $('settings-logout-btn')?.addEventListener('click', async () => await safeRun('Logout', logout));
+  $('logout-btn')?.addEventListener('click', logout);
+  $('settings-logout-btn')?.addEventListener('click', logout);
   $('mobile-menu-toggle')?.addEventListener('click', () => {
     const sidebar = $('sidebar');
     const overlay = $('sidebar-overlay');
@@ -106,14 +106,14 @@ async function loadDashboard(existingSession) {
     updateAvatarUI(quickName);
     if ($('user-email')) $('user-email').textContent = session.user.email;
 
-    // DB profile query
-    let profile = null;
-    try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-      if (!data || (error && error.code === 'PGRST116')) { window.location.replace('/onboarding.html'); return; }
-      if (error) console.error('Profile error:', error);
-      profile = data;
-    } catch(dbErr) { console.error('DB query failed:', dbErr); }
+    // Run both queries in parallel to drastically improve perceived load time
+    const [profileRes, usageRes] = await Promise.allSettled([
+      supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+      supabase.from('usage_tracking').select('*').eq('user_id', session.user.id).single()
+    ]);
+
+    let profile = profileRes.status === 'fulfilled' ? profileRes.value.data : null;
+    let usage = usageRes.status === 'fulfilled' ? usageRes.value.data : null;
 
     if (!profile) { window.location.replace('/onboarding.html'); return; }
     if (!profile.onboarding_completed) { window.location.replace('/onboarding.html'); return; }
@@ -129,50 +129,44 @@ async function loadDashboard(existingSession) {
     if ($('user-plan')) $('user-plan').textContent = planConfig.label;
     if ($('sidebar-tier')) $('sidebar-tier').textContent = planConfig.label + ' TIER';
 
-    // Sync name if missing
+    // Sync name silently in background if missing
     if (!profile.full_name && finalName !== 'User') {
-      supabase.from('profiles').update({ full_name: finalName }).eq('id', session.user.id).catch(() => {});
+      supabase.from('profiles').update({ full_name: finalName }).eq('id', session.user.id).then(()=>{});
     }
 
     safeRun('ProfileCardUpdate', () => updateProfileCard(profile));
 
-    // Load usage
-    let usage = null;
-    try {
-      const { data: usageData } = await supabase.from('usage_tracking').select('*').eq('user_id', session.user.id).single();
-      usage = usageData;
-      
-      // Reset if new day
-      if (usage && usage.reset_date) {
-        const today = new Date().toDateString();
-        const resetDate = new Date(usage.reset_date).toDateString();
-        if (resetDate !== today) {
-          usage.prompts_used = 0;
-          await supabase.from('usage_tracking').update({ prompts_used: 0, reset_date: new Date().toISOString() }).eq('user_id', session.user.id);
-        }
+    // Handle usage data
+    if (usage && usage.reset_date) {
+      const today = new Date().toDateString();
+      const resetDate = new Date(usage.reset_date).toDateString();
+      if (resetDate !== today) {
+        usage.prompts_used = 0;
+        supabase.from('usage_tracking').update({ prompts_used: 0, reset_date: new Date().toISOString() }).eq('user_id', session.user.id).then(()=>{});
       }
+    }
 
-      const promptsUsed = usage?.prompts_used || 0;
-      if ($('prompts-used')) $('prompts-used').textContent = promptsUsed;
-      if ($('prompts-remaining')) {
-        $('prompts-remaining').textContent = plan === 'free' ? Math.max(0, 5 - promptsUsed) : '∞';
-      }
-      if ($('sync-usage')) {
-        const syncsToday = usage?.quota_usage?.syncs_today || 0;
-        $('sync-usage').textContent = plan === 'free' ? `${syncsToday}/2` : '∞';
-      }
-    } catch(uErr) { console.error('Usage query failed:', uErr); }
+    const promptsUsed = usage?.prompts_used || 0;
+    if ($('prompts-used')) $('prompts-used').textContent = promptsUsed;
+    if ($('prompts-remaining')) {
+      $('prompts-remaining').textContent = plan === 'free' ? Math.max(0, 5 - promptsUsed) : '∞';
+    }
+    if ($('sync-usage')) {
+      const syncsToday = usage?.quota_usage?.syncs_today || 0;
+      $('sync-usage').textContent = plan === 'free' ? `${syncsToday}/2` : '∞';
+    }
 
     safeRun('MemoryModesLoad', () => loadMemoryModes(profile));
     if (usage) safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile));
     safeRun('HistoryLoad', renderHistory);
 
-    // FIX: Initialize feature modules AFTER dashboard data is loaded
-    // This ensures getCurrentUser() returns a valid user inside each init
-    safeRun('VoiceInit', () => initVoice(handleGeneration));
-    safeRun('PassportInit', initPassport);
-    safeRun('SessionSyncInit', initSessionSync);
-    safeRun('TourInit', initTour);
+    // FIX: Lazy load feature modules (no await) to prevent UI blocking
+    setTimeout(() => {
+      safeRun('VoiceInit', () => initVoice(handleGeneration));
+      safeRun('PassportInit', initPassport);
+      safeRun('SessionSyncInit', initSessionSync);
+      safeRun('TourInit', initTour);
+    }, 100);
 
     console.log('Dashboard load complete');
   } catch (err) {
@@ -281,20 +275,22 @@ async function handleUpgrade(planTier = 'pro') {
 }
 
 export function showScreen(screenId) {
-  // Hide ALL screens
-  document.querySelectorAll('.screen').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+  // Hide ALL screens efficiently
+  const screens = document.querySelectorAll('.screen');
+  for (let i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('active');
+  }
   
   // Normalize the ID
   const cleanId = screenId.replace('screen-', '');
   const target = document.getElementById('screen-' + cleanId) || document.getElementById(screenId);
   
   if (target) { 
-    target.style.display = 'block'; 
     target.classList.add('active'); 
   } else {
     console.warn('[Nav] Screen not found:', screenId, '→ falling back to overview');
     const fallback = document.getElementById('screen-overview');
-    if (fallback) { fallback.style.display = 'block'; fallback.classList.add('active'); }
+    if (fallback) fallback.classList.add('active');
   }
   
   // Update sidebar active states
@@ -363,8 +359,15 @@ async function handleGeneration(text) {
   await safeRun('Generation', async () => {
     const user = await getCurrentUser();
     if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single();
-    const { data: usage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
+    
+    // Single parallel fetch for both profile AND usage (was 2 sequential queries + 1 duplicate)
+    const [profileRes, usageRes] = await Promise.all([
+      supabase.from('profiles').select('subscription_plan, active_mode, target_ai').eq('id', user.id).single(),
+      supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single()
+    ]);
+    const profile = profileRes.data;
+    const usage = usageRes.data;
+    
     if ((profile?.subscription_plan || 'free') === 'free' && (usage?.prompts_used || 0) >= 5) {
       showUpgradeModal();
       return;
@@ -373,14 +376,13 @@ async function handleGeneration(text) {
     const btnText = $('generate-prompt-btn')?.querySelector('span');
     if (loader) loader.classList.remove('hidden');
     if (btnText) btnText.textContent = 'Thinking...';
-    const { data: p } = await supabase.from('profiles').select('active_mode, target_ai').eq('id', user.id).single();
-    let prompt = await generatePrompt(text, p?.active_mode || 'founder');
+    let prompt = await generatePrompt(text, profile?.active_mode || 'founder');
     if (!prompt) throw new Error('AI failed to respond');
     prompt = cleanPrompt(prompt);
     window._CloastaGeneratedPrompt = prompt;
     navigateTo('output');
     initOutputScreen();
-    await saveToHistory(prompt, text, p?.active_mode || 'founder');
+    await saveToHistory(prompt, text, profile?.active_mode || 'founder');
     const { data: updatedUsage } = await supabase.from('usage_tracking').select('prompts_used').eq('user_id', user.id).single();
     if (updatedUsage && $('prompts-used')) $('prompts-used').textContent = updatedUsage.prompts_used || 0;
     if (updatedUsage && $('prompts-remaining')) {
@@ -479,19 +481,26 @@ async function saveSettings() {
 // ==========================================
 // AUTH STATE → DASHBOARD LOADER
 // ==========================================
+let _dashboardLoaded = false;
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
     const isDashboard = window.location.pathname.includes('dashboard');
     if (session && isDashboard) {
-      const skeleton = $('loading-skeleton');
-      const content = $('dashboard-content');
-      if (skeleton) skeleton.classList.remove('hidden');
-      if (content) content.classList.add('opacity-0');
+      if (_dashboardLoaded) return; // Prevent duplicate loads
+      _dashboardLoaded = true;
+      
       await loadDashboard(session);
-      // Re-bind navigation after dynamic content has been injected
-      initNavigation();
-      if (skeleton) skeleton.classList.add('hidden');
-      if (content) content.classList.remove('opacity-0');
+      
+      // Instant reveal — no transition delay
+      requestAnimationFrame(() => {
+        const skeleton = $('loading-skeleton');
+        const content = $('dashboard-content');
+        if (skeleton) skeleton.style.display = 'none';
+        if (content) { content.style.opacity = '1'; content.style.visibility = 'visible'; }
+        // Re-bind navigation after dynamic content has been injected
+        initNavigation();
+      });
+      
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('upgraded') === 'true') {
         showToast('🎉 Welcome to Cloasta Pro! Unlimited access unlocked.');

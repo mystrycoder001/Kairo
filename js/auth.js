@@ -19,7 +19,7 @@ const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let _authRedirecting = false; // Guard against redirect loops
 
 // Global Loader Utility
-export function showGlobalLoader(text = "Syncing...") {
+export function showGlobalLoader(text = "Loading...") {
     let loader = document.getElementById('global-cinematic-loader');
     if (!loader) {
         loader = document.createElement('div');
@@ -34,15 +34,13 @@ export function showGlobalLoader(text = "Syncing...") {
     const textEl = document.getElementById('global-loader-text');
     if (textEl) textEl.textContent = text;
     
-    // Force reflow and show
-    void loader.offsetWidth;
     loader.classList.add('active');
     
-    // Safety timeout — never block UI longer than 10s
+    // HARD CAP: Max 100ms loader to prevent UI blocking (per user req)
     if (window._loaderTimeout) clearTimeout(window._loaderTimeout);
     window._loaderTimeout = setTimeout(() => {
         hideGlobalLoader();
-    }, 10000);
+    }, 100);
 }
 
 export function hideGlobalLoader() {
@@ -204,8 +202,15 @@ export async function logout() {
     currentUser = null;
     currentUserTimestamp = 0;
     _authRedirecting = false;
-    await supabase.auth.signOut()
-    window.location.href = '/login.html';
+    
+    // Clear storage to prevent stale UI
+    try {
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+    } catch(e) {}
+    
+    await supabase.auth.signOut();
+    window.location.replace('/login.html');
 }
 
 // Route Guard — redirect to login if not authenticated
