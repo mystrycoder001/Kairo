@@ -135,61 +135,94 @@ function showLoadingSkeleton(show) {
 }
 
 async function loadDashboard() {
-  const user = await getCurrentUser();
-  if (!user) return;
+  const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+  if (sessionErr) console.error('Session error:', sessionErr);
+  if (!session) {
+    console.warn('No active session found.');
+    window.location.href = '/login.html';
+    return;
+  }
 
-  // Fetch Profile, Usage, and History in parallel
-  const [profileResult, usageResult] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('usage_tracking').select('*').eq('user_id', user.id).single()
-  ]);
+  // After getting session, log everything:
+  console.log('User ID:', session.user.id);
+  console.log('User metadata:', session.user.user_metadata);
 
-  const profileErr = profileResult.error;
-  const profile = profileResult.data;
-  
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
+
+  console.log('Profile data:', profile);
+  console.log('Profile error:', profileError);
+
+  const usageResult = await supabase
+    .from('usage_tracking')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .single();
+
   // No profile row (PGRST116) or null → onboarding
-  if (!profile || (profileErr && profileErr.code === 'PGRST116')) {
+  if (!profile || (profileError && profileError.code === 'PGRST116')) {
+    console.log('Redirecting to onboarding due to missing profile or PGRST116');
     window.location.href = '/onboarding.html';
     return;
   }
-  if (profileErr) throw profileErr;
+  if (profileError) {
+    console.error('Profile error occurred:', profileError);
+  }
   
   if (!profile.onboarding_completed) {
+    console.log('Redirecting to onboarding because onboarding_completed is false');
     window.location.href = '/onboarding.html';
     return;
   }
 
   _cachedProfile = profile;
 
-  // 2. Update UI with real data
+  // Get name from multiple sources
   const { data: { user: authUser } } = await supabase.auth.getUser();
+  console.log('Auth user metadata:', authUser?.user_metadata);
+
   const displayName = 
     profile?.full_name ||
     profile?.name ||
     authUser?.user_metadata?.full_name ||
     authUser?.user_metadata?.name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split('@')[0] ||
+    session.user.user_metadata?.full_name ||
+    session.user.user_metadata?.name ||
+    session.user.email?.split('@')[0] ||
     'User';
 
-  document.querySelectorAll(
-    '#user-name, .user-name, #sidebar-name, .sidebar-name, [data-user-name]'
-  ).forEach(el => el.textContent = displayName);
+  console.log('Display name resolved:', displayName);
+
+  // Force update every possible element
+  ['#user-name', '.user-name', '#sidebar-name', 
+   '.sidebar-name', '[data-user-name]', 
+   '#display-name', '.display-name'].forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      el.textContent = displayName;
+      console.log('Updated element:', sel);
+    });
+  });
   
-  if ($('user-email')) $('user-email').textContent = user.email;
+  if ($('user-email')) $('user-email').textContent = session.user.email;
   if ($('user-plan')) $('user-plan').textContent = (profile.subscription_plan || 'FREE').toUpperCase();
   if ($('sidebar-tier')) $('sidebar-tier').textContent = (profile.subscription_plan || 'FREE').toUpperCase() + ' TIER';
   
-  document.querySelectorAll(
-    '#user-avatar, .user-avatar, #sidebar-avatar, .avatar-initial'
-  ).forEach(el => el.textContent = displayName[0].toUpperCase());
+  // Update avatar
+  ['#user-avatar', '.user-avatar', '#sidebar-avatar',
+   '.avatar-initial', '.avatar'].forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      el.textContent = displayName[0].toUpperCase();
+    });
+  });
 
   // Update profiles table with display name if missing
   if (!profile?.full_name && displayName !== 'User') {
     await supabase.from('profiles')
       .update({ full_name: displayName })
-      .eq('id', user.id);
+      .eq('id', session.user.id);
   }
 
   // 3. Profile Card Details
@@ -388,6 +421,14 @@ function updateProfileCard(profile) {
 }
 
 function initNavigation() {
+    // Open dashboard.html and find ALL screen sections. Log their exact IDs to console:
+    document.querySelectorAll('[id]').forEach(el => {
+      if (el.id.includes('screen') || 
+          el.classList.contains('screen')) {
+        console.log('Found screen:', el.id, el.className);
+      }
+    });
+
     const navElements = document.querySelectorAll('[data-screen], [data-nav], .nav-item, nav a, aside a, .sidebar a, .sidebar-item');
     navElements.forEach(item => {
         if (item.dataset.navBound) return;
@@ -400,6 +441,10 @@ function initNavigation() {
             
             if (!target) return;
             
+            console.log('Nav click - target screen:', target);
+            console.log('Looking for element:', 'screen-' + target);
+            console.log('Found element:', document.getElementById('screen-' + target));
+
             if (target === 'upgrade') {
                 e.preventDefault();
                 showUpgradeModal();
