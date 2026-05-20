@@ -1,25 +1,32 @@
 const { callAIWaterfall, verifyAndLimit } = require('./_ai-waterfall');
 
-const SYSTEM_PROMPT_FREE = `You are a standard AI prompt formatter. 
-Transform the user's input into a basic, structured prompt.
-Do not invent extensive deep context. Keep it generic and standard.
-Output ONLY the final prompt text. No explanation. No preamble. No markdown fences.`;
+const SYSTEM_PROMPT = `You are an expert AI prompt engineer.
+The user will give you a rough idea, voice transcription, 
+or vague request in plain language.
 
-const SYSTEM_PROMPT_PRO = `You are an elite AI prompt engineer for Cloasta.
-Transform the user's rough idea or voice transcript into a DEEP, highly structured, memory-aware AI prompt.
-Incorporate advanced context optimization and formatting suited perfectly for elite AI (ChatGPT/Claude/Gemini).
-Make it feel 10x more intelligent. 
-Output ONLY the final prompt text. No explanation. No preamble. No markdown fences. 
-Just the prompt, ready to copy-paste.`;
+Your job: Transform it into a perfect, structured AI prompt
+that gets excellent results from ANY AI tool (ChatGPT, Claude, Gemini).
 
-const AI_MODE_INSTRUCTIONS = {
-  'chatgpt': 'Optimize for ChatGPT: use structured, balanced formatting with clear sections.',
-  'claude': 'Optimize for Claude: use detailed, contextual formatting with nuanced instructions.',
-  'gemini': 'Optimize for Gemini: use concise, organized formatting with clear structure.',
-  'grok': 'Optimize for Grok: use conversational, witty formatting with direct instructions.',
-  'cursor': 'Optimize for Cursor: use code-focused, technical formatting with precise specifications.',
-  'common': 'Optimize for general AI: use universal formatting that works across all AI platforms.',
-};
+Rules:
+1. Start with a clear role: "You are a [role]..."
+2. Include specific instructions, format, tone, constraints
+3. Add context that helps the AI understand the goal
+4. Make it copy-paste ready for any AI tool
+5. Output ONLY the final prompt — no explanation, no preamble
+6. No asterisks, no markdown, no bullet symbols
+7. Clean plain text only
+8. Maximum 250 words
+
+Example input: "help me write youtube video about AI"
+Example output:
+You are an expert YouTube content strategist and scriptwriter.
+Write a compelling 8-minute YouTube video script about artificial 
+intelligence for a general audience. Include: an attention-grabbing 
+hook in the first 30 seconds, 3 main sections explaining what AI is, 
+how it affects daily life, and what the future holds, relatable 
+examples and analogies throughout, and a strong call to action at 
+the end. Tone: conversational, engaging, and optimistic. Format the 
+script with clear section headers and estimated timing for each part.`;
 
 module.exports = async function handler(req, res) {
   // CORS Headers
@@ -49,17 +56,29 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // FIX: Use subscription_plan (not plan_tier which doesn't exist)
-    const plan = (profile.subscription_plan || 'free').toLowerCase();
-    const isFree = plan === 'free';
-    const basePrompt = isFree ? SYSTEM_PROMPT_FREE : SYSTEM_PROMPT_PRO;
-    
-    // Add AI mode optimization
-    const aiModeHint = AI_MODE_INSTRUCTIONS[targetAi] || AI_MODE_INSTRUCTIONS['common'];
-    const finalSystemPrompt = `${basePrompt}\nActive Mode Context: ${mode}\n${aiModeHint}`;
+    let finalSystemPrompt = SYSTEM_PROMPT;
+    if (mode && mode !== 'Default') {
+      finalSystemPrompt += `\nActive Mode Context: ${mode}`;
+    }
+    if (targetAi && targetAi !== 'common') {
+      finalSystemPrompt += `\nOptimization target: ${targetAi}`;
+    }
     
     const result = await callAIWaterfall(finalSystemPrompt, text.trim());
-    return res.status(200).json({ result, text: result });
+    
+    let cleanPrompt = result || '';
+    cleanPrompt = cleanPrompt
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`/g, '')
+      .trim();
+
+    if (!cleanPrompt) {
+      cleanPrompt = `You are a helpful assistant. Please perform the following task: ${text}`;
+    }
+
+    return res.status(200).json({ result: cleanPrompt, prompt: cleanPrompt });
   } catch (err) {
     console.error('generate-prompt error:', err);
     return res.status(500).json({ error: 'AI service error. Please try again.' });

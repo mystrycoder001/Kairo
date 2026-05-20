@@ -313,6 +313,20 @@
         ">Copy</button>
       </div>
       <p id="voice-prompt-output" style="color:white; font-size:15px; line-height:1.6; margin:0; white-space:pre-wrap"></p>
+      <div style="display:flex; gap:12px; margin-top:16px">
+        <button id="open-chatgpt-btn" onclick="openInChatGPT()" style="
+          flex:1; background:#00A67E; color:white; border:none;
+          padding:12px; border-radius:8px; cursor:pointer;
+          font-weight:600; font-size:14px; text-align:center;
+          transition: background 0.2s;
+        ">Open in ChatGPT</button>
+        <button id="open-claude-btn" onclick="openInClaude()" style="
+          flex:1; background:#D97706; color:white; border:none;
+          padding:12px; border-radius:8px; cursor:pointer;
+          font-weight:600; font-size:14px; text-align:center;
+          transition: background 0.2s;
+        ">Open in Claude</button>
+      </div>
     </div>
   </div>
 
@@ -713,7 +727,11 @@ async function generatePromptFromVoice() {
     const prompt = data.result || data.prompt || data.text || ''
     if (prompt) {
       document.getElementById('voice-prompt-output').textContent = prompt
-      document.getElementById('voice-output-container').style.display = 'block'
+      const container = document.getElementById('voice-output-container')
+      container.style.display = 'block'
+      setTimeout(() => {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 50)
     } else {
       alert('API error: ' + JSON.stringify(data))
     }
@@ -732,6 +750,34 @@ function copyVoicePrompt() {
     const btn = document.getElementById('copy-btn')
     btn.textContent = 'Copied!'
     setTimeout(() => btn.textContent = 'Copy', 2000)
+  }
+}
+
+function openInChatGPT() {
+  const text = document.getElementById('voice-prompt-output')?.textContent
+  if (text) {
+    navigator.clipboard.writeText(text)
+    const btn = document.getElementById('open-chatgpt-btn')
+    const originalText = btn.textContent
+    btn.textContent = 'Copied & Opening...'
+    setTimeout(() => {
+      btn.textContent = originalText
+      window.open('https://chat.openai.com', '_blank')
+    }, 1000)
+  }
+}
+
+function openInClaude() {
+  const text = document.getElementById('voice-prompt-output')?.textContent
+  if (text) {
+    navigator.clipboard.writeText(text)
+    const btn = document.getElementById('open-claude-btn')
+    const originalText = btn.textContent
+    btn.textContent = 'Copied & Opening...'
+    setTimeout(() => {
+      btn.textContent = originalText
+      window.open('https://claude.ai', '_blank')
+    }, 1000)
   }
 }
 </script>
