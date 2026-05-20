@@ -77,12 +77,8 @@ function closeMobileSidebar() {
 
 async function loadDashboard(existingSession) {
   console.log('loadDashboard() called');
-  const skeleton = $('loading-skeleton');
   const content = $('dashboard-content');
   
-  if (skeleton) skeleton.classList.remove('hidden');
-  if (content) content.classList.add('hidden');
-
   try {
     let session = existingSession;
     if (!session) {
@@ -164,8 +160,7 @@ async function loadDashboard(existingSession) {
   } catch (err) {
     console.error('loadDashboard crashed:', err.message, err.stack);
   } finally {
-    // Hide skeleton and reveal premium dashboard content instantly
-    if (skeleton) skeleton.classList.add('hidden');
+    // Reveal premium dashboard content instantly
     if (content) content.classList.remove('hidden');
   }
 }
