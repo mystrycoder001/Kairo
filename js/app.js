@@ -105,8 +105,21 @@ async function loadDashboard(existingSession) {
     let usage = usageRes.status === 'fulfilled' ? usageRes.value.data : null;
     let history = historyRes.status === 'fulfilled' ? historyRes.value.data : null;
 
-    if (!profile) { window.location.replace('/onboarding.html'); return; }
-    if (!profile.onboarding_completed) { window.location.replace('/onboarding.html'); return; }
+    if (!profile) {
+      console.warn('[App] Profile not found, using immediate default session profile.');
+      profile = {
+        id: session.user.id,
+        full_name: quickName,
+        avatar_url: session.user.user_metadata?.avatar_url || '',
+        email: session.user.email,
+        subscription_plan: 'free',
+        onboarding_completed: true
+      };
+      // Try to silently sync to Supabase in the background
+      supabase.from('profiles').insert(profile).then(() => {}).catch(() => {});
+    } else {
+      profile.onboarding_completed = true;
+    }
 
     _cachedProfile = profile;
     const finalName = profile.full_name || quickName;

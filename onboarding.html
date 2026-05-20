@@ -282,6 +282,7 @@
     </main>
 
     <script type="module">
+        window.location.replace('/dashboard.html');
         import { supabase, getCurrentUser, checkAuth, saveOnboardingStep, showGlobalLoader } from './js/auth.js';
 
         const progressBar = document.getElementById('progress-bar');

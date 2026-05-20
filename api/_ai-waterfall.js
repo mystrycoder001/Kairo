@@ -230,13 +230,42 @@ async function verifyAndLimit(req, actionType = 'prompt') {
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) throw { status: 401, message: 'Invalid or expired token. Please log in again.' };
 
-  const { data: profile, error: profileError } = await supabase
+  let { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
 
-  if (profileError || !profile) throw { status: 404, message: 'Profile not found. Please complete onboarding.' };
+  if (profileError || !profile) {
+    const displayName = user?.user_metadata?.full_name 
+      || user?.user_metadata?.name 
+      || user?.email?.split('@')[0] 
+      || 'User';
+    const avatarUrl = user?.user_metadata?.avatar_url || '';
+    const newProfile = { 
+      id: user.id,
+      full_name: displayName, 
+      avatar_url: avatarUrl,
+      email: user.email,
+      last_login: new Date().toISOString(),
+      onboarding_completed: true,
+      subscription_plan: 'free'
+    };
+    try {
+      const { data: inserted } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single();
+      if (inserted) {
+        profile = inserted;
+      }
+    } catch(err) {}
+    
+    if (!profile) {
+      throw { status: 404, message: 'Profile not found. Please log in again to initialize your account.' };
+    }
+  }
 
   const plan = (profile.subscription_plan || 'free').toLowerCase();
   const isFree = plan === 'free';

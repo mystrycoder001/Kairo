@@ -154,7 +154,7 @@ export async function initUserProfile(user) {
         avatar_url: avatarUrl,
         email: user.email,
         last_login: new Date().toISOString(),
-        onboarding_completed: false,
+        onboarding_completed: true,
         subscription_plan: 'free'
       };
       
@@ -290,32 +290,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       if (_authRedirecting) return;
       
       try {
-        let onboardingCompleted = false;
-        
-        const { data: profile, error: profileErr } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', activeUser.id)
-          .single();
-          
-        if (profile) {
-          onboardingCompleted = profile.onboarding_completed;
-        } else {
-          const localProfileStr = localStorage.getItem(`profile_${activeUser.id}`);
-          if (localProfileStr) {
-            onboardingCompleted = JSON.parse(localProfileStr).onboarding_completed;
-          }
-        }
-        
         _authRedirecting = true;
-        
-        if (onboardingCompleted === true) {
-          console.log('[Auth] Returning user → dashboard');
-          window.location.replace('/dashboard.html');
-        } else {
-          console.log('[Auth] New user → onboarding');
-          window.location.replace('/onboarding.html');
-        }
+        console.log('[Auth] User authenticated → dashboard');
+        window.location.replace('/dashboard.html');
       } catch(err) {
         console.error('[Auth] Redirect error:', err);
         _authRedirecting = true;
