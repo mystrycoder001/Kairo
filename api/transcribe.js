@@ -1,5 +1,6 @@
 const { IncomingForm } = require('formidable');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
@@ -43,19 +44,39 @@ module.exports = async function handler(req, res) {
         }
 
         const file = Array.isArray(audioFile) ? audioFile[0] : audioFile;
-        const formData = new FormData();
         const fileData = fs.readFileSync(file.filepath);
 
-        const blob = new Blob([fileData], { type: file.mimetype || 'audio/webm' });
-        formData.append('file', blob, file.originalFilename || 'audio.webm');
-        formData.append('model', 'whisper-large-v3');
+        // Manually build multipart form-data to ensure perfect cross-runtime compatibility without global FormData or Blob
+        const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+        const parts = [];
+
+        // Append file
+        parts.push(Buffer.from(
+            `--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="file"; filename="${file.originalFilename || 'audio.webm'}"\r\n` +
+            `Content-Type: ${file.mimetype || 'audio/webm'}\r\n\r\n`
+        ));
+        parts.push(fileData);
+
+        // Append model
+        parts.push(Buffer.from(
+            `\r\n--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="model"\r\n\r\n` +
+            `whisper-large-v3`
+        ));
+
+        // Close boundary
+        parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
+
+        const bodyBuffer = Buffer.concat(parts);
 
         const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${groqKey}`
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': `multipart/form-data; boundary=${boundary}`
             },
-            body: formData
+            body: bodyBuffer
         });
 
         const groqData = await groqRes.json();
