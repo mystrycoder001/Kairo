@@ -305,4 +305,5 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
+window.supabase = supabase;
 export { supabase }

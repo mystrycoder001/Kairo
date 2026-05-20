@@ -260,124 +260,63 @@
             </section>
 
             <!-- VOICE CAPTURE SCREEN -->
-            <div id="screen-voice" class="screen" style="display:none">
-              <div style="max-width:600px; margin:0 auto; padding:40px 20px; text-align:center">
-                
-                <h2 style="color:white; font-size:28px; margin-bottom:8px">Voice Capture</h2>
-                <p style="color:#888; margin-bottom:40px">Speak your idea. Get a perfect AI prompt.</p>
-                
-                <!-- Mic Button -->
-                <div id="mic-container" style="margin-bottom:32px">
-                  <button id="mic-btn" onclick="toggleRecording()" style="
-                    width:100px; height:100px;
-                    border-radius:50%;
-                    background:white;
-                    border:none;
-                    cursor:pointer;
-                    font-size:36px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    margin:0 auto;
-                    transition:all 0.3s;
-                    box-shadow:0 0 0 0 rgba(255,255,255,0.4);
-                  ">🎤</button>
-                  <p id="mic-status" style="color:#888; margin-top:16px; font-size:14px">
-                    Click to start recording
-                  </p>
-                </div>
-                
-                <!-- Waveform -->
-                <div id="waveform" style="
-                  display:none;
-                  height:40px;
-                  background:#111;
-                  border-radius:8px;
-                  margin-bottom:24px;
-                  overflow:hidden;
-                  position:relative;
-                ">
-                  <div id="wave-bar" style="
-                    position:absolute;
-                    bottom:0;left:0;right:0;
-                    height:100%;
-                    background:linear-gradient(90deg,#333,#fff,#333);
-                    animation:wave 1s infinite;
-                    opacity:0.3;
-                  "></div>
-                </div>
-                
-                <!-- Transcript -->
-                <div style="margin-bottom:24px">
-                  <textarea id="voice-transcript" 
-                    placeholder="Your transcript will appear here... or type directly"
-                    style="
-                      width:100%;
-                      min-height:120px;
-                      background:#111;
-                      border:1px solid #333;
-                      border-radius:12px;
-                      padding:16px;
-                      color:white;
-                      font-size:15px;
-                      resize:vertical;
-                      box-sizing:border-box;
-                      font-family:inherit;
-                    "></textarea>
-                </div>
-                
-                <!-- Generate Button -->
-                <button id="generate-btn" onclick="generatePromptFromVoice()" style="
-                  width:100%;
-                  background:white;
-                  color:black;
-                  border:none;
-                  border-radius:12px;
-                  padding:16px;
-                  font-size:16px;
-                  font-weight:700;
-                  cursor:pointer;
-                ">✦ Generate Prompt</button>
-                
-                <!-- Output -->
-                <div id="prompt-output-container" style="display:none; margin-top:24px">
-                  <div style="
-                    background:#111;
-                    border:1px solid #333;
-                    border-radius:12px;
-                    padding:20px;
-                    text-align:left;
-                  ">
-                    <div style="
-                      display:flex;
-                      justify-content:space-between;
-                      align-items:center;
-                      margin-bottom:12px;
-                    ">
-                      <span style="color:#888; font-size:12px; text-transform:uppercase">
-                        Generated Prompt
-                      </span>
-                      <button onclick="copyPrompt()" style="
-                        background:#222;
-                        border:1px solid #333;
-                        color:white;
-                        padding:6px 16px;
-                        border-radius:8px;
-                        cursor:pointer;
-                        font-size:13px;
-                      ">Copy</button>
-                    </div>
-                    <p id="prompt-output" style="
-                      color:white;
-                      font-size:15px;
-                      line-height:1.6;
-                      margin:0;
-                      white-space:pre-wrap;
-                    "></p>
-                  </div>
-                </div>
-                
-              </div>
+            <div id="screen-voice" class="screen">
+<div style="max-width:600px; margin:0 auto; padding:40px 20px; text-align:center">
+  
+  <h2 style="color:white; font-size:28px; margin-bottom:8px">Voice Capture</h2>
+  <p style="color:#888; margin-bottom:40px">Speak your idea. Get a perfect AI prompt.</p>
+  
+  <button id="mic-btn" onclick="toggleRecording()" style="
+    width:100px; height:100px;
+    border-radius:50%;
+    background:white;
+    border:none;
+    cursor:pointer;
+    font-size:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 16px;
+    transition:all 0.3s;
+  ">🎤</button>
+  
+  <p id="mic-status" style="color:#888; margin-bottom:32px; font-size:14px">
+    Click to start recording
+  </p>
+  
+  <textarea id="voice-transcript" 
+    placeholder="Transcript appears here... or type directly"
+    style="
+      width:100%; min-height:120px;
+      background:#111; border:1px solid #333;
+      border-radius:12px; padding:16px;
+      color:white; font-size:15px;
+      resize:vertical; box-sizing:border-box;
+      font-family:inherit; margin-bottom:16px;
+    "></textarea>
+  
+  <button onclick="generatePromptFromVoice()" style="
+    width:100%; background:white; color:black;
+    border:none; border-radius:12px;
+    padding:16px; font-size:16px;
+    font-weight:700; cursor:pointer;
+  " id="generate-voice-btn">✦ Generate Prompt</button>
+  
+  <div id="voice-output-container" style="display:none; margin-top:24px">
+    <div style="background:#111; border:1px solid #333; border-radius:12px; padding:20px; text-align:left">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <span style="color:#888; font-size:12px; text-transform:uppercase">Generated Prompt</span>
+        <button id="copy-btn" onclick="copyVoicePrompt()" style="
+          background:#222; border:1px solid #333;
+          color:white; padding:6px 16px;
+          border-radius:8px; cursor:pointer; font-size:13px;
+        ">Copy</button>
+      </div>
+      <p id="voice-prompt-output" style="color:white; font-size:15px; line-height:1.6; margin:0; white-space:pre-wrap"></p>
+    </div>
+  </div>
+
+</div>
             </div>
 
             <!-- PASSPORT SCREEN -->
@@ -695,5 +634,106 @@
         </div>
     </div>
     <script type="module" src="/js/app.js"></script>
+<script>
+let recognition = null
+let isRecording = false
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording()
+  } else {
+    startRecording()
+  }
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SR) {
+    alert('Please use Chrome for voice recording')
+    return
+  }
+  recognition = new SR()
+  recognition.continuous = true
+  recognition.interimResults = true
+  recognition.lang = 'en-US'
+  
+  recognition.onstart = () => {
+    isRecording = true
+    const btn = document.getElementById('mic-btn')
+    btn.style.background = '#ff4444'
+    btn.textContent = '⏹'
+    document.getElementById('mic-status').textContent = 'Recording... Click to stop'
+  }
+  
+  recognition.onresult = (e) => {
+    let t = ''
+    for (let i = 0; i < e.results.length; i++) {
+      t += e.results[i][0].transcript
+    }
+    document.getElementById('voice-transcript').value = t
+  }
+  
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') alert('Allow microphone access in browser settings')
+    stopRecording()
+  }
+  
+  recognition.onend = () => { if (isRecording) recognition.start() }
+  recognition.start()
+}
+
+function stopRecording() {
+  isRecording = false
+  if (recognition) recognition.stop()
+  const btn = document.getElementById('mic-btn')
+  if (btn) { btn.style.background = 'white'; btn.textContent = '🎤' }
+  const s = document.getElementById('mic-status')
+  if (s) s.textContent = 'Click to start recording'
+}
+
+async function generatePromptFromVoice() {
+  const transcript = document.getElementById('voice-transcript')?.value?.trim()
+  if (!transcript) { alert('Please record or type something first'); return }
+  
+  const btn = document.getElementById('generate-voice-btn')
+  btn.textContent = 'Generating...'
+  btn.disabled = true
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/generate-prompt', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (session?.access_token || '')
+      },
+      body: JSON.stringify({ text: transcript, transcript: transcript })
+    })
+    const data = await res.json()
+    const prompt = data.result || data.prompt || data.text || ''
+    if (prompt) {
+      document.getElementById('voice-prompt-output').textContent = prompt
+      document.getElementById('voice-output-container').style.display = 'block'
+    } else {
+      alert('API error: ' + JSON.stringify(data))
+    }
+  } catch(err) {
+    alert('Error: ' + err.message)
+  } finally {
+    btn.textContent = '✦ Generate Prompt'
+    btn.disabled = false
+  }
+}
+
+function copyVoicePrompt() {
+  const text = document.getElementById('voice-prompt-output')?.textContent
+  if (text) {
+    navigator.clipboard.writeText(text)
+    const btn = document.getElementById('copy-btn')
+    btn.textContent = 'Copied!'
+    setTimeout(() => btn.textContent = 'Copy', 2000)
+  }
+}
+</script>
 </body>
 </html>
