@@ -1,5 +1,5 @@
 import { supabase, getCurrentUser } from './auth.js';
-import { $ } from './app.js';
+import { $ } from './utils.js';
 
 export async function initTour() {
     const user = await getCurrentUser();

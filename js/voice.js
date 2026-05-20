@@ -1,5 +1,5 @@
 // js/voice.js — Frontend Stabilization Pass
-import { $, showToast, logError } from './app.js';
+import { $, showToast, logError } from './utils.js';
 
 export function initVoice(onComplete) {
     // 1. Element Discovery with Defensive Checks
@@ -15,22 +15,17 @@ export function initVoice(onComplete) {
     const stopBtn = $('stop-btn');
     const generateBtn = $('generate-prompt-btn');
 
-    let recognition = null;
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
     let timerInterval = null;
     let seconds = 0;
+    let mediaStream = null;
 
-    // 2. Dynamic Browser Support Check
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    // 3. UI Listeners
+    // 2. UI Listeners
     transcriptDisplay?.addEventListener('input', () => {
         if (generateBtn) generateBtn.disabled = transcriptDisplay.value.trim().length === 0;
     });
-
-    let activeRecordingSession = false;
 
     micBtn.addEventListener('click', async () => {
         if (isRecording) {
@@ -42,9 +37,7 @@ export function initVoice(onComplete) {
         } catch (err) {
             logError('VoiceCapture', err);
             showToast('❌ Could not start recording');
-            isRecording = false;
-            activeRecordingSession = false;
-            resetMicUI();
+            cleanupRecordingState();
         }
     });
 
@@ -57,88 +50,39 @@ export function initVoice(onComplete) {
         if (text) onComplete(text);
     });
 
-    // 4. Recording Logic
+    // Audio type detection helper
+    function getAudioExtension(mimeType) {
+        if (mimeType.includes('webm')) return 'webm';
+        if (mimeType.includes('mp4') || mimeType.includes('aac') || mimeType.includes('m4a')) return 'm4a';
+        if (mimeType.includes('ogg')) return 'ogg';
+        if (mimeType.includes('wav')) return 'wav';
+        return 'webm';
+    }
+
+    // 3. Recording Logic
     async function startRecordingFlow() {
-        if (activeRecordingSession) return;
-        activeRecordingSession = true;
+        if (isRecording) return;
         isRecording = true;
         resetUI();
 
-        // Dynamic support validation
-        const hasVoiceSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!SpeechRecognition;
-        if (!hasVoiceSupport) {
-            isRecording = false;
-            activeRecordingSession = false;
-            if (statusText) statusText.textContent = "Voice capture unavailable. Please type your idea.";
+        // Check browser capabilities
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showToast("⚠️ Voice capture is not supported in this browser context (requires HTTPS).");
+            if (statusText) statusText.textContent = "Voice unsupported. Please type.";
+            isRecording = false;
             resetMicUI();
             return;
         }
 
-        // Check for mic permission and cleanly release stream if mediaDevices is supported
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                tempStream.getTracks().forEach(track => track.stop());
-            } catch (err) {
-                isRecording = false;
-                activeRecordingSession = false;
-                showToast('🎤 Microphone permission required');
-                resetMicUI();
-                return;
-            }
-        }
-
-        // Instant UI update for high responsiveness
-        updateUIForRecording('Listening...');
-
-        if (SpeechRecognition) {
-            try {
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.lang = 'en-US';
-
-                let fullTranscript = transcriptDisplay?.value || '';
-
-                recognition.onstart = () => updateUIForRecording('Listening...');
-                recognition.onresult = (event) => {
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                    }
-                    if (finalTranscript && transcriptDisplay) {
-                        fullTranscript = (fullTranscript ? fullTranscript + ' ' : '') + finalTranscript;
-                        transcriptDisplay.value = fullTranscript.trim();
-                        if (generateBtn) generateBtn.disabled = false;
-                    }
-                };
-                recognition.onerror = (err) => {
-                    logError('SpeechRecognition', err);
-                    if (err.error !== 'no-speech' && err.error !== 'aborted') {
-                        tryMediaRecorderFallback();
-                    }
-                };
-                recognition.onend = () => {
-                    if (isRecording && recognition) {
-                        try { recognition.start(); } catch(e) { /* already started */ }
-                    }
-                };
-                recognition.start();
-                return;
-            } catch (e) {
-                logError('SpeechRecognitionInit', e);
-                tryMediaRecorderFallback();
-            }
-        } else {
-            tryMediaRecorderFallback();
-        }
-    }
-
-    async function tryMediaRecorderFallback() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            // Request microphone stream exactly once
+            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Instantly update UI to listening
+            updateUIForRecording('Listening...');
+
+            // Create MediaRecorder - let browser choose its default format
+            mediaRecorder = new MediaRecorder(mediaStream);
             audioChunks = [];
 
             mediaRecorder.ondataavailable = (e) => {
@@ -146,49 +90,67 @@ export function initVoice(onComplete) {
             };
 
             mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                await processAudioWithGroq(audioBlob);
-                stream.getTracks().forEach(track => track.stop());
+                const recordedMimeType = mediaRecorder.mimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunks, { type: recordedMimeType });
+                const ext = getAudioExtension(recordedMimeType);
+                
+                await processAudioWithGroq(audioBlob, ext, recordedMimeType);
+                
+                // Cleanup tracks
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
             };
 
             mediaRecorder.start();
-            updateUIForRecording('Neural Sync (Recording...)');
         } catch (err) {
-            logError('MediaRecorderFallback', err);
-            if (statusText) statusText.textContent = "Type your idea instead";
-            showToast('⚠️ Voice unavailable');
-            isRecording = false;
-            activeRecordingSession = false;
-            resetMicUI();
+            logError('VoiceStart', err);
+            const isPermDenied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.message?.toLowerCase().includes('permission');
+            const msg = isPermDenied ? '🎤 Microphone permission denied' : '⚠️ Voice unavailable or unsupported';
+            if (statusText) statusText.textContent = isPermDenied ? "Permission Required" : "Type your idea instead";
+            showToast(msg);
+            cleanupRecordingState();
         }
     }
 
     function stopRecordingFlow() {
+        if (!isRecording) return;
         isRecording = false;
-        activeRecordingSession = false;
-        if (recognition) {
-            try { recognition.stop(); } catch(e) { /* ignore */ }
-            recognition = null;
-        }
+        
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
+            try { mediaRecorder.stop(); } catch(e) { logError('MediaRecorderStop', e); }
         }
+        
         resetMicUI();
         stopTimer();
         if (statusText) statusText.textContent = 'Recording complete';
     }
 
+    function cleanupRecordingState() {
+        isRecording = false;
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+        resetMicUI();
+        stopTimer();
+    }
+
     function resetMicUI() {
-        if (micIcon) micIcon.textContent = 'mic';
-        if (micIcon) micIcon.classList.remove('animate-pulse');
+        if (micIcon) {
+            micIcon.textContent = 'mic';
+            micIcon.classList.remove('animate-pulse');
+        }
         if (micRings) micRings.classList.add('hidden');
         recordingDot?.classList.add('hidden');
         if (stopBtn) stopBtn.disabled = true;
     }
 
     function updateUIForRecording(status) {
-        if (micIcon) micIcon.textContent = 'graphic_eq';
-        if (micIcon) micIcon.classList.add('animate-pulse');
+        if (micIcon) {
+            micIcon.textContent = 'graphic_eq';
+            micIcon.classList.add('animate-pulse');
+        }
         if (micRings) micRings.classList.remove('hidden');
         if (statusText) statusText.textContent = status || 'Capture Active';
         recordingDot?.classList.remove('hidden');
@@ -201,12 +163,12 @@ export function initVoice(onComplete) {
         if (timerDisplay) timerDisplay.textContent = '00:00';
     }
 
-    async function processAudioWithGroq(blob) {
+    async function processAudioWithGroq(blob, ext, mimeType) {
         if (statusText) statusText.textContent = 'Transcribing...';
-        micIcon?.classList.add('animate-spin');
+        if (micIcon) micIcon.classList.add('animate-spin');
 
         const formData = new FormData();
-        formData.append('audio', blob, 'recording.webm');
+        formData.append('audio', blob, `recording.${ext}`);
 
         try {
             const response = await fetch('/api/transcribe', {
@@ -217,7 +179,6 @@ export function initVoice(onComplete) {
             if (!response.ok) throw new Error(data.error || 'Transcription failed');
 
             if (transcriptDisplay) {
-                // Append transcription to existing text
                 const existing = transcriptDisplay.value.trim();
                 transcriptDisplay.value = existing ? existing + ' ' + data.text : data.text;
                 if (generateBtn) generateBtn.disabled = false;
@@ -228,7 +189,7 @@ export function initVoice(onComplete) {
             if (statusText) statusText.textContent = "Voice unavailable. Type below.";
             showToast('❌ Transcription failed');
         } finally {
-            micIcon?.classList.remove('animate-spin');
+            if (micIcon) micIcon.classList.remove('animate-spin');
         }
     }
 

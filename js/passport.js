@@ -1,5 +1,5 @@
 // js/passport.js — AI Passport Identity Manager with Supabase
-import { $, showToast, cleanPrompt } from './app.js';
+import { $, showToast, cleanPrompt } from './utils.js';
 import { supabase, getCurrentUser, getAccessToken } from './auth.js';
 import { checkPassportLimit } from './usage.js';
 

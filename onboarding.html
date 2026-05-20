@@ -84,7 +84,6 @@
             to { opacity: 1; transform: scale(1); }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Confetti for Step 5 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script type="module">
@@ -474,11 +473,9 @@
         const transcribedText = $('ob-transcribed-text');
 
         let isRecording = false;
-        let recognition = null;
         let mediaRecorder = null;
         let audioChunks = [];
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let mediaStream = null;
 
         micBtn?.addEventListener('click', async () => {
             if (isRecording) {
@@ -489,85 +486,42 @@
                 await startRecordingFlow();
             } catch (err) {
                 console.error('[Onboarding Voice]', err);
-                isRecording = false;
-                resetMicUI();
+                cleanupRecordingState();
             }
         });
 
+        function getAudioExtension(mimeType) {
+            if (mimeType.includes('webm')) return 'webm';
+            if (mimeType.includes('mp4') || mimeType.includes('aac') || mimeType.includes('m4a')) return 'm4a';
+            if (mimeType.includes('ogg')) return 'ogg';
+            if (mimeType.includes('wav')) return 'wav';
+            return 'webm';
+        }
+
         async function startRecordingFlow() {
+            if (isRecording) return;
             isRecording = true;
             if (demoOutput) demoOutput.classList.add('hidden');
             if (transcribedText) transcribedText.value = '';
-            
-            // Check mic permissions
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    await navigator.mediaDevices.getUserMedia({ audio: true });
-                } catch (err) {
-                    console.warn('Microphone permission denied', err);
-                    isRecording = false;
-                    if (micStatus) micStatus.textContent = 'Mic Permission Required';
-                    return;
-                }
-            } else {
-                console.warn('navigator.mediaDevices is not supported in this context');
+
+            // Check browser capabilities
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 isRecording = false;
                 if (micStatus) micStatus.textContent = 'Voice capture unsupported (requires HTTPS)';
+                resetMicUI();
                 return;
             }
 
-            if (micIcon) micIcon.textContent = 'graphic_eq';
-            if (micRings) micRings.classList.remove('hidden');
-            if (micStatus) micStatus.textContent = 'Listening...';
-
-            if (SpeechRecognition) {
-                try {
-                    recognition = new SpeechRecognition();
-                    recognition.continuous = true;
-                    recognition.interimResults = true;
-                    recognition.lang = 'en-US';
-
-                    let fullTranscript = '';
-
-                    recognition.onresult = (event) => {
-                        let finalTranscript = '';
-                        for (let i = event.resultIndex; i < event.results.length; ++i) {
-                            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                        }
-                        if (finalTranscript) {
-                            fullTranscript = (fullTranscript ? fullTranscript + ' ' : '') + finalTranscript;
-                            if (transcribedText) transcribedText.value = fullTranscript.trim();
-                            if (demoOutput) demoOutput.classList.remove('hidden');
-                        }
-                    };
-
-                    recognition.onerror = (err) => {
-                        console.warn('SpeechRecognition error in onboarding:', err);
-                        if (err.error !== 'no-speech' && err.error !== 'aborted') {
-                            tryMediaRecorderFallback();
-                        }
-                    };
-
-                    recognition.onend = () => {
-                        if (isRecording && recognition) {
-                            try { recognition.start(); } catch(e) { }
-                        }
-                    };
-
-                    recognition.start();
-                } catch (e) {
-                    console.warn('SpeechRecognition start failed in onboarding:', e);
-                    tryMediaRecorderFallback();
-                }
-            } else {
-                tryMediaRecorderFallback();
-            }
-        }
-
-        async function tryMediaRecorderFallback() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                // Request stream exactly once
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                if (micIcon) micIcon.textContent = 'graphic_eq';
+                if (micRings) micRings.classList.remove('hidden');
+                if (micStatus) micStatus.textContent = 'Listening...';
+
+                // Create recorder - let browser choose its default format
+                mediaRecorder = new MediaRecorder(mediaStream);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = (e) => {
@@ -575,33 +529,45 @@
                 };
 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    stream.getTracks().forEach(track => track.stop());
-                    await processAudioWithGroq(audioBlob);
+                    const recordedMimeType = mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: recordedMimeType });
+                    const ext = getAudioExtension(recordedMimeType);
+                    
+                    await processAudioWithGroq(audioBlob, ext, recordedMimeType);
+                    
+                    if (mediaStream) {
+                        mediaStream.getTracks().forEach(track => track.stop());
+                    }
                 };
 
                 mediaRecorder.start();
-                if (micStatus) micStatus.textContent = 'Recording Audio...';
             } catch (err) {
-                console.error('MediaRecorder fallback failed in onboarding:', err);
-                isRecording = false;
-                resetMicUI();
-                if (micStatus) micStatus.textContent = 'Voice Sync Failed';
+                console.error('MediaRecorder start failed in onboarding:', err);
+                const isPermDenied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.message?.toLowerCase().includes('permission');
+                if (micStatus) micStatus.textContent = isPermDenied ? 'Mic Permission Required' : 'Voice capture failed';
+                cleanupRecordingState();
             }
         }
 
         function stopRecordingFlow() {
+            if (!isRecording) return;
             isRecording = false;
-            if (recognition) {
-                try { recognition.stop(); } catch(e) { }
-                recognition = null;
-            }
+            
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
+                try { mediaRecorder.stop(); } catch(e) { console.error('onboarding stop failed:', e); }
             }
             resetMicUI();
             if (micStatus) micStatus.textContent = 'Capture Complete';
             if (demoOutput) demoOutput.classList.remove('hidden');
+        }
+
+        function cleanupRecordingState() {
+            isRecording = false;
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            resetMicUI();
         }
 
         function resetMicUI() {
@@ -610,12 +576,12 @@
             isRecording = false;
         }
 
-        async function processAudioWithGroq(blob) {
+        async function processAudioWithGroq(blob, ext, mimeType) {
             if (micStatus) micStatus.textContent = 'Transcribing...';
             if (micIcon) micIcon.classList.add('animate-spin');
 
             const formData = new FormData();
-            formData.append('audio', blob, 'recording.webm');
+            formData.append('audio', blob, `recording.${ext}`);
 
             try {
                 const response = await fetch('/api/transcribe', {

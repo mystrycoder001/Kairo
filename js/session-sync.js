@@ -1,5 +1,5 @@
 // js/session-sync.js — Session Sync Logic with Supabase
-import { $, showToast, cleanPrompt } from './app.js';
+import { $, showToast, cleanPrompt } from './utils.js';
 import { supabase, getCurrentUser, getAccessToken } from './auth.js';
 import { checkSessionAccess } from './usage.js';
 

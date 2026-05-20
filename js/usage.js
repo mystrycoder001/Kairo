@@ -1,5 +1,5 @@
 import { supabase, getCurrentUser } from './auth.js';
-import { $ } from './app.js';
+import { $ } from './utils.js';
 
 // Plan hierarchy: free < pro < ultra
 const PLAN_HIERARCHY = { free: 0, pro: 1, ultra: 2 };

@@ -4,33 +4,17 @@ import { initPassport, getPassportText } from './passport.js';
 import { initSessionSync } from './session-sync.js';
 import { getCurrentUser, logout, supabase, getAccessToken } from './auth.js';
 import { initTour } from './tour.js';
+import { $, showToast, logError, cleanPrompt } from './utils.js';
 
 window.logout = logout;
 
-export const $ = (id) => document.getElementById(id);
-
-export function showToast(msg) {
-  const toast = $('toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.classList.remove('opacity-0', 'translate-y-20');
-  setTimeout(() => toast.classList.add('opacity-0', 'translate-y-20'), 3000);
-}
-
-export function logError(component, error) {
-  console.error(`[Cloasta] ${component}:`, error?.message || error);
-}
+export { $, showToast, logError, cleanPrompt };
 
 async function safeRun(component, fn) {
   try { return await fn(); } catch (err) {
     logError(component, err);
     showToast(`⚠️ ${component} failed. Please refresh.`);
   }
-}
-
-export function cleanPrompt(text) {
-  if (!text) return '';
-  return text.replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,6}\s/g,'').replace(/`{1,3}/g,'').replace(/^\s*[-•]\s/gm,'').trim();
 }
 
 const memoryModes = [
@@ -93,6 +77,12 @@ function closeMobileSidebar() {
 
 async function loadDashboard(existingSession) {
   console.log('loadDashboard() called');
+  const skeleton = $('loading-skeleton');
+  const content = $('dashboard-content');
+  
+  if (skeleton) skeleton.classList.remove('hidden');
+  if (content) content.classList.add('hidden');
+
   try {
     let session = existingSession;
     if (!session) {
@@ -108,14 +98,16 @@ async function loadDashboard(existingSession) {
     updateAvatarUI(quickName);
     if ($('user-email')) $('user-email').textContent = session.user.email;
 
-    // Run both queries in parallel to drastically improve perceived load time
-    const [profileRes, usageRes] = await Promise.allSettled([
+    // Run profile, usage tracking, AND prompt history queries in parallel to drastically eliminate sequential waterfalls
+    const [profileRes, usageRes, historyRes] = await Promise.allSettled([
       supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-      supabase.from('usage_tracking').select('*').eq('user_id', session.user.id).single()
+      supabase.from('usage_tracking').select('*').eq('user_id', session.user.id).single(),
+      supabase.from('prompts').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(10)
     ]);
 
     let profile = profileRes.status === 'fulfilled' ? profileRes.value.data : null;
     let usage = usageRes.status === 'fulfilled' ? usageRes.value.data : null;
+    let history = historyRes.status === 'fulfilled' ? historyRes.value.data : null;
 
     if (!profile) { window.location.replace('/onboarding.html'); return; }
     if (!profile.onboarding_completed) { window.location.replace('/onboarding.html'); return; }
@@ -160,7 +152,7 @@ async function loadDashboard(existingSession) {
 
     safeRun('MemoryModesLoad', () => loadMemoryModes(profile));
     if (usage) safeRun('UsageLimitCheck', () => checkUsageLimit(usage, profile));
-    safeRun('HistoryLoad', renderHistory);
+    safeRun('HistoryLoad', () => renderHistory(history));
 
     // Initialize feature modules directly — no lazy loading delay
     safeRun('VoiceInit', () => initVoice(handleGeneration));
@@ -171,6 +163,10 @@ async function loadDashboard(existingSession) {
     console.log('Dashboard load complete');
   } catch (err) {
     console.error('loadDashboard crashed:', err.message, err.stack);
+  } finally {
+    // Hide skeleton and reveal premium dashboard content instantly
+    if (skeleton) skeleton.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
   }
 }
 
@@ -236,6 +232,18 @@ function hideUpgradeModal() {
   if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
+function loadRazorpay() {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Razorpay SDK failed to load'));
+    document.head.appendChild(script);
+  });
+}
+
 async function handleUpgrade(planTier = 'pro') {
   const user = await getCurrentUser();
   if (!user) return;
@@ -243,6 +251,9 @@ async function handleUpgrade(planTier = 'pro') {
   if (btn) btn.disabled = true;
 
   try {
+    // Dynamically lazy-load Razorpay SDK only when needed
+    await loadRazorpay();
+
     const response = await fetch('/api/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -415,13 +426,19 @@ async function saveToHistory(promptText, inputText, mode) {
   await supabase.from('prompts').insert({ user_id: user.id, input_text: inputText, generated_prompt: promptText, memory_mode: mode });
 }
 
-async function renderHistory() {
+async function renderHistory(preFetchedHistory = null) {
   const c = $('recent-history-container');
   if (!c) return;
-  const user = await getCurrentUser();
-  if (!user) return;
-  const { data: history, error } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
-  if (error) throw error;
+  
+  let history = preFetchedHistory;
+  if (!history) {
+    const user = await getCurrentUser();
+    if (!user) return;
+    const { data, error } = await supabase.from('prompts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
+    if (error) throw error;
+    history = data;
+  }
+
   if (!history || history.length === 0) {
     c.innerHTML = `<div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-gray-600 text-3xl">history</span></div><p class="text-gray-400 font-medium">No recent syncs.</p>`;
     return;
