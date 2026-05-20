@@ -60,6 +60,20 @@
             #sidebar span.hidden { display: inline !important; }
             #sidebar .hidden.lg\:block { display: block !important; }
         }
+        
+        @keyframes wave {
+          0% { transform: translateX(-100%) }
+          100% { transform: translateX(100%) }
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4) }
+          70% { box-shadow: 0 0 0 20px rgba(255,255,255,0) }
+          100% { box-shadow: 0 0 0 0 rgba(255,255,255,0) }
+        }
+        .recording {
+          animation: pulse 1.5s infinite !important;
+          background: #ff4444 !important;
+        }
     </style>
 </head>
 <body class="bg-black text-white h-screen flex flex-col font-sans overflow-hidden">
@@ -246,44 +260,125 @@
             </section>
 
             <!-- VOICE CAPTURE SCREEN -->
-            <section id="screen-voice" class="screen p-8 lg:p-12 max-w-4xl mx-auto space-y-12">
-                <div class="text-center space-y-2">
-                    <h1 class="text-3xl font-bold tracking-tight">Voice Capture</h1>
-                    <p class="text-gray-400">Speak naturally. Groq Whisper will perfectly transcribe it.</p>
+            <div id="screen-voice" class="screen" style="display:none">
+              <div style="max-width:600px; margin:0 auto; padding:40px 20px; text-align:center">
+                
+                <h2 style="color:white; font-size:28px; margin-bottom:8px">Voice Capture</h2>
+                <p style="color:#888; margin-bottom:40px">Speak your idea. Get a perfect AI prompt.</p>
+                
+                <!-- Mic Button -->
+                <div id="mic-container" style="margin-bottom:32px">
+                  <button id="mic-btn" onclick="toggleRecording()" style="
+                    width:100px; height:100px;
+                    border-radius:50%;
+                    background:white;
+                    border:none;
+                    cursor:pointer;
+                    font-size:36px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto;
+                    transition:all 0.3s;
+                    box-shadow:0 0 0 0 rgba(255,255,255,0.4);
+                  ">🎤</button>
+                  <p id="mic-status" style="color:#888; margin-top:16px; font-size:14px">
+                    Click to start recording
+                  </p>
                 </div>
-
-                <div class="flex flex-col items-center space-y-8 bg-[#111111] border border-[#222222] rounded-3xl p-12 glassmorphism">
-                    <div id="mic-container" class="relative group">
-                        <div id="mic-rings" class="absolute inset-0 rounded-full bg-white/10 scale-100 group-hover:scale-110 transition-transform"></div>
-                        <button id="mic-btn" class="relative w-32 h-32 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-10 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-                            <span id="mic-icon" class="material-symbols-outlined text-black text-5xl">mic</span>
-                        </button>
-                    </div>
-                    
-                    <div id="recording-timer" class="text-2xl font-mono tracking-widest">00:00</div>
-                    
-                    <div class="flex gap-4">
-                        <button id="stop-btn" class="bg-red-500/20 text-red-500 border border-red-500/30 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2 disabled:opacity-30" disabled>
-                            <span class="material-symbols-outlined text-sm">stop</span> Stop
-                        </button>
-                    </div>
-                    
-                    <div class="flex gap-2 items-center">
-                        <span id="recording-dot" class="w-2 h-2 rounded-full bg-red-500 animate-pulse hidden"></span>
-                        <span id="status-text" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ready to record</span>
-                    </div>
+                
+                <!-- Waveform -->
+                <div id="waveform" style="
+                  display:none;
+                  height:40px;
+                  background:#111;
+                  border-radius:8px;
+                  margin-bottom:24px;
+                  overflow:hidden;
+                  position:relative;
+                ">
+                  <div id="wave-bar" style="
+                    position:absolute;
+                    bottom:0;left:0;right:0;
+                    height:100%;
+                    background:linear-gradient(90deg,#333,#fff,#333);
+                    animation:wave 1s infinite;
+                    opacity:0.3;
+                  "></div>
                 </div>
-
-                <div class="space-y-4">
-                    <textarea id="transcript-display" class="w-full h-32 bg-[#111111] border border-[#222222] rounded-xl p-4 text-gray-300 focus:border-white focus:ring-0 outline-none resize-none" placeholder="Transcript will appear here..."></textarea>
-                    
-                    <button id="generate-prompt-btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform flex justify-center items-center gap-2 disabled:opacity-50">
-                        <span>Generate Perfect Prompt</span>
-                        <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                        <div id="generate-loader" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    </button>
+                
+                <!-- Transcript -->
+                <div style="margin-bottom:24px">
+                  <textarea id="voice-transcript" 
+                    placeholder="Your transcript will appear here... or type directly"
+                    style="
+                      width:100%;
+                      min-height:120px;
+                      background:#111;
+                      border:1px solid #333;
+                      border-radius:12px;
+                      padding:16px;
+                      color:white;
+                      font-size:15px;
+                      resize:vertical;
+                      box-sizing:border-box;
+                      font-family:inherit;
+                    "></textarea>
                 </div>
-            </section>
+                
+                <!-- Generate Button -->
+                <button id="generate-btn" onclick="generatePromptFromVoice()" style="
+                  width:100%;
+                  background:white;
+                  color:black;
+                  border:none;
+                  border-radius:12px;
+                  padding:16px;
+                  font-size:16px;
+                  font-weight:700;
+                  cursor:pointer;
+                ">✦ Generate Prompt</button>
+                
+                <!-- Output -->
+                <div id="prompt-output-container" style="display:none; margin-top:24px">
+                  <div style="
+                    background:#111;
+                    border:1px solid #333;
+                    border-radius:12px;
+                    padding:20px;
+                    text-align:left;
+                  ">
+                    <div style="
+                      display:flex;
+                      justify-content:space-between;
+                      align-items:center;
+                      margin-bottom:12px;
+                    ">
+                      <span style="color:#888; font-size:12px; text-transform:uppercase">
+                        Generated Prompt
+                      </span>
+                      <button onclick="copyPrompt()" style="
+                        background:#222;
+                        border:1px solid #333;
+                        color:white;
+                        padding:6px 16px;
+                        border-radius:8px;
+                        cursor:pointer;
+                        font-size:13px;
+                      ">Copy</button>
+                    </div>
+                    <p id="prompt-output" style="
+                      color:white;
+                      font-size:15px;
+                      line-height:1.6;
+                      margin:0;
+                      white-space:pre-wrap;
+                    "></p>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
 
             <!-- PASSPORT SCREEN -->
             <section id="screen-passport" class="screen p-8 lg:p-12 max-w-5xl mx-auto space-y-8">

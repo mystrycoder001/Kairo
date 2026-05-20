@@ -223,6 +223,7 @@ function checkUsageLimit(usage, profile) {
     if (promptsUsed >= 5) {
       if (banner) banner.classList.remove('hidden');
       if ($('generate-prompt-btn')) $('generate-prompt-btn').disabled = true;
+      if ($('generate-btn')) $('generate-btn').disabled = true;
     }
   } else {
     if (sidebarUpgrade) sidebarUpgrade.classList.add('hidden');
