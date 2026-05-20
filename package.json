@@ -2,9 +2,17 @@
   "name": "Cloasta",
   "version": "1.0.0",
   "description": "Cloasta AI - Personalized AI Prompts",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.11.1",
     "@supabase/supabase-js": "^2.39.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "formidable": "^3.5.1",
     "node-fetch": "^2.6.9",
     "razorpay": "^2.9.2"

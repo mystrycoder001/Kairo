@@ -18,40 +18,13 @@ let currentUserTimestamp = 0;
 const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let _authRedirecting = false; // Guard against redirect loops
 
-// Global Loader Utility
+// Global Loader Utility (Disabled per user request)
 export function showGlobalLoader(text = "Loading...") {
-    let loader = document.getElementById('global-cinematic-loader');
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'global-cinematic-loader';
-        loader.className = 'global-loader-overlay';
-        loader.innerHTML = `
-            <div class="cinematic-ring"></div>
-            <div class="loader-text" id="global-loader-text"></div>
-        `;
-        document.body.appendChild(loader);
-    }
-    const textEl = document.getElementById('global-loader-text');
-    if (textEl) textEl.textContent = text;
-    
-    loader.classList.add('active');
-    
-    // HARD CAP: Max 100ms loader to prevent UI blocking (per user req)
-    if (window._loaderTimeout) clearTimeout(window._loaderTimeout);
-    window._loaderTimeout = setTimeout(() => {
-        hideGlobalLoader();
-    }, 100);
+    // Disabled
 }
 
 export function hideGlobalLoader() {
-    const loader = document.getElementById('global-cinematic-loader');
-    if (loader) {
-        loader.classList.remove('active');
-    }
-    if (window._loaderTimeout) {
-        clearTimeout(window._loaderTimeout);
-        window._loaderTimeout = null;
-    }
+    // Disabled
 }
 
 // ==========================================
@@ -71,15 +44,7 @@ export async function signInWithGoogle() {
 }
 
 // Email OTP — Send code (Magic Link)
-// MOCK BYPASS: On localhost, bypass SMTP check for any email containing "test"
 export async function signInWithOTP(email) {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal && email.includes('test')) {
-    console.log('[Auth] Local development bypass triggered for:', email);
-    localStorage.setItem('cloasta_pending_mock_email', email);
-    return { mock: true };
-  }
-
   const { data, error } = await supabase.auth.signInWithOtp({
     email: email,
     options: {
@@ -92,43 +57,7 @@ export async function signInWithOTP(email) {
 }
 
 // Email OTP — Verify code
-// MOCK BYPASS: On localhost, verify instantly with any 6-digit code for "test" emails
 export async function verifyOTP(email, token) {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal && email.includes('test')) {
-    console.log('[Auth] Local verification bypass triggered for:', email);
-    const mockUser = {
-      id: 'mock-user-123456789',
-      email: email,
-      user_metadata: {
-        full_name: email.split('@')[0],
-        name: email.split('@')[0]
-      }
-    };
-    const mockSession = {
-      access_token: 'mock-token-123456789',
-      user: mockUser
-    };
-    localStorage.setItem('cloasta_mock_session', JSON.stringify(mockSession));
-    currentUser = mockUser;
-    currentUserTimestamp = Date.now();
-    
-    // Auto-create local user profile
-    await initUserProfile(mockUser);
-    
-    // Trigger State Change logic immediately
-    setTimeout(() => {
-      const mockProfile = JSON.parse(localStorage.getItem(`profile_${mockUser.id}`) || '{}');
-      if (mockProfile.onboarding_completed) {
-        window.location.replace('/dashboard.html');
-      } else {
-        window.location.replace('/onboarding.html');
-      }
-    }, 500);
-
-    return { user: mockUser, session: mockSession };
-  }
-
   const { data, error } = await supabase.auth.verifyOtp({
     email: email,
     token: token,
@@ -144,30 +73,15 @@ export async function verifyOTP(email, token) {
 
 // Get current access token for API calls
 export async function getAccessToken() {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal && localStorage.getItem('cloasta_mock_session')) {
-    const mockSession = JSON.parse(localStorage.getItem('cloasta_mock_session'));
-    return mockSession.access_token;
-  }
   const { data: { session } } = await supabase.auth.getSession()
   return session?.access_token || null;
 }
 
-// Robust session retrieval with cache TTL and local mock bypass
+// Robust session retrieval with cache TTL
 export async function getCurrentUser() {
   const now = Date.now();
   if (currentUser && (now - currentUserTimestamp) < USER_CACHE_TTL) {
     return currentUser;
-  }
-
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal && localStorage.getItem('cloasta_mock_session')) {
-    try {
-      const mockSession = JSON.parse(localStorage.getItem('cloasta_mock_session'));
-      currentUser = mockSession.user;
-      currentUserTimestamp = now;
-      return currentUser;
-    } catch(e) {}
   }
 
   try {
@@ -199,19 +113,20 @@ export async function initUserProfile(user) {
   try {
     // First check if profile exists, falling back to local storage on error
     let existing = null;
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, onboarding_completed, subscription_plan')
-        .eq('id', user.id)
-        .single();
-      existing = data;
-    } catch (e) {
-      console.warn('[Auth] Database profile fetch failed, checking local backup...');
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, onboarding_completed, subscription_plan')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) {
+      console.warn('[Auth] Database profile fetch failed or no profile found:', error.message);
       const localProfileStr = localStorage.getItem(`profile_${user.id}`);
       if (localProfileStr) {
         existing = JSON.parse(localProfileStr);
       }
+    } else {
+      existing = data;
     }
     
     if (existing) {
@@ -253,18 +168,19 @@ export async function initUserProfile(user) {
     
     // Ensure usage_tracking row exists, with offline fallback
     let usageExists = null;
-    try {
-      const { data } = await supabase
-        .from('usage_tracking')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-      usageExists = data;
-    } catch (e) {
+    const { data: usageData, error: usageError } = await supabase
+      .from('usage_tracking')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (usageError) {
       const localUsageStr = localStorage.getItem(`usage_${user.id}`);
       if (localUsageStr) {
         usageExists = JSON.parse(localUsageStr);
       }
+    } else {
+      usageExists = usageData;
     }
     
     if (!usageExists) {
@@ -304,9 +220,9 @@ export async function logout() {
         window.sessionStorage.clear();
     } catch(e) {}
     
-    try {
-        await supabase.auth.signOut();
-    } catch(e) {}
+    // Fire and forget signOut so it doesn't block the UI redirect
+    supabase.auth.signOut().catch(err => console.error('[Auth] SignOut error:', err));
+    
     window.location.replace('/login.html');
 }
 
@@ -348,18 +264,14 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('[Auth] State change:', event);
 
   let activeUser = session?.user;
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!activeUser && isLocal && localStorage.getItem('cloasta_mock_session')) {
-    activeUser = JSON.parse(localStorage.getItem('cloasta_mock_session')).user;
-  }
 
   if (activeUser) {
     currentUser = activeUser;
     currentUserTimestamp = Date.now();
 
-    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || (!session && isLocal)) {
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
       // Sync profile on sign-in
-      if (event === 'SIGNED_IN' || (!session && isLocal)) {
+      if (event === 'SIGNED_IN') {
         try {
           await initUserProfile(activeUser);
         } catch (err) {
@@ -379,14 +291,16 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       
       try {
         let onboardingCompleted = false;
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('onboarding_completed')
-            .eq('id', activeUser.id)
-            .single();
-          if (profile) onboardingCompleted = profile.onboarding_completed;
-        } catch (err) {
+        
+        const { data: profile, error: profileErr } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', activeUser.id)
+          .single();
+          
+        if (profile) {
+          onboardingCompleted = profile.onboarding_completed;
+        } else {
           const localProfileStr = localStorage.getItem(`profile_${activeUser.id}`);
           if (localProfileStr) {
             onboardingCompleted = JSON.parse(localProfileStr).onboarding_completed;

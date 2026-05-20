@@ -5,6 +5,8 @@ import { initSessionSync } from './session-sync.js';
 import { getCurrentUser, logout, supabase, getAccessToken } from './auth.js';
 import { initTour } from './tour.js';
 
+window.logout = logout;
+
 export const $ = (id) => document.getElementById(id);
 
 export function showToast(msg) {

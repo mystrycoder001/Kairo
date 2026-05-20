@@ -13,7 +13,7 @@
     <meta name="description" content="Cloasta keeps your prompts, communication style, and context synced across AI platforms.">
     <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://cloasta.com/onboarding">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app/onboarding">
     <meta property="og:title" content="Cloasta — Think once. Use everywhere.">
     <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/Cloasta-logo.png">
@@ -500,12 +500,19 @@
             if (transcribedText) transcribedText.value = '';
             
             // Check mic permissions
-            try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch (err) {
-                console.warn('Microphone permission denied', err);
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (err) {
+                    console.warn('Microphone permission denied', err);
+                    isRecording = false;
+                    if (micStatus) micStatus.textContent = 'Mic Permission Required';
+                    return;
+                }
+            } else {
+                console.warn('navigator.mediaDevices is not supported in this context');
                 isRecording = false;
-                if (micStatus) micStatus.textContent = 'Mic Permission Required';
+                if (micStatus) micStatus.textContent = 'Voice capture unsupported (requires HTTPS)';
                 return;
             }
 

@@ -13,7 +13,7 @@
     <meta name="description" content="Convert your voice or text into perfect AI prompts instantly. Save your AI Passport and continue any session across ChatGPT, Gemini, Claude — everywhere.">
     <meta name="keywords" content="AI memory, AI profile, session sync, AI identity, ChatGPT memory, Claude context">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://cloasta.com/dashboard">
+    <meta property="og:url" content="https://mindwave-omega-three.vercel.app/dashboard">
     <meta property="og:title" content="Cloasta — Think once. Use everywhere.">
     <meta property="og:description" content="Your AI identity stays consistent everywhere.">
     <meta property="og:image" content="/logo/Cloasta-logo.png">
@@ -45,11 +45,8 @@
 
     <style>
         .screen { display: none; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .screen.active { display: block; }
+        
         .sidebar-item.active {
             background: rgba(255, 255, 255, 0.1);
             border-right: 2px solid white;
@@ -61,10 +58,6 @@
             #sidebar span.hidden { display: inline !important; }
             #sidebar .hidden.lg\:block { display: block !important; }
         }
-        /* Loading skeleton */
-        .skeleton-pulse { animation: skeletonPulse 1.5s ease-in-out infinite; }
-        @keyframes skeletonPulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
-        #dashboard-content { transition: opacity 0.3s ease; }
     </style>
 </head>
 <body class="bg-black text-white h-screen flex flex-col font-sans overflow-hidden">
@@ -110,7 +103,7 @@
                         <p class="text-sm font-bold truncate text-white" id="sidebar-name">User</p>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest" id="sidebar-tier">Free Tier</p>
                     </div>
-                    <button id="logout-btn" class="hidden lg:block text-gray-600 hover:text-white transition-colors">
+                    <button id="logout-btn" onclick="window.logout ? window.logout() : null" class="hidden lg:block text-gray-600 hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-sm">logout</span>
                     </button>
                 </div>
@@ -561,7 +554,7 @@
 
                     <div class="flex gap-4 pt-4">
                         <button id="save-settings-btn" class="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform text-sm">Save Changes</button>
-                        <button id="settings-logout-btn" class="bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-8 py-4 rounded-xl hover:bg-red-500/30 transition-colors text-sm">Logout</button>
+                        <button id="settings-logout-btn" onclick="window.logout ? window.logout() : null" class="bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-8 py-4 rounded-xl hover:bg-red-500/30 transition-colors text-sm">Logout</button>
                     </div>
                 </div>
             </section>
