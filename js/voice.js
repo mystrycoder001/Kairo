@@ -101,7 +101,10 @@ async function generatePromptFromVoice() {
   }
   
   const btn = document.getElementById('generate-voice-btn') ||
-              document.querySelector('[onclick*="generatePromptFromVoice"]')
+    document.querySelector('button[onclick*="generatePromptFromVoice"]') ||
+    document.querySelector('#screen-voice button:last-of-type')
+  
+  const originalText = btn?.textContent || '✦ Generate Prompt'
   if (btn) { btn.textContent = 'Generating...'; btn.disabled = true }
   
   try {
@@ -117,55 +120,90 @@ async function generatePromptFromVoice() {
     })
     
     const data = await res.json()
+    console.log('API response:', data)
+    
     const prompt = data.result || data.prompt || data.text || ''
     
-    if (prompt) {
-      // Try multiple possible output element IDs
-      const outputEl = 
-        document.getElementById('voice-prompt-output') ||
-        document.getElementById('prompt-output') ||
-        document.getElementById('voice-output')
-      
-      const containerEl = 
-        document.getElementById('voice-output-container') ||
-        document.getElementById('prompt-output-container') ||
-        document.getElementById('voice-output-wrapper')
-      
-      if (outputEl) outputEl.textContent = prompt
-      if (containerEl) containerEl.style.display = 'block'
-      
-      // If elements still not found, create them dynamically
-      if (!outputEl) {
-        const div = document.createElement('div')
-        div.style.cssText = 'background:#111;border:1px solid #333;border-radius:12px;padding:20px;margin-top:24px;color:white;white-space:pre-wrap;font-size:15px;line-height:1.6;text-align:left'
-        div.textContent = prompt
-        
-        const copyBtn = document.createElement('button')
-        copyBtn.textContent = 'Copy Prompt'
-        copyBtn.style.cssText = 'margin-top:12px;background:white;color:black;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-weight:700'
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(prompt)
-          copyBtn.textContent = 'Copied!'
-          setTimeout(() => copyBtn.textContent = 'Copy Prompt', 2000)
-        }
-        
-        const wrapper = document.createElement('div')
-        wrapper.appendChild(div)
-        wrapper.appendChild(copyBtn)
-        
-        const screen = document.getElementById('screen-voice')
-        if (screen) screen.appendChild(wrapper)
-      }
-      
-    } else {
-      alert('Error: ' + JSON.stringify(data))
+    if (!prompt) {
+      alert('No prompt returned. Error: ' + JSON.stringify(data))
+      return
     }
+    
+    // Remove any existing output
+    const existing = document.getElementById('dynamic-output')
+    if (existing) existing.remove()
+    
+    // Create output div dynamically
+    const outputDiv = document.createElement('div')
+    outputDiv.id = 'dynamic-output'
+    outputDiv.style.cssText = `
+      margin-top: 24px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+    `
+    outputDiv.innerHTML = `
+      <div style="display:flex;justify-content:space-between;
+        align-items:center;margin-bottom:12px">
+        <span style="color:#888;font-size:12px;
+          text-transform:uppercase;letter-spacing:1px">
+          Generated Prompt
+        </span>
+        <div style="display:flex;gap:8px">
+          <button id="copy-prompt-btn" style="
+            background:#222;border:1px solid #333;
+            color:white;padding:6px 16px;
+            border-radius:8px;cursor:pointer;font-size:13px">
+            Copy
+          </button>
+          <button onclick="window.open('https://chat.openai.com','_blank')" style="
+            background:#222;border:1px solid #333;
+            color:white;padding:6px 16px;
+            border-radius:8px;cursor:pointer;font-size:13px">
+            ChatGPT
+          </button>
+          <button onclick="window.open('https://claude.ai','_blank')" style="
+            background:#222;border:1px solid #333;
+            color:white;padding:6px 16px;
+            border-radius:8px;cursor:pointer;font-size:13px">
+            Claude
+          </button>
+        </div>
+      </div>
+      <p id="final-prompt-text" style="
+        color:white;font-size:15px;
+        line-height:1.6;margin:0;
+        white-space:pre-wrap">${prompt}</p>
+    `
+    
+    // Add copy functionality
+    outputDiv.querySelector('#copy-prompt-btn').onclick = () => {
+      navigator.clipboard.writeText(prompt)
+      outputDiv.querySelector('#copy-prompt-btn').textContent = 'Copied!'
+      setTimeout(() => {
+        outputDiv.querySelector('#copy-prompt-btn').textContent = 'Copy'
+      }, 2000)
+    }
+    
+    // Append to voice screen
+    const screen = document.getElementById('screen-voice')
+    if (screen) {
+      screen.querySelector('[style*="max-width"]')?.appendChild(outputDiv) ||
+      screen.appendChild(outputDiv)
+    } else {
+      document.body.appendChild(outputDiv)
+    }
+    
+    outputDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    console.log('Prompt displayed successfully')
     
   } catch(err) {
     console.error('Generate error:', err)
-    alert('Error generating prompt: ' + err.message)
+    alert('Error: ' + err.message)
   } finally {
-    if (btn) { btn.textContent = '✦ Generate Prompt'; btn.disabled = false }
+    if (btn) { btn.textContent = originalText; btn.disabled = false }
   }
 }
 
